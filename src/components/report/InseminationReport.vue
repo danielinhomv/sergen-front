@@ -1,5 +1,5 @@
 <template>
-  <LayoutApp>
+   <LayoutReport>
     <div class="report-section">
       <h2>Generar Reporte</h2>
       <div class="input-options">
@@ -24,12 +24,12 @@
         </button>
       </div>
     </div>
-  </LayoutApp>
+  </LayoutReport>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import LayoutApp from '../LayoutApp.vue';
+import LayoutReport from './LayoutReport.vue';
 
 // Variables reactivas para el estado de la grabación y el texto del reporte
 const isRecording = ref(false);

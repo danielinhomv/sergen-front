@@ -1,14 +1,15 @@
 
 <template>
- <DashboardApp/>
+ <InseminationReport/>
 </template>
 
 <script>
-import DashboardApp from './components/DashboardApp.vue';
+import InseminationReport from './components/report/InseminationReport.vue';
+
 export default {
   name: 'App',
   components: {
-    DashboardApp, // Esto registra el componente para que pueda ser usado en el template
+    InseminationReport, // Esto registra el componente para que pueda ser usado en el template
   },
 };
 </script>
