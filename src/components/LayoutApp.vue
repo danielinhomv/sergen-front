@@ -20,7 +20,7 @@
           <i class="fas fa-tractor me-3"></i>Propiedad Actual
         </a>
         <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
-          <i class="fas fa-clipboard-list me-3"></i>Protocolos
+          <i class="fas fa-clipboard-list me-3"></i>Etapas
         </a>
         <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-file-alt me-3"></i>Reportes
