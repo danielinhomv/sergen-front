@@ -1,15 +1,12 @@
-
 <template>
- <AccountManagement/>
+  <div>
+    <!-- El router-view renderizará el componente de la ruta actual -->
+    <router-view></router-view>
+  </div>
 </template>
 
 <script>
-import AccountManagement from './components/management/AccountManagement.vue';
-
 export default {
   name: 'App',
-  components: {
-    AccountManagement, // Esto registra el componente para que pueda ser usado en el template
-  },
 };
 </script>

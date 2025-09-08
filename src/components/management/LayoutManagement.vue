@@ -3,16 +3,16 @@
     <div class="container py-4" style="background-color: #eafaf1; min-height: 100vh;">
       <div class="row mb-4 align-items-center">
         <div class="col-md-4">
-          <h2 class="text-success">Etapas de Protocolo</h2>
+          <h2 class="text-success">Reproducción y Genética</h2>
         </div>
       </div>
 
       <div class="row">
         <div class="col-md-3">
           <nav class="nav flex-column bg-white rounded shadow-sm p-3">
-            <span class="fw-bold text-success mb-2">Procesos de Protocolo</span>
+            <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
             <button
-                v-for="(proceso, idx) in procesos"
+                v-for="(proceso, idx) in etapas"
                 :key="proceso"
                 class="btn mb-2"
                 :class="activeProceso === idx ? 'btn-success' : 'btn-outline-success'"
@@ -32,9 +32,9 @@
                 </p>
               </div>
               <div v-else>
-                <h4 class="text-success">{{ procesos[activeProceso] }}</h4>
+                <h4 class="text-success">{{ etapas[activeProceso] }}</h4>
                 <!-- Contenido para el proceso seleccionado -->
-                <slot :proceso="procesos[activeProceso]"></slot>
+                <slot :proceso="etapas[activeProceso]"></slot>
               </div>
             </div>
           </div>
@@ -47,7 +47,7 @@
 import { ref } from 'vue';
 import LayoutApp from '../LayoutApp.vue';
 
-const procesos = [
+const etapas = [
     'Presincronización',
     'Ecografía',
     'Retiro de Implante',

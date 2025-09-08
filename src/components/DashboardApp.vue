@@ -7,7 +7,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import LayoutApp from './LayoutApp.vue';
 
 </script>

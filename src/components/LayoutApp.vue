@@ -10,28 +10,28 @@
         <h2 class="text-white mt-3 mb-0">Sergen</h2>
       </div>
       <div class="list-group list-group-flush flex-grow-1">
-        <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
+        <router-link :to="{ name:'dashboard'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
+          <i class="fas fa-chart-line me-3"></i>Panel
+        </router-link>
+         <router-link :to="{ name: 'account-management' }" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
           <i class="fas fa-user-circle me-3"></i>Mi Cuenta
-        </a>
-        <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
-          <i class="fas fa-chart-line me-3"></i>Dashboard
-        </a>
+        </router-link>
         <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-tractor me-3"></i>Propiedad Actual
         </a>
-        <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
+        <router-link :to="{ name:'insemination-management'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-clipboard-list me-3"></i>Etapas
-        </a>
-        <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
+        </router-link>
+        <router-link :to="{ name:'insemination-report'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-file-alt me-3"></i>Reportes
-        </a>
+        </router-link>
        
       </div>
       <!-- Separador y opción de Cerrar Sesión -->
       <div class="mt-auto p-3">
-        <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold ">
+        <router-link :to="{ name:'login'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold ">
           <i class="fas fa-sign-out-alt me-3"></i>Cerrar Sesión
-        </a>
+        </router-link>
       </div>
     </div>
     <!-- /#sidebar-wrapper -->
@@ -156,7 +156,7 @@ html, body {
 }
 .list-group-item-action:hover {
   background-color: rgba(255, 255, 255, 0.35) !important;
-  transform: scale(1.03);
+  transform: scale(1.0);
 }
 
 .logo-circle {
@@ -190,5 +190,9 @@ html, body {
     display: none !important;
   }
 }
-
+.list-group-item.router-link-exact-active {
+    background-color: #76A868 !important;
+    color: #fff !important;
+    font-weight: bold;
+}
 </style>

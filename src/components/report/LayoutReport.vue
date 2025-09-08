@@ -15,11 +15,7 @@
                         <label for="fechaFin" class="form-label mb-0 text-success">Fecha Final</label>
                         <input type="date" id="fechaFin" v-model="fechaFin" class="form-control border-success" />
                     </div>
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-success" @click="filtrarReporte">
-                            Filtrar
-                        </button>
-                    </div>
+
                 </form>
             </div>
         </div>
@@ -27,9 +23,9 @@
         <div class="row">
             <div class="col-md-3">
                 <nav class="nav flex-column bg-white rounded shadow-sm p-3">
-                    <span class="fw-bold text-success mb-2">Procesos de Protocolo</span>
+                    <span class="fw-bold text-success mb-2">etapas de Protocolo</span>
                     <button
-                        v-for="(proceso, idx) in procesos"
+                        v-for="(proceso, idx) in etapas"
                         :key="proceso"
                         class="btn mb-2"
                         :class="activeProceso === idx ? 'btn-success' : 'btn-outline-success'"
@@ -41,9 +37,9 @@
             </div>
             <div class="col-md-9">
                 <div class="bg-white rounded shadow-sm p-4">
-                    <h4 class="text-success">{{ procesos[activeProceso] }}</h4>
+                    <h4 class="text-success">{{ etapas[activeProceso] }}</h4>
                     <!-- Aquí va el contenido del reporte para el proceso seleccionado -->
-                    <slot :proceso="procesos[activeProceso]" :fechaInicio="fechaInicio" :fechaFin="fechaFin"></slot>
+                    <slot :proceso="etapas[activeProceso]" :fechaInicio="fechaInicio" :fechaFin="fechaFin"></slot>
                 </div>
             </div>
         </div>
@@ -58,7 +54,7 @@ import LayoutApp from '../LayoutApp.vue';
 
 const fechaInicio = ref('');
 const fechaFin = ref('');
-const procesos = [
+const etapas = [
     'Presincronización',
     'Ecografía',
     'Retiro de Implante',
@@ -69,9 +65,6 @@ const procesos = [
 ];
 const activeProceso = ref(0);
 
-function filtrarReporte() {
-    // Aquí puedes emitir un evento o manejar la lógica de filtrado
-}
 </script>
 
 <style scoped>

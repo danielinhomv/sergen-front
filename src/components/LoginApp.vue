@@ -28,29 +28,37 @@
                         placeholder="Ingrese su contraseña"
                     />
                 </div>
-                <button class="login-btn" type="submit">Ingresar</button>
+                <button
+                    class="login-btn"
+                    type="submit"
+                    :disabled="!isFormValid"
+                >
+                    Ingresar
+                </button>
             </form>
         </div>
     </div>
 </template>
 
-<script>
-export default {
-    name: "LoginApp",
-    data() {
-        return {
-            username: "",
-            password: "",
-        };
-    },
-    methods: {
-        handleLogin() {
-            // Aquí va la lógica de autenticación
-            // Reemplazar `alert` con un modal o notificación
-            console.log(`Bienvenido, ${this.username}!`);
-        },
-    },
-};
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const username = ref('');
+const password = ref('');
+const router = useRouter();
+
+// Propiedad computada para validar el formulario
+const isFormValid = computed(() => {
+  return username.value.trim().length > 0 && password.value.length >= 8;
+});
+
+function handleLogin() {
+    // Aquí va la lógica de autenticación
+    console.log(`Bienvenido, ${username.value}!`);
+    router.push({ name: 'dashboard' });
+
+}
 </script>
 
 <style scoped>
@@ -157,6 +165,11 @@ input:focus {
 
 .login-btn:hover {
     background: linear-gradient(90deg, #388e3c 0%, #43a047 100%);
+}
+
+.login-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
 }
 
 @media (max-width: 600px) {
