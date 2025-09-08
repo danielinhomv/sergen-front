@@ -5,6 +5,7 @@ import SelectProperty from '../components/SelectProperty.vue';
 import InseminationReport from '../components/report/InseminationReport.vue';
 import AccountManagement from '../components/management/AccountManagement.vue';
 import InseminationManagement from '../components/management/InseminationManagement.vue';
+import PropertyManagement from '../components/management/PropertyManagement.vue';
 
 const routes = [
   { path: '/', name: 'dashboard', component: DashboardApp },
@@ -13,7 +14,7 @@ const routes = [
   { path: '/select-property', name: 'select-property', component: SelectProperty },
   { path: '/reports/insemination', name: 'insemination-report', component: InseminationReport },
   { path: '/management/insemination', name: 'insemination-management', component: InseminationManagement },
-  // Agrega aquí otras rutas
+  { path: '/management/property', name: 'property-management', component: PropertyManagement },
 ];
 
 const router = createRouter({

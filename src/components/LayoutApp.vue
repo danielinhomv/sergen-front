@@ -16,9 +16,9 @@
          <router-link :to="{ name: 'account-management' }" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
           <i class="fas fa-user-circle me-3"></i>Mi Cuenta
         </router-link>
-        <a href="#" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
+        <router-link :to="{ name: 'property-management'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-tractor me-3"></i>Propiedad Actual
-        </a>
+        </router-link>
         <router-link :to="{ name:'insemination-management'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-clipboard-list me-3"></i>Etapas
         </router-link>
