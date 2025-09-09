@@ -11,57 +11,72 @@
         <div class="col-md-3">
           <nav class="nav flex-column bg-white rounded shadow-sm p-3">
             <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
-            <button
-                v-for="(proceso, idx) in etapas"
-                :key="proceso"
-                class="btn mb-2"
-                :class="activeProceso === idx ? 'btn-success' : 'btn-outline-success'"
-                @click="activeProceso = idx"
-            >
+            <button v-for="(proceso) in etapas" :key="proceso" class="btn mb-2"
+              :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
+              @click="goToReport(etapaRoutes[proceso])">
               {{ proceso }}
             </button>
           </nav>
         </div>
-       <div class="col-md-9">
-            <div class="content-card bg-white rounded-4 shadow-lg p-5">
-              <div v-if="activeProceso === null" class="d-flex flex-column align-items-center justify-content-center text-center">
-                <i class="fas fa-satellite-dish text-success pulsate mb-4" style="font-size: 5rem;"></i>
-                <h4 class="text-muted fw-light">Escaneando...</h4>
-                <p class="text-muted mt-2">
-                  Esperando la detección de un escaneo de vaca. La información del protocolo aparecerá aquí.
-                </p>
-              </div>
-              <div v-else>
-                <h4 class="text-success">{{ etapas[activeProceso] }}</h4>
-                <!-- Contenido para el proceso seleccionado -->
-                <slot :proceso="etapas[activeProceso]"></slot>
-              </div>
-            </div>
+        <div class="col-md-9">
+          
+          <div class="bg-white rounded shadow-sm p-4">
+            <h4 class="text-success">{{ getTitleFromRoute() }}</h4>
+            <!-- El componente de la ruta se renderizará aquí -->
+            <RouterView />
           </div>
+        </div>
       </div>
     </div>
   </LayoutApp>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import LayoutApp from '../LayoutApp.vue';
 
 const etapas = [
-    'Presincronización',
-    'Ecografía',
-    'Retiro de Implante',
-    'Inseminación',
-    'Ecografía de Confirmación',
-    'Palpación General',
-    'Parto'
+  'Presincronización',
+  'Ecografía',
+  'Retiro de Implante',
+  'Inseminación',
+  'Ecografía de Confirmación',
+  'Palpación General',
+  'Parto'
 ];
 
-const activeProceso = ref(null);
+const etapaRoutes = {
+  'Inseminación': 'insemination-management',
+  // 'Ecografía': 'ultrasound-report',
+  // 'Retiro de Implante': 'implant-removal-report',
+  // 'Inseminación': 'insemination-report',
+  // 'Ecografía de Confirmación': 'confirmatory-ultrasound-report',
+  // 'Palpación General': 'general-palpation-report',
+  // 'Parto': 'birth-report'
+};
+
+const router = useRouter();
+const route = useRoute();
+
+const currentRouteName = computed(() => route.name);
+
+function goToReport(routeName) {
+  router.push({ name: routeName });
+}
+
+function getTitleFromRoute() {
+  for (const etapa in etapaRoutes) {
+    if (etapaRoutes[etapa] === currentRouteName.value) {
+      return etapa;
+    }
+  }
+  return "Selecciona una etapa"; // Título por defecto
+}
 </script>
 
 <style scoped>
 body {
-    background-color: #eafaf1;
+  background-color: #eafaf1;
 }
 </style>
