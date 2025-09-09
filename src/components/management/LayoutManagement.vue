@@ -13,7 +13,7 @@
             <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
             <button v-for="(proceso) in etapas" :key="proceso" class="btn mb-2"
               :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
-              @click="goToReport(etapaRoutes[proceso])">
+              @click="goTomanagement(etapaRoutes[proceso])">
               {{ proceso }}
             </button>
           </nav>
@@ -48,12 +48,12 @@ const etapas = [
 
 const etapaRoutes = {
   'Inseminación': 'insemination-management',
-  // 'Ecografía': 'ultrasound-report',
-  // 'Retiro de Implante': 'implant-removal-report',
-  // 'Inseminación': 'insemination-report',
-  // 'Ecografía de Confirmación': 'confirmatory-ultrasound-report',
-  // 'Palpación General': 'general-palpation-report',
-  // 'Parto': 'birth-report'
+  'Ecografía': 'ultrasound-management',
+  'Retiro de Implante': 'implant-removal-management',
+  'Ecografía de Confirmación': 'confirmatory-ultrasound-management',
+  'Palpación General': 'general-palpation-management',
+  'Parto': 'birth-management',
+  'Presincronización': 'presynchronization-management'
 };
 
 const router = useRouter();
@@ -61,7 +61,7 @@ const route = useRoute();
 
 const currentRouteName = computed(() => route.name);
 
-function goToReport(routeName) {
+function goTomanagement(routeName) {
   router.push({ name: routeName });
 }
 
