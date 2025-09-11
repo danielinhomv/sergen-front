@@ -15,6 +15,7 @@
               <label for="fechaFin" class="form-label mb-0 text-success">Fecha Final</label>
               <input type="date" id="fechaFin" v-model="fechaFin" class="form-control border-success" />
             </div>
+
           </form>
         </div>
       </div>
@@ -24,11 +25,11 @@
           <nav class="nav flex-column bg-white rounded shadow-sm p-3">
             <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
             <button
-                v-for="(proceso) in etapas"
-                :key="proceso"
-                class="btn mb-2"
-                :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
-                @click="goToReport(etapaRoutes[proceso])"
+              v-for="(proceso) in etapas"
+              :key="proceso"
+              class="btn mb-2"
+              :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
+              @click="goToReport(etapaRoutes[proceso])"
             >
               {{ proceso }}
             </button>
@@ -75,8 +76,8 @@ const etapaRoutes = {
 
 const router = useRouter();
 const route = useRoute();
-
 const currentRouteName = computed(() => route.name);
+
 
 function goToReport(routeName) {
   router.push({ name: routeName });
