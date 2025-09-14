@@ -7,7 +7,7 @@
         </div>
         <div class="col-md-6 text-end">
           <button class="btn btn-danger btn-lg shadow-sm" @click="confirmNewProtocol">
-            <i class="fas fa-plus-circle me-2"></i> Iniciar Nuevo Protocolo
+            <i class="fas fa-redo-alt me-2"></i> Comenzar De Nuevo
           </button>
         </div>
       </div>
@@ -16,10 +16,7 @@
         <div class="col-md-3">
           <nav class="nav flex-column bg-white rounded shadow-sm p-3">
             <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
-            <button
-              v-for="(proceso) in etapas"
-              :key="proceso"
-              class="btn mb-2"
+            <button v-for="(proceso) in etapas" :key="proceso" class="btn mb-2"
               :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
               @click="goTomanagement(etapaRoutes[proceso])">
               {{ proceso }}
@@ -38,7 +35,8 @@
       <!-- Modal de Confirmación -->
       <div v-if="showConfirmation" class="confirmation-overlay">
         <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
-          <p class="mb-4">¿Estás seguro de que quieres iniciar un nuevo protocolo? Se eliminarán los datos del protocolo actual.</p>
+          <p class="mb-4">¿Estás seguro de que quieres iniciar un nuevo protocolo? Se eliminarán los datos del protocolo
+            actual.</p>
           <div class="d-flex justify-content-center gap-3">
             <button class="btn btn-success" @click="startNewProtocol">Sí, continuar</button>
             <button class="btn btn-outline-danger" @click="showConfirmation = false">Cancelar</button>
