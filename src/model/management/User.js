@@ -1,5 +1,6 @@
 class User {
-    constructor({ name, password, licence, type_licence, enabled }) {
+    constructor({ id ,name, password, licence, type_licence, enabled }) {
+        this.name = id
         this.name = name;
         this.password = password;
         this.licence = licence;
