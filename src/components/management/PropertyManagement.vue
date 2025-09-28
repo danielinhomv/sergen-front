@@ -195,6 +195,7 @@ Nacimiento</label>
 <script setup>
 import { ref, computed } from 'vue';
 import LayoutApp from '../LayoutApp.vue';
+import { useNavigation } from '@/utils/navigation';
 
 // Data Mock
 const initialProperty = {
@@ -203,6 +204,8 @@ place: 'Santa Cruz, Bolivia',
 phone_number: '591-77889900',
 owner_name: 'Juan Pérez',
 };
+
+const { replaceTo } = useNavigation();
 
 const mockBovines = ref([
 { id: 1, serie: 'A123', rgd: 'S1-456', sex: 'female', weight: 450.5, birthdate: '2022-01-15', mother_id: null },
@@ -265,6 +268,8 @@ mother_id: null,
 
 function closeProperty() {
 console.log('Redireccionando a la ruta "select-property"');
+replaceTo({ name: "select-property'" })
+
 }
 
 // Lógica de la tabla de animales
