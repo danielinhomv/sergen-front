@@ -268,7 +268,7 @@ mother_id: null,
 
 function closeProperty() {
 console.log('Redireccionando a la ruta "select-property"');
-replaceTo({ name: "select-property'" })
+replaceTo({ name: "select-property" })
 
 }
 
