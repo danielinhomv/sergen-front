@@ -7,13 +7,11 @@ const PREFIX = '/management/property'
 
 class PropertyService {
 
-    // Listar todas las propiedades
     static async list(user_id = 1) {
         try {
             const response = await axios.get(`${API_URL}${PREFIX}/list`, {
                 params: user_id ? { user_id } : {}
             });
-            // Mapear solo el array que está dentro de "properties"
             return response.data.properties.map(p => new Property(p));
         } catch (error) {
             console.error('Error listando propiedades:', error.response?.data || error);

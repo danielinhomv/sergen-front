@@ -83,6 +83,33 @@
         </div>
       </div>
     </div>
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger shadow-red">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteConfirmationModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p v-if="propertyToDelete">
+                        Estás a punto de eliminar la propiedad **{{ propertyToDelete.name }}**.
+                        <br>
+                        <strong class="text-danger">Esta acción es irreversible. ¿Confirmas la eliminación?</strong>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" @click="confirmDelete">
+                        <i class="fas fa-trash me-2"></i> Sí, Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
   </div>
 </template>
@@ -105,10 +132,15 @@ export default {
       name: '',
       place: '',
       owner_name: '',
-      phone_number: ''
+      phone_number: '',
+      user_id: 1
     });
     const nameExists = ref(false);
-
+  // NUEVO: Para almacenar la propiedad a eliminar y controlar el modal
+    const propertyToDelete = ref(null); 
+    
+    // Referencia a la instancia del modal de eliminación para controlarlo
+    let deleteModalInstance = null;
     const loadProperties = async () => {
       try {
         properties.value = await PropertyService.list();
@@ -128,7 +160,7 @@ export default {
 
     const openAddPropertyModal = () => {
       nameExists.value = false;
-      newProperty.value = { name: '', place: '', owner_name: '', phone_number: '' };
+      newProperty.value = { name: '', place: '', owner_name: '', phone_number: '' ,user_id:1};
       const modal = new Modal(document.getElementById('createPropertyModal'));
       modal.show();
     };
@@ -151,6 +183,7 @@ export default {
     const saveProperty = async () => {
       if (!isFormValid.value) return;
       try {
+        console.log(newProperty.value);
         const created = await PropertyService.create(newProperty.value);
         properties.value.push(created);
         const modalEl = document.getElementById('createPropertyModal');
@@ -162,14 +195,34 @@ export default {
     };
 
     const deleteProperty = async (prop) => {
-      if (!confirm(`¿Seguro que deseas eliminar la propiedad "${prop.name}"?`)) return;
+   propertyToDelete.value = prop;
+      if (!deleteModalInstance) {
+        // Inicializa la instancia de Bootstrap Modal la primera vez
+        deleteModalInstance = new Modal(document.getElementById('deleteConfirmationModal'));
+      }
+      deleteModalInstance.show();
+    };
+    const confirmDelete = async () => {
+      if (!propertyToDelete.value) return;
+
       try {
-        await PropertyService.delete(prop.id);
-        properties.value = properties.value.filter(p => p.id !== prop.id);
+        await PropertyService.delete(propertyToDelete.value.id);
+        
+        // Actualiza la lista
+        properties.value = properties.value.filter(p => p.id !== propertyToDelete.value.id);
+        
+        // Cierra el modal
+        deleteModalInstance.hide();
+        
+        console.log(`Propiedad "${propertyToDelete.value.name}" eliminada.`);
+        propertyToDelete.value = null; // Limpia el estado
+        
       } catch (error) {
         console.error('Error eliminando propiedad:', error);
+        alert('Hubo un error al intentar eliminar la propiedad.'); // Usa alerta si falla la API
       }
     };
+
 
     const isFormValid = computed(() => {
       return newProperty.value.name &&
@@ -190,7 +243,8 @@ export default {
       saveProperty,
       debouncedCheckName,
       isFormValid,
-      deleteProperty,
+      deleteProperty, 
+      confirmDelete, 
       loading
     };
   }
