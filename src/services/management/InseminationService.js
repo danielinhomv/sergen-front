@@ -59,9 +59,9 @@ export class InseminationService {
         }
     }
 
-    async editInsemination(insemination) {
+    async editInsemination(id,insemination) {
         try {
-            const url = `${this.baseUrl}/${insemination.id}`;
+            const url = `${this.baseUrl}/update/${id}`;
             const response = await fetch(url, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

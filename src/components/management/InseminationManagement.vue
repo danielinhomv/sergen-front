@@ -162,7 +162,8 @@
 
 
                                 <td>
-                                    <button class="btn btn-sm btn-outline-info me-2" title="Editar Protocolo">
+                                    <button @click="openEditInseminationModal(protocol)"
+                                        class="btn btn-sm btn-outline-info me-2" title="Editar Protocolo">
                                         <i class="fas fa-edit"></i> </button>
                                     <button class="btn btn-sm btn-outline-danger" title="Eliminar"><i
                                             class="fas fa-trash"></i></button>
@@ -186,7 +187,8 @@
                     <div class="modal-header">
                         <h5 class="modal-title section-title-modal" id="protocolModalLabel">Nuevo Protocolo de Datos
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" insemination-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form @submit.prevent="submitFormAndCloseModal">
@@ -226,11 +228,80 @@
 
                             <div class="modal-footer px-0 pb-0 pt-3">
                                 <button @click="closeModalInsemination()" type="button" class="btn btn-secondary"
-                                    data-bs-dismiss="modal">
+                                    insemination-bs-dismiss="modal">
                                     <i class="fas fa-times me-2"></i>Cerrar
                                 </button>
                                 <button type="submit" class="btn btn-submit-modal" :disabled="!isFormValid">
                                     <i class="fas fa-paper-plane me-2"></i>Guardar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="inseminationEditModal" tabindex="-1" aria-labelledby="inseminationEditModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-green-border">
+                    <div class="modal-header">
+                        <h5 class="modal-title section-title-modal" id="inseminationEditModalLabel">Editar Protocolo de
+                            Datos
+                        </h5>
+                        <button type="button" class="btn-close" insemination-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="submitEditFormAndCloseModal">
+                            <div class="form-group">
+                                <label for="toro-edit" class="form-label"><i
+                                        class="fas fa-bullhorn me-2"></i>Toro</label>
+                                <select v-model="formEdit.toro" id="toro-edit" class="form-control" required>
+                                    <option disabled value="">Seleccione un toro</option>
+                                    <option v-for="bull in bulls" :key="bull" :value="bull">{{ bull }}</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cc-edit" class="form-label"><i class="fas fa-percentage me-2"></i>Condición
+                                    Corporal (CC)</label>
+                                <input v-model="formEdit.bodyConditionScore" id="cc-edit" type="number" min="1" max="5"
+                                    step="0.5" class="form-control" placeholder="1.0-5.0" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="celo-edit" class="form-label"><i
+                                        class="fas fa-heartbeat me-2"></i>Celo</label>
+                                <select v-model="formEdit.heatQuality" id="celo-edit" class="form-control" required>
+                                    <option disabled value="">Seleccione la calidad de celo</option>
+                                    <option value="well">Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="bad">Malo</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="observation-edit" class="form-label"><i
+                                        class="fas fa-eye me-2"></i>Observación</label>
+                                <textarea v-model="formEdit.observation" id="observation-edit" class="form-control"
+                                    rows="3"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="others-edit" class="form-label"><i
+                                        class="fas fa-ellipsis-h me-2"></i>Otros</label>
+                                <textarea v-model="formEdit.others" id="others-edit" class="form-control"
+                                    rows="3"></textarea>
+                            </div>
+
+                            <div class="modal-footer px-0 pb-0 pt-3">
+                                <button @click="closeEditInseminationModal()" type="button" class="btn btn-secondary"
+                                    insemination-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-warning" :disabled="!isFormValid">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
                                 </button>
                             </div>
                         </form>
@@ -245,13 +316,15 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="textViewerModalLabel">Detalle: {{ fullTextTitle }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" insemination-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p style="white-space: pre-wrap;">{{ fullTextContent }}</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button @click="closeTextViewerModal()" type="button" class="btn btn-secondary"
+                            insemination-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>
@@ -265,7 +338,7 @@
                     </div>
                     <div id="toast-message" class="toast-body flex-grow-1">
                     </div>
-                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"
+                    <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
                         aria-label="Close"></button>
                 </div>
             </div>
@@ -313,10 +386,20 @@ const form = ref({
     toro: '',
     bodyConditionScore: null,
     heatQuality: '',
-    observation: '',
-    others: '',
+    observation: null,
+    others: null,
     date: new Date().toISOString().slice(0, 10),
 });
+
+const formEdit = ref({
+    id: null,
+    toro: '',
+    bodyConditionScore: null,
+    heatQuality: '',
+    observation: null,
+    others: null,
+})
+
 const hasChanges = computed(() => {
     return JSON.stringify(editableBovine.value) !== JSON.stringify(bovine.value);
 });
@@ -369,6 +452,19 @@ const opentextViewerModal = () => {
     modal.show();
 };
 
+const openEditInseminationModal = (insemination) => {
+    formEdit.value.id = insemination.id;
+    formEdit.value.toro = insemination.bull;
+    formEdit.value.bodyConditionScore = insemination.bodyConditionScore;
+    formEdit.value.heatQuality = insemination.heatQuality;
+    formEdit.value.observation = insemination.observation;
+    formEdit.value.others = insemination.others;
+
+    console.log(formEdit);
+    const modal = new Modal(document.getElementById('inseminationEditModal'));
+    modal.show();
+};
+
 onMounted(() => {
     let textIndex = 0;
     intervalId = setInterval(() => {
@@ -417,6 +513,27 @@ async function submitProtocol() {
     }
 }
 
+async function submitEditProtocol() {
+    try {
+        const newInsemination = new Insemination({
+            bodyConditionScore: formEdit.value.bodyConditionScore,
+            heatQuality: formEdit.value.heatQuality,
+            observation: formEdit.value.observation,
+            others: formEdit.value.others,
+            bull: 1,
+            controlBovineId: 1,
+        });
+        isLoading.value = true;
+        id = formEdit.value.id;
+        protocolsHistory.value = await inseminationService.editInsemination(id, newInsemination);
+        showToast('success', 'Registro actualizado con éxito.');
+    } catch (error) {
+        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    } finally {
+        isLoading.value = false;
+    }
+}
+
 function toggleEdit() {
     isEditing.value = !isEditing.value;
     if (!isEditing.value) {
@@ -439,6 +556,12 @@ function submitFormAndCloseModal() {
     closeModalInsemination()
 }
 
+function submitEditFormAndCloseModal() {
+    submitEditProtocol();
+    closeEditInseminationModal();
+}
+
+
 function closeModalInsemination() {
     const modalElement = document.getElementById('protocolModal');
     const modalInstance = Modal.getInstance(modalElement);
@@ -447,6 +570,17 @@ function closeModalInsemination() {
 
 }
 
+function closeEditInseminationModal() {
+    const modalElement = document.getElementById('inseminationEditModal');
+    const modalInstance = Modal.getInstance(modalElement);
+    modalInstance.hide();
+}
+
+function closeTextViewerModal() {
+    const modalElement = document.getElementById('textViewerModal');
+    const modalInstance = Modal.getInstance(modalElement);
+    modalInstance.hide();
+}
 
 function resetForm() {
     form.value = {
