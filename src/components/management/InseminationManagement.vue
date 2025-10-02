@@ -200,13 +200,13 @@
                             <div class="form-group">
                                 <label for="cc" class="form-label"><i class="fas fa-percentage me-2"></i>Condición
                                     Corporal (CC)</label>
-                                <input v-model="form.bodyConditionScore" id="cc"  min="1" max="5" class="form-control"
+                                <input v-model="form.bodyConditionScore" id="cc" min="1" max="5" class="form-control"
                                     placeholder="1-5" required />
                             </div>
                             <div class="form-group">
                                 <label for="celo" class="form-label"><i class="fas fa-heartbeat me-2"></i>Celo</label>
                                 <select v-model="form.heatQuality" id="celo" class="form-control" required>
-                                    <option disabled value="">Seleccione la calidad de celo</option> 
+                                    <option disabled value="">Seleccione la calidad de celo</option>
                                     <option value="well">Bueno</option>
                                     <option value="Regular">Regular</option>
                                     <option value="bad">Malo</option>
@@ -225,7 +225,8 @@
                             </div>
 
                             <div class="modal-footer px-0 pb-0 pt-3">
-                                <button @click="closeModalInsemination()" type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <button @click="closeModalInsemination()" type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">
                                     <i class="fas fa-times me-2"></i>Cerrar
                                 </button>
                                 <button type="submit" class="btn btn-submit-modal" :disabled="!isFormValid">
@@ -408,11 +409,9 @@ async function submitProtocol() {
         isLoading.value = true;
         protocolsHistory.value = await inseminationService.createInsemination(newInsemination);
 
-        console.log('Nuevo Protocolo guardado con éxito.');
-
+        showToast('success', 'Registro guardado con éxito.');
     } catch (error) {
-        console.error('Error al crear inseminación:', error);
-        alert('Error al guardar el protocolo: ' + error.message);
+        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
     } finally {
         isLoading.value = false;
     }
@@ -437,11 +436,10 @@ function saveChanges() {
 
 function submitFormAndCloseModal() {
     submitProtocol();
-    showToast('success', 'Protocolo guardado con éxito.'); // <-- ¡Toast agregado aquí!
     closeModalInsemination()
 }
 
-function closeModalInsemination (){
+function closeModalInsemination() {
     const modalElement = document.getElementById('protocolModal');
     const modalInstance = Modal.getInstance(modalElement);
     modalInstance.hide();
