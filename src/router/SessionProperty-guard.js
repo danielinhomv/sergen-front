@@ -6,17 +6,18 @@ export function createSessionPropertyGuard(router) {
 
         const sessionPropertyStore = useSessionPropertyStore();
 
-        if (to.name === 'select-property' && !sessionPropertyStore.isWorked) {
-             return next({ 
-                name: 'select-property', 
-                replace: true 
-            }); 
-        }
        if (to.name === 'select-property' && sessionPropertyStore.isWorked) {
             return next({ 
                 name: 'dashboard', 
                 replace: true 
             }); 
+        }
+
+        if(!sessionPropertyStore.isWorked && to.name != "select-property"){
+            return next({ 
+                name: 'select-property', 
+                replace: true 
+            });
         }
         next();
     })

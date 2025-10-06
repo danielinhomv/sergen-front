@@ -120,7 +120,7 @@
 import PropertyService from '../services/management/PropertyService';
 import { ref, onMounted, computed } from 'vue';
 import { Modal } from 'bootstrap';
-import {useSessionPropertyStore } from '@/store/SessionProperty';
+import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { useNavigation } from '@/utils/navigation';
 
 export default {
@@ -138,13 +138,15 @@ export default {
       phone_number: '',
       user_id: 1
     });
+
     const nameExists = ref(false);
     // NUEVO: Para almacenar la propiedad a eliminar y controlar el modal
     const propertyToDelete = ref(null);
-        console.log(sessionPropertyStore.isWorked);
+    console.log(sessionPropertyStore.isWorked);
 
     // Referencia a la instancia del modal de eliminación para controlarlo
     let deleteModalInstance = null;
+
     const loadProperties = async () => {
       try {
         properties.value = await PropertyService.list();
@@ -163,9 +165,7 @@ export default {
 
         emit('start-work', propertyId);
 
-        setTimeout(() => {
-          replaceTo('dashboard');
-        }, 500);
+        replaceTo('dashboard');
 
       } catch (error) {
         console.error("Error al iniciar trabajo:", error);

@@ -8,9 +8,40 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const isWorking = ref(false);
     const propertyId = ref(null);
     const isWorked = computed(() => isWorking.value);
+    const isLoaded = ref(false);
     const getPropertyId = computed(() => propertyId.value);
     const PREFIX = '/management/property';
     const baseUrl = `${API_URL}${PREFIX}`;
+
+    async function fetchInitialWorkStatus(userId) {
+
+        try {
+            const response = await _sendRequestHttp('isWorked', userId, null);
+
+            if (response.ok) {
+                const data = await response.json();
+                const active = data.active;
+
+                if (active) {
+                    isWorking.value = true;
+                    propertyId.value = data.property_id
+                } else {
+                    isWorking.value = false;
+                    property_id.value = null;
+                    localStorage.removeItem('pinia-sessionProperty');
+                }
+            }
+
+        } catch (error) {
+            console.error("Error al cargar estado inicial del servidor:", error);
+            isWorking.value = false;
+            propertyId.value = null;
+            localStorage.removeItem('pinia-sessionProperty');
+        } finally {
+            isLoaded.value = true;
+        }
+
+    }
 
     async function _processResponse(response) {
         if (!response.ok) {
@@ -34,11 +65,13 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     }
 
     async function finishWork(selectedPropertyId, userId) {
+
         const response = await _sendRequestHttp('finish-work', userId, selectedPropertyId);
         await _processResponse(response);
-        isWorking.value = false;
 
+        isWorking.value = false;
     }
+
 
     async function _sendRequestHttp(valor, userId, selectedPropertyId) {
         try {
@@ -59,10 +92,21 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
     }
 
-    return { isWorked, getPropertyId, startWork, finishWork , isWorking , propertyId }
-},{ 
-    persist:
+    return {
+        isWorked,
+        getPropertyId,
+        startWork,
+        finishWork,
+        isWorking,
+        propertyId,
+        isLoaded,
+        fetchInitialWorkStatus
+    }
+},
     {
-    paths: ['isWorking', 'propertyId'] 
-    } 
-})
+        persist:
+        {
+            paths: ['isWorking', 'propertyId']
+        }
+    }
+)
