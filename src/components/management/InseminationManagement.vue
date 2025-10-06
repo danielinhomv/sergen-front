@@ -515,17 +515,17 @@ async function submitProtocol() {
 
 async function submitEditProtocol() {
     try {
-        const newInsemination = new Insemination({
-            bodyConditionScore: formEdit.value.bodyConditionScore,
-            heatQuality: formEdit.value.heatQuality,
-            observation: formEdit.value.observation,
-            others: formEdit.value.others,
-            bull: 1,
-            controlBovineId: 1,
-        });
+        // const newInsemination = new Insemination({
+        //     bodyConditionScore: formEdit.value.bodyConditionScore,
+        //     heatQuality: formEdit.value.heatQuality,
+        //     observation: formEdit.value.observation,
+        //     others: formEdit.value.others,
+        //     bull: 1,
+        //     controlBovineId: 1,
+        // });
         isLoading.value = true;
-        id = formEdit.value.id;
-        protocolsHistory.value = await inseminationService.editInsemination(id, newInsemination);
+        //id = formEdit.value.id;
+        //protocolsHistory.value = await inseminationService.editInsemination(id, newInsemination);
         showToast('success', 'Registro actualizado con éxito.');
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');

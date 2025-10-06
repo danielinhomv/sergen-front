@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { createSessionPropertyGuard } from './SessionProperty-guard.js'
 
 import DashboardApp from '../components/DashboardApp.vue';
 import Login from '../components/LoginApp.vue';
@@ -69,5 +70,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+createSessionPropertyGuard(router);
 
 export default router;

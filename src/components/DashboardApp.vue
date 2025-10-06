@@ -8,5 +8,12 @@
 
 <script setup>
 import LayoutApp from './LayoutApp.vue';
+import { useSessionPropertyStore } from '@/store/SessionProperty.js';
+    
+const sessionPropertyStore = useSessionPropertyStore();
+console.log("se inicio un trabajo correctamente !!")
+console.log("en la propiedad con el id:"+sessionPropertyStore.getPropertyId);
+console.log("en la propiedad con el id:"+sessionPropertyStore.isWorked);
+
 
 </script>

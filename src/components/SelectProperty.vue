@@ -36,7 +36,7 @@
         <p><i class="fas fa-phone text-success me-2"></i><strong>Teléfono:</strong> {{ prop.phone_number }}</p>
       </div>
       <div class="d-flex gap-2 w-100">
-        <button class="btn btn-success flex-fill" @click="startWork(prop)">
+        <button class="btn btn-success flex-fill" @click="startWork(prop.id)">
           <i class="fas fa-play-circle me-2"></i>Iniciar trabajo
         </button>
         <button class="btn btn-outline-danger flex-fill" @click="deleteProperty(prop)">
@@ -83,32 +83,33 @@
         </div>
       </div>
     </div>
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-danger shadow-red">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="deleteConfirmationModalLabel">
-                        <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p v-if="propertyToDelete">
-                        Estás a punto de eliminar la propiedad **{{ propertyToDelete.name }}**.
-                        <br>
-                        <strong class="text-danger">Esta acción es irreversible. ¿Confirmas la eliminación?</strong>
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i> Cancelar
-                    </button>
-                    <button type="button" class="btn btn-danger" @click="confirmDelete">
-                        <i class="fas fa-trash me-2"></i> Sí, Eliminar
-                    </button>
-                </div>
-            </div>
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger shadow-red">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="deleteConfirmationModalLabel">
+              <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p v-if="propertyToDelete">
+              Estás a punto de eliminar la propiedad **{{ propertyToDelete.name }}**.
+              <br>
+              <strong class="text-danger">Esta acción es irreversible. ¿Confirmas la eliminación?</strong>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-2"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" @click="confirmDelete">
+              <i class="fas fa-trash me-2"></i> Sí, Eliminar
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
   </div>
@@ -119,6 +120,7 @@
 import PropertyService from '../services/management/PropertyService';
 import { ref, onMounted, computed } from 'vue';
 import { Modal } from 'bootstrap';
+import {useSessionPropertyStore } from '@/store/SessionProperty';
 import { useNavigation } from '@/utils/navigation';
 
 export default {
@@ -126,6 +128,7 @@ export default {
   setup(_, { emit }) {
     const properties = ref([]);
     const loading = ref(false);
+    const sessionPropertyStore = useSessionPropertyStore();
     const { replaceTo } = useNavigation();
 
     const newProperty = ref({
@@ -136,9 +139,10 @@ export default {
       user_id: 1
     });
     const nameExists = ref(false);
-  // NUEVO: Para almacenar la propiedad a eliminar y controlar el modal
-    const propertyToDelete = ref(null); 
-    
+    // NUEVO: Para almacenar la propiedad a eliminar y controlar el modal
+    const propertyToDelete = ref(null);
+        console.log(sessionPropertyStore.isWorked);
+
     // Referencia a la instancia del modal de eliminación para controlarlo
     let deleteModalInstance = null;
     const loadProperties = async () => {
@@ -149,18 +153,29 @@ export default {
       }
     };
 
-    const startWork = (prop) => {
-      emit('start-work', prop);
+    const startWork = async (propertyId) => {
+
       loading.value = true;
-      setTimeout(() => {
-        replaceTo({ name: "dashboard" })
-      }, 5000);
-      //redirige a esta pantalla con este nombre dashboard
+
+      try {
+        console.log(sessionPropertyStore.isWorked);
+        await sessionPropertyStore.startWork(propertyId, 1);
+
+        emit('start-work', propertyId);
+
+        setTimeout(() => {
+          replaceTo('dashboard');
+        }, 500);
+
+      } catch (error) {
+        console.error("Error al iniciar trabajo:", error);
+        loading.value = false;
+      }
     };
 
     const openAddPropertyModal = () => {
       nameExists.value = false;
-      newProperty.value = { name: '', place: '', owner_name: '', phone_number: '' ,user_id:1};
+      newProperty.value = { name: '', place: '', owner_name: '', phone_number: '', user_id: 1 };
       const modal = new Modal(document.getElementById('createPropertyModal'));
       modal.show();
     };
@@ -195,7 +210,7 @@ export default {
     };
 
     const deleteProperty = async (prop) => {
-   propertyToDelete.value = prop;
+      propertyToDelete.value = prop;
       if (!deleteModalInstance) {
         // Inicializa la instancia de Bootstrap Modal la primera vez
         deleteModalInstance = new Modal(document.getElementById('deleteConfirmationModal'));
@@ -207,16 +222,16 @@ export default {
 
       try {
         await PropertyService.delete(propertyToDelete.value.id);
-        
+
         // Actualiza la lista
         properties.value = properties.value.filter(p => p.id !== propertyToDelete.value.id);
-        
+
         // Cierra el modal
         deleteModalInstance.hide();
-        
+
         console.log(`Propiedad "${propertyToDelete.value.name}" eliminada.`);
         propertyToDelete.value = null; // Limpia el estado
-        
+
       } catch (error) {
         console.error('Error eliminando propiedad:', error);
         alert('Hubo un error al intentar eliminar la propiedad.'); // Usa alerta si falla la API
@@ -243,8 +258,8 @@ export default {
       saveProperty,
       debouncedCheckName,
       isFormValid,
-      deleteProperty, 
-      confirmDelete, 
+      deleteProperty,
+      confirmDelete,
       loading
     };
   }
