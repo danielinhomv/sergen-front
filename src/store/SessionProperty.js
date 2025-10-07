@@ -12,13 +12,13 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const isLoaded = ref(false);
     const getPropertyId = computed(() => propertyId.value);
     const getProtocolId = computed(() => protocolId.value);
-    const PREFIX = '/management/property';
+    const PREFIX = '/management/';
     const baseUrl = `${API_URL}${PREFIX}`;
 
     async function fetchInitialWorkStatus(userId) {
 
         try {
-            const response = await _sendRequestHttp('isWorked', userId, null);
+            const response = await _sendRequestHttp('property/isWorked', userId, null);
 
             if (response.ok) {
                 const data = await response.json();
@@ -58,7 +58,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     async function startWork(selectedPropertyId, userId) {
 
 
-        const response = await _sendRequestHttp('start-work', userId, selectedPropertyId);
+        const response = await _sendRequestHttp('property/start-work', userId, selectedPropertyId);
         const dataProcesed = await _processResponse(response);
 
         const dataProcesedCurrentSession = dataProcesed.current_session;
@@ -71,17 +71,24 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
     async function finishWork(selectedPropertyId, userId) {
 
-        const response = await _sendRequestHttp('finish-work', userId, selectedPropertyId);
+        const response = await _sendRequestHttp('property/finish-work', userId, selectedPropertyId);
         await _processResponse(response);
 
         isWorking.value = false;
-        
+
+    }
+
+    async function startNewProtocol() {
+        const response = await _sendRequestHttp('protocol/start', null, propertyId.value);
+        const dataProcesed = await _processResponse(response);
+        const protocol = dataProcesed.protocolo;
+        protocolId.value = protocol.id;
     }
 
 
     async function _sendRequestHttp(valor, userId, selectedPropertyId) {
         try {
-            const response = await fetch(`${baseUrl}/${valor}`, {
+            const response = await fetch(`${baseUrl}${valor}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -108,13 +115,14 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         isWorking,
         propertyId,
         isLoaded,
-        fetchInitialWorkStatus
+        fetchInitialWorkStatus,
+        startNewProtocol
     }
 },
     {
         persist:
         {
-            paths: ['isWorking', 'propertyId']
+            paths: ['isWorking', 'propertyId', 'protocolId']
         }
     }
 )

@@ -1,5 +1,26 @@
 <template>
   <LayoutApp>
+
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-3 text-success">Iniciando nuevo protocolo</p>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+      <div id="liveToast" class="toast align-items-center w-100" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div id="toast-icon" class="toast-body me-2">
+          </div>
+          <div id="toast-message" class="toast-body flex-grow-1">
+          </div>
+          <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
+            aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
     <div class="container py-4" style="background-color: #eafaf1; min-height: 100vh;">
       <div class="row mb-4 align-items-center">
         <div class="col-md-6">
@@ -51,6 +72,16 @@
 import { computed, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import LayoutApp from '../LayoutApp.vue';
+import { useSessionPropertyStore } from '@/store/SessionProperty';
+import { Toast } from 'bootstrap';
+
+
+const loading = ref(false);
+const showConfirmation = ref(false);
+const router = useRouter();
+const route = useRoute();
+const currentRouteName = computed(() => route.name);
+const sessionPropertyStore = useSessionPropertyStore();
 
 const etapas = [
   'Presincronización',
@@ -72,12 +103,6 @@ const etapaRoutes = {
   'Presincronización': 'presynchronization-management'
 };
 
-const showConfirmation = ref(false);
-
-const router = useRouter();
-const route = useRoute();
-
-const currentRouteName = computed(() => route.name);
 
 function goTomanagement(routeName) {
   router.push({ name: routeName });
@@ -96,11 +121,48 @@ function confirmNewProtocol() {
   showConfirmation.value = true;
 }
 
-function startNewProtocol() {
+async function startNewProtocol() {
   showConfirmation.value = false;
-  // Lógica para iniciar un nuevo protocolo, por ejemplo, limpiar el estado o navegar a una nueva página.
-  console.log('Nuevo protocolo iniciado. Datos anteriores eliminados.');
+  loading.value = true;
+  try {
+    await sessionPropertyStore.startNewProtocol();
+    loading.value = false;
+    showToast('success', 'Se ha iniciado un nuevo protocolo!!');
+  } catch (error) {
+    loading.value = false;
+    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+
+  }
 }
+
+function showToast(type, message) {
+  const toastEl = document.getElementById('liveToast');
+  const toastMessage = document.getElementById('toast-message');
+  const toastIcon = document.getElementById('toast-icon');
+
+
+  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
+
+  let iconHtml = '';
+
+  if (type === 'success') {
+    toastEl.classList.add('text-bg-success');
+    iconHtml = '<i class="fas fa-check-circle fs-5"></i>';
+  } else if (type === 'error') {
+    toastEl.classList.add('text-bg-danger');
+    iconHtml = '<i class="fas fa-times-circle fs-5"></i>';
+  } else if (type === 'warning') {
+    toastEl.classList.add('text-bg-warning');
+    iconHtml = '<i class="fas fa-exclamation-triangle fs-5"></i>';
+  }
+
+  toastMessage.textContent = message;
+  toastIcon.innerHTML = iconHtml;
+
+  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
+  toast.show();
+}
+
 </script>
 
 <style scoped>
@@ -127,5 +189,19 @@ body {
   padding: 2.5rem;
   border-radius: 1rem;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
 }
 </style>
