@@ -60,7 +60,12 @@
             <form @submit.prevent="saveProperty">
               <div class="mb-3">
                 <label class="form-label"><i class="fas fa-signature me-2 text-success"></i>Nombre</label>
-                <input type="text" class="form-control" v-model="newProperty.name" @input="debouncedCheckName">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  v-model.trim="newProperty.name" 
+                  @input="debouncedCheckName"
+                >
                 <div v-if="nameExists" class="form-text text-danger">El nombre ya existe</div>
               </div>
               <div class="mb-3">
@@ -83,6 +88,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de confirmación de eliminación -->
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel"
       aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -95,9 +102,8 @@
           </div>
           <div class="modal-body">
             <p v-if="propertyToDelete">
-              Estás a punto de eliminar la propiedad **{{ propertyToDelete.name }}**.
-              <br>
-              <strong class="text-danger">Esta acción es irreversible. ¿Confirmas la eliminación?</strong>
+              Estás a punto de eliminar la propiedad <strong class="text-danger">{{ propertyToDelete.name }}</strong>.
+              <br>Esta acción es irreversible. ¿Confirmas la eliminación?
             </p>
           </div>
           <div class="modal-footer">
@@ -114,7 +120,6 @@
 
   </div>
 </template>
-
 
 <script>
 import PropertyService from '../services/management/PropertyService';
@@ -140,12 +145,9 @@ export default {
     });
 
     const nameExists = ref(false);
-    // NUEVO: Para almacenar la propiedad a eliminar y controlar el modal
     const propertyToDelete = ref(null);
-    console.log(sessionPropertyStore.isWorked);
-
-    // Referencia a la instancia del modal de eliminación para controlarlo
     let deleteModalInstance = null;
+    let debounceTimeout = null;
 
     const loadProperties = async () => {
       try {
@@ -156,17 +158,11 @@ export default {
     };
 
     const startWork = async (propertyId) => {
-
       loading.value = true;
-
       try {
-        console.log(sessionPropertyStore.isWorked);
         await sessionPropertyStore.startWork(propertyId, 1);
-
         emit('start-work', propertyId);
-
         replaceTo('dashboard');
-
       } catch (error) {
         console.error("Error al iniciar trabajo:", error);
         loading.value = false;
@@ -180,25 +176,20 @@ export default {
       modal.show();
     };
 
-    let debounceTimeout;
+    // Verificación local de duplicado (no backend)
     const debouncedCheckName = () => {
       clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(checkNameExists, 400);
-    };
-
-    const checkNameExists = async () => {
-      if (!newProperty.value.name) return;
-      try {
-        nameExists.value = await PropertyService.nameExists(newProperty.value.name);
-      } catch (error) {
-        console.error('Error verificando nombre:', error);
-      }
+      debounceTimeout = setTimeout(() => {
+        const exists = properties.value.some(
+          p => p.name.trim().toLowerCase() === newProperty.value.name.trim().toLowerCase()
+        );
+        nameExists.value = exists;
+      }, 400);
     };
 
     const saveProperty = async () => {
       if (!isFormValid.value) return;
       try {
-        console.log(newProperty.value);
         const created = await PropertyService.create(newProperty.value);
         properties.value.push(created);
         const modalEl = document.getElementById('createPropertyModal');
@@ -212,39 +203,32 @@ export default {
     const deleteProperty = async (prop) => {
       propertyToDelete.value = prop;
       if (!deleteModalInstance) {
-        // Inicializa la instancia de Bootstrap Modal la primera vez
         deleteModalInstance = new Modal(document.getElementById('deleteConfirmationModal'));
       }
       deleteModalInstance.show();
     };
+
     const confirmDelete = async () => {
       if (!propertyToDelete.value) return;
-
       try {
         await PropertyService.delete(propertyToDelete.value.id);
-
-        // Actualiza la lista
         properties.value = properties.value.filter(p => p.id !== propertyToDelete.value.id);
-
-        // Cierra el modal
         deleteModalInstance.hide();
-
-        console.log(`Propiedad "${propertyToDelete.value.name}" eliminada.`);
-        propertyToDelete.value = null; // Limpia el estado
-
+        propertyToDelete.value = null;
       } catch (error) {
         console.error('Error eliminando propiedad:', error);
-        alert('Hubo un error al intentar eliminar la propiedad.'); // Usa alerta si falla la API
+        alert('Hubo un error al intentar eliminar la propiedad.');
       }
     };
 
-
     const isFormValid = computed(() => {
-      return newProperty.value.name &&
+      return (
+        newProperty.value.name &&
         newProperty.value.place &&
         newProperty.value.owner_name &&
         newProperty.value.phone_number &&
-        !nameExists.value;
+        !nameExists.value
+      );
     });
 
     onMounted(loadProperties);

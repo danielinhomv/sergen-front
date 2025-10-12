@@ -37,8 +37,8 @@ export class BovineService {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body:JSON.stringify({
-                    "property_id":$propertyId
+                body: JSON.stringify({
+                    "property_id": $propertyId
                 })
             });
             return await this._processResponse(response);
@@ -76,8 +76,11 @@ export class BovineService {
         try {
             const response = await fetch(`${this.baseUrl}/update`, {
                 method: 'POST',
-                //headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bovine.toJson()),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...bovine.toJson(),
+                    id: bovine.id
+                }),
             });
             return await this._processResponse(response);
         } catch (error) {
@@ -95,8 +98,12 @@ export class BovineService {
         try {
             const response = await fetch(`${this.baseUrl}/delete`, {
                 method: 'POST',
-                //headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(
+                    {
+                        "id": id
+                    }
+                ),
             });
             return await this._processResponse(response);
         } catch (error) {

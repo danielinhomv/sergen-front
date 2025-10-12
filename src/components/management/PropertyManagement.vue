@@ -9,65 +9,105 @@
         <p class="mt-3 text-success">Finalizando trabajo en la propiedad</p>
       </div>
 
-      <div class="modal fade" id="bovineModal" tabindex="-1" aria-labelledby="bovineModalLabel">
-        <div class="modal-dialog">
-          <div class="modal-header">
-            <h3 class="modal-title">{{ isEditing ? 'Editar Registro' : 'Nuevo Registro de Animal' }}</h3>
-            <button @click="closeModalBovine()" class="btn-close" aria-label="close"></button>
+      <div class="modal fade" id="bovineModal" tabindex="-1" aria-labelledby="bovineModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content modal-green-border">
+            <!-- Header -->
+            <div class="modal-header">
+              <h3 class="modal-title section-title-modal">
+                {{ isEditing ? 'Editar Registro' : 'Nuevo Registro de Animal' }}
+              </h3>
+              <button @click="closeModalBovine()" class="btn-close" aria-label="close"></button>
+            </div>
+
+            <!-- Formulario -->
+            <form @submit.prevent="isEditing ? updateBovine() : addBovine()">
+              <div class="modal-body row">
+                <!-- Serie -->
+                <div class="col-md-6 form-group">
+                  <label for="serie" class="form-label">
+                    <i class="fas fa-barcode me-2"></i>Serie
+                  </label>
+                  <input v-model.trim="newBovineForm.serie" id="serie" type="text" class="form-control"
+                    :class="{ 'is-invalid': duplicateSerie }" required />
+                  <div v-if="duplicateSerie" class="invalid-feedback">
+                    Esta serie ya existe en el registro.
+                  </div>
+                </div>
+
+                <!-- RGD -->
+                <div class="col-md-6 form-group">
+                  <label for="rgd" class="form-label">
+                    <i class="fas fa-id-card me-2"></i>RGD
+                  </label>
+                  <input v-model.trim="newBovineForm.rgd" id="rgd" type="text" class="form-control"
+                    :class="{ 'is-invalid': duplicateRgd }" required />
+                  <div v-if="duplicateRgd" class="invalid-feedback">
+                    Este RGD ya existe en el registro.
+                  </div>
+                </div>
+
+                <!-- Sexo -->
+                <div class="col-md-6 form-group">
+                  <label for="sex" class="form-label">
+                    <i class="fas fa-venus-mars me-2"></i>Sexo
+                  </label>
+                  <select v-model="newBovineForm.sex" id="sex" class="form-control" required>
+                    <option value="male">Macho</option>
+                    <option value="female">Hembra</option>
+                  </select>
+                </div>
+
+                <!-- Peso -->
+                <div class="col-md-6 form-group">
+                  <label for="weight" class="form-label">
+                    <i class="fas fa-weight-hanging me-2"></i>Peso (kg)
+                  </label>
+                  <input v-model.number="newBovineForm.weight" id="weight" type="number" step="0.1" class="form-control"
+                    required />
+                </div>
+
+                <!-- Fecha Nacimiento -->
+                <div class="col-md-6 form-group">
+                  <label for="birthdate" class="form-label">
+                    <i class="fas fa-birthday-cake me-2"></i>Fecha de Nacimiento
+                  </label>
+                  <input v-model="newBovineForm.birthdate" id="birthdate" type="date" class="form-control" required />
+                </div>
+
+                <!-- Madre -->
+                <div class="col-md-6 form-group">
+                  <label for="mother_id" class="form-label">
+                    <i class="fas fa-child me-2"></i>Madre (RGD)
+                  </label>
+                  <select v-model.number="newBovineForm.mother_id" id="mother_id" class="form-control">
+                    <option :value="null">Ninguna</option>
+                    <option v-for="bovine in femaleBovines" :key="bovine.id" :value="bovine.id">
+                      {{ bovine.rgd }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div class="modal-footer d-grid">
+                <button type="submit" class="btn btn-update btn-create" :disabled="!formIsValid">
+                  <i :class="isEditing ? 'fas fa-save me-2' : 'fas fa-plus me-2'"></i>
+                  {{ isEditing ? 'Guardar Cambios' : 'Crear Registro' }}
+                </button>
+              </div>
+            </form>
           </div>
-          <form @submit.prevent="isEditing ? updateBovine() : addBovine()">
-            <div class="modal-body row">
-              <div class="col-md-6 form-group">
-                <label for="serie" class="form-label"><i class="fas fa-barcode me-2"></i>Serie</label>
-                <input v-model="newBovineForm.serie" id="serie" type="text" class="form-control" required />
-              </div>
-              <div class="col-md-6 form-group">
-                <label for="rgd" class="form-label"><i class="fas fa-id-card me-2"></i>RGD</label>
-                <input v-model="newBovineForm.rgd" id="rgd" type="text" class="form-control" required />
-              </div>
-              <div class="col-md-6 form-group">
-                <label for="sex" class="form-label"><i class="fas fa-venus-mars me-2"></i>Sexo</label>
-                <select v-model="newBovineForm.sex" id="sex" class="form-control" required>
-                  <option value="male">Macho</option>
-                  <option value="female">Hembra</option>
-                </select>
-              </div>
-              <div class="col-md-6 form-group">
-                <label for="weight" class="form-label"><i class="fas fa-weight-hanging me-2"></i>Peso (kg)</label>
-                <input v-model.number="newBovineForm.weight" id="weight" type="number" step="0.1" class="form-control"
-                  required />
-              </div>
-              <div class="col-md-6 form-group">
-                <label for="birthdate" class="form-label"><i class="fas fa-birthday-cake me-2"></i>Fecha de
-                  Nacimiento</label>
-                <input v-model="newBovineForm.birthdate" id="birthdate" type="date" class="form-control" required />
-              </div>
-              <div class="col-md-6 form-group">
-                <label for="mother_id" class="form-label"><i class="fas fa-child me-2"></i>Madre (RGD)</label>
-                <select v-model.number="newBovineForm.mother_id" id="mother_id" class="form-control">
-                  <option :value="null">Ninguna</option>
-                  <option v-for="bovine in femaleBovines" :key="bovine.id" :value="bovine.id">
-                    {{ bovine.rgd }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="modal-footer d-grid">
-              <button type="submit" class="btn btn-update btn-create">
-                <i :class="isEditing ? 'fas fa-save me-2' : 'fas fa-plus me-2'"></i>
-                {{ isEditing ? 'Guardar Cambios' : 'Crear Registro' }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
+
 
       <div class="account-card mb-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h2 class="account-title m-0">Protocolo de la Propiedad</h2>
           <div class="d-flex align-items-center">
             <button @click="toggleEditMode" class="btn btn-edit-property me-2">
-              <i :class="isEditing ? 'fas fa-times-circle' : 'fas fa-edit'"></i>
+              <i :class="isEditingProperty ? 'fas fa-times-circle' : 'fas fa-edit'"></i>
             </button>
             <button @click="openModalConfirmation" class="btn btn-close-property">
               <i class="fas fa-sign-out-alt me-2"></i>Cerrar Propiedad
@@ -75,7 +115,7 @@
           </div>
         </div>
         <div class="info-list">
-          <div v-if="!isEditing">
+          <div v-if="!isEditingProperty">
             <div>
               <i class="fas fa-building me-2 text-primary"></i>
               <span class="font-weight-bold me-2">Nombre de la propiedad:</span>
@@ -189,12 +229,12 @@
       </div>
     </div>
 
-    <div v-if="openConfirmationModal" class="confirmation-overlay ">
+    <div v-if="openConfirmationPropertyModal" class="confirmation-overlay ">
       <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
         <p class="mb-4">¿Estás seguro de que quieres finalizar el trabajo en esta propiedad?</p>
         <div class="d-flex justify-content-center gap-3">
           <button class="btn btn-success" @click="closeProperty()">Sí, continuar</button>
-          <button class="btn btn-outline-danger" @click="openConfirmationModal = false">Cancelar</button>
+          <button class="btn btn-outline-danger" @click="openConfirmationPropertyModal = false">Cancelar</button>
         </div>
       </div>
     </div>
@@ -226,7 +266,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import LayoutApp from '../LayoutApp.vue';
 import { useNavigation } from '@/utils/navigation';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
@@ -243,7 +283,7 @@ const { replaceTo } = useNavigation();
 const isEditing = ref(false);
 const isEditingProperty = ref(false);
 const confirmationDeleteModal = ref(false);
-const openConfirmationModal = ref(false);
+const openConfirmationPropertyModal = ref(false);
 const isLoading = ref(true);
 const bovines = ref([]);
 
@@ -255,6 +295,11 @@ const property = ref({
   owner_name: 'Juan Pérez',
 });
 const editableProperty = ref({ ...property.value });
+
+//validaciones de campos duplicados
+const duplicateSerie = ref(false);
+const duplicateRgd = ref(false);
+
 
 const hasChanges = computed(() => {
   return editableProperty.value.name !== property.value.name ||
@@ -270,8 +315,13 @@ const isFormValid = computed(() => {
     editableProperty.value.owner_name;
 });
 
+// === CARGA INICIAL === //
+onMounted(() => {
+  fetchBovines();
+});
+
 function toggleEditMode() {
-  isEditingProperty.value = !isEditing.value;
+  isEditingProperty.value = !isEditingProperty.value;
   if (isEditing.value) {
     editableProperty.value = { ...property.value };
   }
@@ -296,6 +346,51 @@ const newBovineForm = ref({
   mother_id: null,
   property_id: sessionPropertyStore.getPropertyId,
 
+});
+
+//Validación dinámica local
+watch(
+  () => newBovineForm.value.serie,
+  (newVal) => {
+    if (!newVal) {
+      duplicateSerie.value = false;
+      return;
+    }
+    duplicateSerie.value = bovines.value.some(
+      (b) =>
+        b.serie?.toLowerCase() === newVal.toLowerCase() &&
+        (!isEditing.value || b.id !== newBovineForm.value.id)
+    );
+  }
+);
+
+watch(
+  () => newBovineForm.value.rgd,
+  (newVal) => {
+    if (!newVal) {
+      duplicateRgd.value = false;
+      return;
+    }
+    duplicateRgd.value = bovines.value.some(
+      (b) =>
+        b.rgd?.toLowerCase() === newVal.toLowerCase() &&
+        (!isEditing.value || b.id !== newBovineForm.value.id)
+    );
+  }
+);
+
+// --- Computed para habilitar/deshabilitar el botón de guardar o crear
+const formIsValid = computed(() => {
+  const f = newBovineForm.value;
+  return (
+    f.serie &&
+    f.rgd &&
+    f.sex &&
+    f.weight &&
+    f.birthdate &&
+    !duplicateSerie.value &&
+    !duplicateRgd.value
+  );
 });
 
 async function fetchBovines() {
@@ -366,20 +461,22 @@ async function deleteBovine() {
     showToast('success', 'Bovino eliminado con éxito.');
   } catch (error) {
     console.error('Error al eliminar bovino:', error);
-    showToast('error', 'Ocurrió un error al eliminar el bovino.');
+    showToast('error', 'Ocurrió un error , intentalo mas tarde');
   } finally {
     isLoading.value = false;
+    confirmationDeleteModal.value = false;
   }
 }
 
 // === MODALES === //
 function openModalConfirmation() {
-  openConfirmationModal.value = true;
+  openConfirmationPropertyModal.value = true;
 }
 
-function openConfirmationDeleteModal($id){
+function openConfirmationDeleteModal(id) {
   confirmationDeleteModal.value = true;
-  bovineId=$id;
+  bovineId = id;
+  console.log("id del bovino a eliminar:" + id);
 }
 
 function openAddBovineModal() {
@@ -468,10 +565,7 @@ function showToast(type, message) {
 
 const femaleBovines = computed(() => bovines.value.filter(b => b.sex === 'female'));
 
-// === CARGA INICIAL === //
-onMounted(() => {
-  fetchBovines();
-});
+
 
 // === Mantiene la función original sin cambios === //
 async function closeProperty() {
@@ -482,8 +576,8 @@ async function closeProperty() {
     replaceTo({ name: "select-property" });
   } catch (error) {
     isLoading.value = false;
-    console.log("ocurrio un error , no se pudo cerrar la propiedad");
-    console.log(error);
+    openConfirmationPropertyModal.value = false;
+    showToast('error', 'Ocurrió un error , intentalo mas tarde');
   }
 }
 </script>
@@ -686,14 +780,19 @@ async function closeProperty() {
   align-items: center;
 }
 
-.modal-dialog {
-  background: #fff;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  /* Ajuste para móviles */
-  max-width: 700px;
+.modal-green-border {
+  border: 3px solid #66bb6a;
+  /* Borde verde claro */
+}
+
+.section-title-modal {
+  color: #1b5e20;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.modal-content {
+  border-radius: 16px;
 }
 
 .modal-header {
@@ -715,6 +814,8 @@ async function closeProperty() {
   color: #999;
   cursor: pointer;
 }
+
+
 
 /* Estilo para la nueva alerta de advertencia */
 .alert-warning-custom {
