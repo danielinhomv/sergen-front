@@ -1,5 +1,4 @@
 import { Insemination } from '@/model/management/Insemination';
-
 import { API_URL } from '@/environment/Api';
 
 const PREFIX = '/management/insemination'

@@ -1,28 +1,21 @@
 <template>
   <LayoutApp>
     <div class="account-container">
-      
-      <div v-if="loading" class="loading-overlay">
+
+      <div v-if="isLoading" class="loading-overlay">
         <div class="spinner-border text-success" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
         <p class="mt-3 text-success">Finalizando trabajo en la propiedad</p>
       </div>
 
-      <div v-if="showAddBovineModal" class="modal-overlay">
+      <div class="modal fade" id="bovineModal" tabindex="-1" aria-labelledby="bovineModalLabel">
         <div class="modal-dialog">
           <div class="modal-header">
-            <h3 class="modal-title">Nuevo Registro de Animal</h3>
-            <button @click="showAddBovineModal = false" class="close-btn">
-              <i class="fas fa-times"></i>
-            </button>
+            <h3 class="modal-title">{{ isEditing ? 'Editar Registro' : 'Nuevo Registro de Animal' }}</h3>
+            <button @click="closeModalBovine()" class="btn-close" aria-label="close"></button>
           </div>
-          <form @submit.prevent="addBovine">
-            <div class="alert-warning-custom mb-4">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              ⚠️ Atención: Si ya existe un animal con la misma Serie o RGD, su registro anterior será reemplazado
-              por este nuevo.
-            </div>
+          <form @submit.prevent="isEditing ? updateBovine() : addBovine()">
             <div class="modal-body row">
               <div class="col-md-6 form-group">
                 <label for="serie" class="form-label"><i class="fas fa-barcode me-2"></i>Serie</label>
@@ -53,13 +46,16 @@
                 <label for="mother_id" class="form-label"><i class="fas fa-child me-2"></i>Madre (RGD)</label>
                 <select v-model.number="newBovineForm.mother_id" id="mother_id" class="form-control">
                   <option :value="null">Ninguna</option>
-                  <option v-for="bovine in femaleBovines" :key="bovine.id" :value="bovine.id">{{ bovine.rgd }}</option>
+                  <option v-for="bovine in femaleBovines" :key="bovine.id" :value="bovine.id">
+                    {{ bovine.rgd }}
+                  </option>
                 </select>
               </div>
             </div>
             <div class="modal-footer d-grid">
               <button type="submit" class="btn btn-update btn-create">
-                <i class="fas fa-plus me-2"></i>Crear Registro
+                <i :class="isEditing ? 'fas fa-save me-2' : 'fas fa-plus me-2'"></i>
+                {{ isEditing ? 'Guardar Cambios' : 'Crear Registro' }}
               </button>
             </div>
           </form>
@@ -73,12 +69,11 @@
             <button @click="toggleEditMode" class="btn btn-edit-property me-2">
               <i :class="isEditing ? 'fas fa-times-circle' : 'fas fa-edit'"></i>
             </button>
-            <button @click="openModalConfirmation()" class="btn btn-close-property">
+            <button @click="openModalConfirmation" class="btn btn-close-property">
               <i class="fas fa-sign-out-alt me-2"></i>Cerrar Propiedad
             </button>
           </div>
         </div>
-
         <div class="info-list">
           <div v-if="!isEditing">
             <div>
@@ -130,75 +125,99 @@
       </div>
 
       <div class="account-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
           <h2 class="account-title m-0">Lista de Animales</h2>
-          <div class="d-flex align-items-center">
-
-            <button @click="openAddBovineModal" class="btn btn-primary me-2">
-
-              <i class="fas fa-plus me-2"></i>Nuevo Registro
-
+          <div class="d-flex align-items-center mt-2 mt-md-0">
+            <input v-model="searchTerm" type="text" class="form-control me-2" placeholder="Buscar por Serie o RGD" />
+            <button @click="openAddBovineModal" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Nuevo
             </button>
-
-
           </div>
         </div>
-
         <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Serie</th>
-                <th>RGD</th>
-                <th>Sexo</th>
-                <th>Peso</th>
-                <th>Nacimiento</th>
-                <th>Edad</th>
-                <th>Madre</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="bovine in paginatedBovines" :key="bovine.id">
-                <td>{{ bovine.serie }}</td>
-                <td>{{ bovine.rgd }}</td>
-                <td>{{ bovine.sex }}</td>
-                <td>{{ bovine.weight }} kg</td>
-                <td>{{ bovine.birthdate }}</td>
-                <td>{{ calculateAge(bovine.birthdate) }} años</td>
-                <td>
-                  <span v-if="bovine.mother_id" class="text-muted">{{ getMotherRGD(bovine.mother_id) }}</span>
-                  <span v-else class="text-muted">N/A</span>
-                </td>
-              </tr>
-              <tr v-if="!paginatedBovines.length">
-                <td colspan="7" class="text-center text-muted py-4">No hay registros de animales en esta página.</td>
-              </tr>
-            </tbody>
-          </table>
+          <!-- Contenedor con Scroll Vertical -->
+          <div class="table-scroll-body">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Serie</th>
+                  <th>RGD</th>
+                  <th>Sexo</th>
+                  <th>Peso</th>
+                  <th>Nacimiento</th>
+                  <th>Edad</th>
+                  <th>Madre</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="bovine in bovines" :key="bovine.id">
+                  <td>{{ bovine.serie }}</td>
+                  <td>{{ bovine.rgd }}</td>
+                  <td>{{ bovine.sex === 'male' ? 'Macho' : 'Hembra' }}</td>
+                  <td>{{ bovine.weight }} kg</td>
+                  <td>{{ bovine.birthdate }}</td>
+                  <td>{{ calculateAge(bovine.birthdate) }} años</td>
+                  <td>
+                    <span v-if="bovine.mother_id" class="text-muted">{{ getMotherRGD(bovine.mother_id) }}</span>
+                    <span v-else class="text-muted">N/A</span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <button @click="openEditBovineModal(bovine)" class="btn btn-sm btn-edit-property" title="Editar">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button @click="openConfirmationDeleteModal(bovine.id)" class="btn btn-sm text-danger"
+                        title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                      <!-- Botón de Historial (Verde Naturaleza) -->
+                      <button @click="viewHistory(bovine.id)" class="btn btn-sm btn-success"
+                        title="Ver Historial de Procesos">
+                        <i class="fas fa-history"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!bovines.length">
+                  <td colspan="8" class="text-center text-muted py-4">No hay registros de animales que coincidan.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        <nav aria-label="Paginación de registros" class="mt-4 d-flex justify-content-center">
-          <ul class="pagination">
-            <li class="page-item" :class="{ 'disabled': currentPage === 1 }">
-              <button @click="currentPage--" class="page-link">Anterior</button>
-            </li>
-            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ 'active': currentPage === page }">
-              <button @click="currentPage = page" class="page-link">{{ page }}</button>
-            </li>
-            <li class="page-item" :class="{ 'disabled': currentPage === totalPages }">
-              <button @click="currentPage++" class="page-link">Siguiente</button>
-            </li>
-          </ul>
-        </nav>
       </div>
     </div>
 
-    <div v-if="showConfirmation" class="confirmation-overlay">
+    <div v-if="openConfirmationModal" class="confirmation-overlay ">
       <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
         <p class="mb-4">¿Estás seguro de que quieres finalizar el trabajo en esta propiedad?</p>
         <div class="d-flex justify-content-center gap-3">
           <button class="btn btn-success" @click="closeProperty()">Sí, continuar</button>
-          <button class="btn btn-outline-danger" @click="showConfirmation = false">Cancelar</button>
+          <button class="btn btn-outline-danger" @click="openConfirmationModal = false">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="confirmationDeleteModal" class="confirmation-overlay ">
+      <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
+        <p class="mb-4">¿Estás seguro de que quieres finalizar el trabajo en esta propiedad?</p>
+        <div class="d-flex justify-content-center gap-3">
+          <button class="btn btn-success" @click="deleteBovine()">Sí, continuar</button>
+          <button class="btn btn-outline-danger" @click="confirmationDeleteModal = false">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+      <div id="liveToast" class="toast align-items-center w-100" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div id="toast-icon" class="toast-body me-2">
+          </div>
+          <div id="toast-message" class="toast-body flex-grow-1">
+          </div>
+          <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
+            aria-label="Close"></button>
         </div>
       </div>
     </div>
@@ -207,38 +226,35 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import LayoutApp from '../LayoutApp.vue';
 import { useNavigation } from '@/utils/navigation';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
+import { Modal, Toast } from 'bootstrap';
+import { BovineService } from '@/services/management/BovineService';
+import { Bovine } from '@/model/management/Bovine';
 
-// Data Mock
-const initialProperty = {
+const bovineService = new BovineService();
+let bovineId = null;
+const sessionPropertyStore = useSessionPropertyStore();
+const { replaceTo } = useNavigation();
+
+// Estado general
+const isEditing = ref(false);
+const isEditingProperty = ref(false);
+const confirmationDeleteModal = ref(false);
+const openConfirmationModal = ref(false);
+const isLoading = ref(true);
+const bovines = ref([]);
+
+// Propiedad
+const property = ref({
   name: 'Finca El Paraíso',
   place: 'Santa Cruz, Bolivia',
   phone_number: '591-77889900',
   owner_name: 'Juan Pérez',
-};
-
-const sessionPropertyStore = useSessionPropertyStore();
-const { replaceTo } = useNavigation();
-const showConfirmation = ref(false);
-const loading = ref(false);
-
-const mockBovines = ref([
-  { id: 1, serie: 'A123', rgd: 'S1-456', sex: 'female', weight: 450.5, birthdate: '2022-01-15', mother_id: null },
-  { id: 2, serie: 'A124', rgd: 'S1-457', sex: 'female', weight: 480.0, birthdate: '2022-02-20', mother_id: 1 },
-  { id: 3, serie: 'A125', rgd: 'S1-458', sex: 'male', weight: 510.3, birthdate: '2022-03-10', mother_id: 1 },
-  { id: 4, serie: 'A126', rgd: 'S1-459', sex: 'female', weight: 460.1, birthdate: '2022-04-05', mother_id: 2 },
-  { id: 5, serie: 'A127', rgd: 'S1-460', sex: 'male', weight: 490.5, birthdate: '2022-05-18', mother_id: 2 },
-  { id: 6, serie: 'A128', rgd: 'S1-461', sex: 'female', weight: 470.0, birthdate: '2022-06-25', mother_id: 4 },
-  { id: 7, serie: 'A129', rgd: 'S1-462', sex: 'male', weight: 505.3, birthdate: '2022-07-01', mother_id: 4 },
-]);
-
-// Estado de la Propiedad
-const property = ref({ ...initialProperty });
-const editableProperty = ref({ ...initialProperty });
-const isEditing = ref(false);
+});
+const editableProperty = ref({ ...property.value });
 
 const hasChanges = computed(() => {
   return editableProperty.value.name !== property.value.name ||
@@ -248,11 +264,14 @@ const hasChanges = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return editableProperty.value.name && editableProperty.value.place && editableProperty.value.phone_number && editableProperty.value.owner_name;
+  return editableProperty.value.name &&
+    editableProperty.value.place &&
+    editableProperty.value.phone_number &&
+    editableProperty.value.owner_name;
 });
 
 function toggleEditMode() {
-  isEditing.value = !isEditing.value;
+  isEditingProperty.value = !isEditing.value;
   if (isEditing.value) {
     editableProperty.value = { ...property.value };
   }
@@ -266,15 +285,8 @@ function saveChanges() {
   }
 }
 
-// Estado de los Animales
-const bovines = ref(mockBovines.value);
+// === FUNCIONES DE BOVINOS === //
 
-// Estado de paginación
-const currentPage = ref(1);
-const pageSize = 5;
-
-// Estado del Modal
-const showAddBovineModal = ref(false);
 const newBovineForm = ref({
   serie: '',
   rgd: '',
@@ -282,40 +294,140 @@ const newBovineForm = ref({
   weight: null,
   birthdate: '',
   mother_id: null,
+  property_id: sessionPropertyStore.getPropertyId,
+
 });
 
-function openModalConfirmation() {
-  console.log("abriendo modal");
-  showConfirmation.value = true;
-}
-
-async function closeProperty() {
-  console.log('Redireccionando a la ruta "select-property"');
-  loading.value = true;
+async function fetchBovines() {
   try {
-    await sessionPropertyStore.finishWork(sessionPropertyStore.getPropertyId, 1);
-
-    replaceTo({ name: "select-property" })
-
+    isLoading.value = true;
+    bovines.value = await bovineService.listBovines(sessionPropertyStore.getPropertyId);
   } catch (error) {
-    loading.value=false;
-    console.log("ocurrio un error , no se pudo cerrar la propiead");
-    console.log(error);
+    console.error('Error al cargar los bovinos:', error);
+    showToast('error', 'Error al cargar la lista de bovinos.');
+  } finally {
+    isLoading.value = false;
   }
-
 }
 
+async function addBovine() {
+  try {
+    const newBovine = new Bovine({
+      motherId: newBovineForm.value.mother_id,
+      serie: newBovineForm.value.serie,
+      rgd: newBovineForm.value.rgd,
+      sex: newBovineForm.value.sex,
+      weight: newBovineForm.value.weight,
+      birthdate: newBovineForm.value.birthdate,
+      propertyId: sessionPropertyStore.getPropertyId,
+    });
 
-// Lógica de la tabla de animales
-const totalPages = computed(() => {
-  return Math.ceil(bovines.value.length / pageSize);
-});
+    isLoading.value = true;
+    bovines.value = await bovineService.createBovine(newBovine);
+    showToast('success', 'Bovino registrado con éxito.');
+    closeModalBovine();
+  } catch (error) {
+    console.error('Error al crear bovino:', error);
+    showToast('error', 'Ocurrió un error al registrar el bovino.');
+  } finally {
+    isLoading.value = false;
+  }
+}
 
-const paginatedBovines = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  const end = start + pageSize;
-  return bovines.value.slice(start, end);
-});
+async function updateBovine() {
+  try {
+    const updatedBovine = new Bovine({
+      id: newBovineForm.value.id,
+      motherId: newBovineForm.value.mother_id,
+      serie: newBovineForm.value.serie,
+      rgd: newBovineForm.value.rgd,
+      sex: newBovineForm.value.sex,
+      weight: newBovineForm.value.weight,
+      birthdate: newBovineForm.value.birthdate,
+      propertyId: sessionPropertyStore.getPropertyId,
+    });
+
+    isLoading.value = true;
+    bovines.value = await bovineService.editBovine(updatedBovine);
+    showToast('success', 'Bovino actualizado con éxito.');
+    closeModalBovine();
+  } catch (error) {
+    console.error('Error al actualizar bovino:', error);
+    showToast('error', 'Ocurrió un error al actualizar el bovino.');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function deleteBovine() {
+  try {
+    isLoading.value = true;
+    bovines.value = await bovineService.deleteBovine(bovineId);
+    showToast('success', 'Bovino eliminado con éxito.');
+  } catch (error) {
+    console.error('Error al eliminar bovino:', error);
+    showToast('error', 'Ocurrió un error al eliminar el bovino.');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// === MODALES === //
+function openModalConfirmation() {
+  openConfirmationModal.value = true;
+}
+
+function openConfirmationDeleteModal($id){
+  confirmationDeleteModal.value = true;
+  bovineId=$id;
+}
+
+function openAddBovineModal() {
+  resetNewBovineForm();
+  isEditing.value = false;
+  const modal = new Modal(document.getElementById('bovineModal'));
+  modal.show();
+}
+
+function openEditBovineModal(bovine) {
+  isEditing.value = true;
+  newBovineForm.value = {
+    id: bovine.id,
+    serie: bovine.serie,
+    rgd: bovine.rgd,
+    sex: bovine.sex,
+    weight: bovine.weight,
+    birthdate: bovine.birthdate,
+    mother_id: bovine.mother_id,
+    property_id: bovine.property_id,
+  };
+  const modal = new Modal(document.getElementById('bovineModal'));
+  modal.show();
+}
+
+function closeModalBovine() {
+  const modalElement = document.getElementById('bovineModal');
+  const modalInstance = Modal.getInstance(modalElement);
+  modalInstance.hide();
+}
+
+function resetNewBovineForm() {
+  newBovineForm.value = {
+    serie: '',
+    rgd: '',
+    sex: 'male',
+    weight: null,
+    birthdate: '',
+    mother_id: null,
+    property_id: sessionPropertyStore.getPropertyId,
+  };
+}
+
+// === FUNCIONES AUXILIARES === //
+function getMotherRGD(motherId) {
+  const mother = bovines.value.find(b => b.id === motherId);
+  return mother ? mother.rgd : 'Desconocida';
+}
 
 function calculateAge(birthdate) {
   const birth = new Date(birthdate);
@@ -328,44 +440,54 @@ function calculateAge(birthdate) {
   return age;
 }
 
-function getMotherRGD(motherId) {
-  const mother = bovines.value.find(b => b.id === motherId);
-  return mother ? mother.rgd : 'Desconocida';
+// === TOAST === //
+function showToast(type, message) {
+  const toastEl = document.getElementById('liveToast');
+  const toastMessage = document.getElementById('toast-message');
+  const toastIcon = document.getElementById('toast-icon');
+
+  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
+  let iconHtml = '';
+
+  if (type === 'success') {
+    toastEl.classList.add('text-bg-success');
+    iconHtml = '<i class="fas fa-check-circle fs-5"></i>';
+  } else if (type === 'error') {
+    toastEl.classList.add('text-bg-danger');
+    iconHtml = '<i class="fas fa-times-circle fs-5"></i>';
+  } else if (type === 'warning') {
+    toastEl.classList.add('text-bg-warning');
+    iconHtml = '<i class="fas fa-exclamation-triangle fs-5"></i>';
+  }
+
+  toastMessage.textContent = message;
+  toastIcon.innerHTML = iconHtml;
+  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
+  toast.show();
 }
 
-function openAddBovineModal() {
-  resetNewBovineForm();
-  showAddBovineModal.value = true;
-}
+const femaleBovines = computed(() => bovines.value.filter(b => b.sex === 'female'));
 
-function addBovine() {
-  const newId = bovines.value.length > 0 ? Math.max(...bovines.value.map(b => b.id)) + 1 : 1;
-  const newBovine = {
-    ...newBovineForm.value,
-    id: newId,
-    weight: newBovineForm.value.weight,
-  };
-  bovines.value.push(newBovine);
-  showAddBovineModal.value = false;
-  resetNewBovineForm();
-  console.log('Nuevo animal añadido:', newBovine);
-}
-
-function resetNewBovineForm() {
-  newBovineForm.value = {
-    serie: '',
-    rgd: '',
-    sex: 'male',
-    weight: null,
-    birthdate: '',
-    mother_id: null,
-  };
-}
-
-const femaleBovines = computed(() => {
-  return bovines.value.filter(b => b.sex === 'female');
+// === CARGA INICIAL === //
+onMounted(() => {
+  fetchBovines();
 });
+
+// === Mantiene la función original sin cambios === //
+async function closeProperty() {
+  console.log('Redireccionando a la ruta "select-property"');
+  isLoading.value = true;
+  try {
+    await sessionPropertyStore.finishWork(sessionPropertyStore.getPropertyId, 1);
+    replaceTo({ name: "select-property" });
+  } catch (error) {
+    isLoading.value = false;
+    console.log("ocurrio un error , no se pudo cerrar la propiedad");
+    console.log(error);
+  }
+}
 </script>
+
 
 <style scoped>
 /* Importamos las fuentes */
@@ -373,11 +495,18 @@ const femaleBovines = computed(() => {
 
 /* Estilos personalizados para replicar el diseño de la cuenta */
 .account-container {
-  min-height: 100vh;
+  /* ¡CAMBIOS CLAVE PARA EL SCROLL DE TODA LA PLANTILLA! */
+  height: 100%;
+  max-height: calc(100vh - 80px);
+  /* Ajusta a 100% del viewport menos la altura del header/footer si existen */
+  overflow-y: auto;
+  /* Habilita el scroll vertical cuando el contenido es muy largo */
+
   padding: 3rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Fondo degradado verde suave */
   background: linear-gradient(135deg, #e6f4ea 0%, #b6e2c7 100%);
   font-family: 'Poppins', sans-serif;
 }
@@ -385,6 +514,7 @@ const femaleBovines = computed(() => {
 .account-card {
   background: #fff;
   border-radius: 16px;
+  /* Sombra de tarjeta verde suave */
   box-shadow: 0 4px 24px rgba(67, 160, 71, 0.15);
   padding: 2.5rem 2rem;
   width: 100%;
@@ -425,6 +555,7 @@ const femaleBovines = computed(() => {
   outline: none;
 }
 
+/* Botón de actualizar/guardar (verde degradado) */
 .btn-update {
   padding: 0.8rem;
   background: linear-gradient(90deg, #43a047 0%, #388e3c 100%);
@@ -447,6 +578,7 @@ const femaleBovines = computed(() => {
   cursor: not-allowed;
 }
 
+/* Botón de editar propiedad (solo ícono verde) */
 .btn-edit-property {
   background: none;
   border: none;
@@ -459,34 +591,86 @@ const femaleBovines = computed(() => {
   color: #388e3c;
 }
 
+/* Botón de historial (Verde Naturaleza) */
+.btn-success {
+  background-color: #43a047;
+  border-color: #43a047;
+  color: #fff;
+  /* Asegura que el ícono sea blanco para contrastar */
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.btn-success:hover {
+  background-color: #388e3c;
+  border-color: #388e3c;
+  transform: translateY(-1px);
+}
+
 /* Estilo para el botón de creación grande */
 .btn-create-lg {
   padding: 1rem 2.5rem;
   font-size: 1.25rem;
 }
 
+/* ---------------------------------------------------- */
+/* ESTILOS DE TABLA (SCROLL Y TEMA NATURALEZA) */
+/* ---------------------------------------------------- */
+
+/* Contenedor para el scroll vertical (Tabla) */
+.table-scroll-body {
+  /* Fija la altura máxima para activar el scroll vertical */
+  max-height: 400px;
+  /* Ajusta este valor a tu gusto */
+  overflow-y: auto;
+  /* Asegura que el scroll horizontal siga funcionando con table-responsive */
+  overflow-x: hidden;
+}
+
+
 .table-responsive .table {
   border-collapse: separate;
+  /* Espacio vertical entre filas para el efecto de "tarjeta" */
   border-spacing: 0 0.8rem;
 }
 
 .table thead th {
   background-color: #e6f4ea;
+  /* Verde muy claro para el encabezado */
   border-bottom: 2px solid #b6e2c7;
   color: #388e3c;
+  /* Texto verde oscuro */
   font-weight: 600;
+  padding-top: 1rem;
+  /* Padding extra para mejor apariencia */
+  padding-bottom: 1rem;
+  position: sticky;
+  /* Fija el encabezado */
+  top: 0;
+  z-index: 10;
 }
 
+/* Estilo de Naturaleza/Verde para el cuerpo de la tabla */
 .table tbody tr {
   background-color: #f6fff8;
+  /* Fondo de fila verde muy pálido */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease-in-out;
+}
+
+/* Filas alternadas para mejor lectura */
+.table-hover>tbody>tr:nth-child(even) {
+  background-color: #effcf1;
+  /* Un tono un poco diferente */
 }
 
 .table tbody tr:hover {
   background-color: #fff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
+
+/* ---------------------------------------------------- */
+/* ESTILOS DE MODALES Y ALERTAS */
+/* ---------------------------------------------------- */
 
 /* Estilos para los modales */
 .modal-overlay {
@@ -508,9 +692,8 @@ const femaleBovines = computed(() => {
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
   width: 90%;
-  /* Ajuste para móviles /
-max-width: 700px;
-/ Incrementado para acomodar 2 columnas */
+  /* Ajuste para móviles */
+  max-width: 700px;
 }
 
 .modal-header {
@@ -597,5 +780,4 @@ max-width: 700px;
   justify-content: center;
   z-index: 2000;
 }
-
 </style>
