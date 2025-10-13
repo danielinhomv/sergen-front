@@ -191,7 +191,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="bovine in bovines" :key="bovine.id">
+                <tr v-for="bovine in filteredBovines" :key="bovine.id">
                   <td>{{ bovine.serie }}</td>
                   <td>{{ bovine.rgd }}</td>
                   <td>{{ bovine.sex === 'male' ? 'Macho' : 'Hembra' }}</td>
@@ -200,7 +200,7 @@
                   <td>{{ calculateAge(bovine.birthdate) }} años</td>
                   <td>
                     <span v-if="bovine.mother_id" class="text-muted">{{ getMotherRGD(bovine.mother_id) }}</span>
-                    <span v-else class="text-muted">N/A</span>
+                    <span v-else class="text-muted">Ninguna</span>
                   </td>
                   <td>
                     <div class="d-flex gap-2">
@@ -219,7 +219,7 @@
                     </div>
                   </td>
                 </tr>
-                <tr v-if="!bovines.length">
+                <tr v-if="!filteredBovines.length">
                   <td colspan="8" class="text-center text-muted py-4">No hay registros de animales que coincidan.</td>
                 </tr>
               </tbody>
@@ -241,7 +241,7 @@
 
     <div v-if="confirmationDeleteModal" class="confirmation-overlay ">
       <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
-        <p class="mb-4">¿Estás seguro de que quieres finalizar el trabajo en esta propiedad?</p>
+        <p class="mb-4">¿Estás seguro de que quieres eliminar este bovino?</p>
         <div class="d-flex justify-content-center gap-3">
           <button class="btn btn-success" @click="deleteBovine()">Sí, continuar</button>
           <button class="btn btn-outline-danger" @click="confirmationDeleteModal = false">Cancelar</button>
@@ -300,6 +300,12 @@ const editableProperty = ref({ ...property.value });
 const duplicateSerie = ref(false);
 const duplicateRgd = ref(false);
 
+const searchTerm = ref('');
+const debouncedSearch = ref('');
+
+const updateDebouncedSearch = debounce((val) => {
+  debouncedSearch.value = val.trim().toLowerCase();
+}, 300);
 
 const hasChanges = computed(() => {
   return editableProperty.value.name !== property.value.name ||
@@ -319,6 +325,16 @@ const isFormValid = computed(() => {
 onMounted(() => {
   fetchBovines();
 });
+
+// Utilidad simple para debounce
+function debounce(fn, delay = 300) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
+
 
 function toggleEditMode() {
   isEditingProperty.value = !isEditingProperty.value;
@@ -378,6 +394,11 @@ watch(
     );
   }
 );
+
+//busqueda cada vez que cambia searchTerm
+watch(searchTerm, (newVal) => {
+  updateDebouncedSearch(newVal);
+});
 
 // --- Computed para habilitar/deshabilitar el botón de guardar o crear
 const formIsValid = computed(() => {
@@ -495,8 +516,7 @@ function openEditBovineModal(bovine) {
     sex: bovine.sex,
     weight: bovine.weight,
     birthdate: bovine.birthdate,
-    mother_id: bovine.mother_id,
-    property_id: bovine.property_id,
+    mother_id: !bovine.motherId?null:bovine.motherId
   };
   const modal = new Modal(document.getElementById('bovineModal'));
   modal.show();
@@ -536,6 +556,16 @@ function calculateAge(birthdate) {
   }
   return age;
 }
+
+//funcion para filtrar bovinos
+const filteredBovines = computed(() => {
+  if (!debouncedSearch.value) return bovines.value;
+  return bovines.value.filter(
+    (b) =>
+      b.serie?.toLowerCase().includes(debouncedSearch.value) ||
+      b.rgd?.toLowerCase().includes(debouncedSearch.value)
+  );
+});
 
 // === TOAST === //
 function showToast(type, message) {

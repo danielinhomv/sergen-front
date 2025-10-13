@@ -177,15 +177,15 @@ export default {
     };
 
     // Verificación local de duplicado (no backend)
-    const debouncedCheckName = () => {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(() => {
-        const exists = properties.value.some(
-          p => p.name.trim().toLowerCase() === newProperty.value.name.trim().toLowerCase()
-        );
-        nameExists.value = exists;
-      }, 400);
-    };
+      const debouncedCheckName = () => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+          const exists = properties.value.some(
+            p => p.name.trim().toLowerCase() === newProperty.value.name.trim().toLowerCase()
+          );
+          nameExists.value = exists;
+        }, 400);
+      };
 
     const saveProperty = async () => {
       if (!isFormValid.value) return;
