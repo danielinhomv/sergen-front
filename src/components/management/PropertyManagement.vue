@@ -82,7 +82,7 @@
                   </label>
                   <select v-model.number="newBovineForm.mother_id" id="mother_id" class="form-control">
                     <option :value="null">Ninguna</option>
-                    <option v-for="bovine in femaleBovines" :key="bovine.id" :value="bovine.id">
+                    <option v-for="bovine in filteredBovines" :key="bovine.id" :value="bovine.id">
                       {{ bovine.rgd }}
                     </option>
                   </select>
@@ -462,7 +462,7 @@ async function updateBovine() {
       birthdate: newBovineForm.value.birthdate,
       propertyId: sessionPropertyStore.getPropertyId,
     });
-
+    console.log(updateBovine);
     isLoading.value = true;
     bovines.value = await bovineService.editBovine(updatedBovine);
     showToast('success', 'Bovino actualizado con éxito.');
@@ -592,10 +592,6 @@ function showToast(type, message) {
   const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
   toast.show();
 }
-
-const femaleBovines = computed(() => bovines.value.filter(b => b.sex === 'female'));
-
-
 
 // === Mantiene la función original sin cambios === //
 async function closeProperty() {
