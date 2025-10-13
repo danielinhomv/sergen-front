@@ -32,7 +32,7 @@ export class InseminationService {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    "control_bovine_id": 1,
+                    "control_bovine_id": 3,
                 }),
 
             });
@@ -76,9 +76,16 @@ export class InseminationService {
 
     async deleteInsemination(id) {
         try {
-            const url = `${this.baseUrl}/${id}`;
+            const url = `${this.baseUrl}/delete`;
             const response = await fetch(url, {
-                method: 'DELETE',
+                method: 'POST',
+                 headers: {
+                    // 'Authorization': 'Bearer TU_TOKEN_AQUI', // Si es necesario
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "id": id,
+                }),
             });
             return await this._processResponse(response);
         } catch (error) {

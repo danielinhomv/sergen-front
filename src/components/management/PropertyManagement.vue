@@ -420,7 +420,7 @@ async function fetchBovines() {
     bovines.value = await bovineService.listBovines(sessionPropertyStore.getPropertyId);
   } catch (error) {
     console.error('Error al cargar los bovinos:', error);
-    showToast('error', 'Error al cargar la lista de bovinos.');
+    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
   } finally {
     isLoading.value = false;
   }
@@ -444,7 +444,7 @@ async function addBovine() {
     closeModalBovine();
   } catch (error) {
     console.error('Error al crear bovino:', error);
-    showToast('error', 'Ocurrió un error al registrar el bovino.');
+    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
   } finally {
     isLoading.value = false;
   }
@@ -469,7 +469,7 @@ async function updateBovine() {
     closeModalBovine();
   } catch (error) {
     console.error('Error al actualizar bovino:', error);
-    showToast('error', 'Ocurrió un error al actualizar el bovino.');
+    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
   } finally {
     isLoading.value = false;
   }
@@ -482,7 +482,7 @@ async function deleteBovine() {
     showToast('success', 'Bovino eliminado con éxito.');
   } catch (error) {
     console.error('Error al eliminar bovino:', error);
-    showToast('error', 'Ocurrió un error , intentalo mas tarde');
+    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
   } finally {
     isLoading.value = false;
     confirmationDeleteModal.value = false;
@@ -525,7 +525,7 @@ function openEditBovineModal(bovine) {
 }
 
 function search(rgd) {
-  if(!rgd){
+  if (!rgd) {
     return null;
   }
   const bovine = bovines.value.find(b => b.rgd?.toLowerCase() === rgd.toLowerCase());
@@ -572,7 +572,6 @@ const filteredBovines = computed(() => {
   );
 });
 
-// === TOAST === //
 function showToast(type, message) {
   const toastEl = document.getElementById('liveToast');
   const toastMessage = document.getElementById('toast-message');
@@ -606,9 +605,10 @@ async function closeProperty() {
     await sessionPropertyStore.finishWork(sessionPropertyStore.getPropertyId, 1);
     replaceTo({ name: "select-property" });
   } catch (error) {
+    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+  } finally {
     isLoading.value = false;
     openConfirmationPropertyModal.value = false;
-    showToast('error', 'Ocurrió un error , intentalo mas tarde');
   }
 }
 </script>

@@ -1,66 +1,69 @@
 <template>
   <LayoutApp>
-
-    <div v-if="loading" class="loading-overlay">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Cargando...</span>
+    <div class="account-container">
+      <div v-if="loading" class="loading-overlay">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-success">Iniciando nuevo protocolo</p>
       </div>
-      <p class="mt-3 text-success">Iniciando nuevo protocolo</p>
-    </div>
 
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
-      <div id="liveToast" class="toast align-items-center w-100" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-          <div id="toast-icon" class="toast-body me-2">
+      <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+        <div id="liveToast" class="toast align-items-center w-100" role="alert" aria-live="assertive"
+          aria-atomic="true">
+          <div class="d-flex">
+            <div id="toast-icon" class="toast-body me-2">
+            </div>
+            <div id="toast-message" class="toast-body flex-grow-1">
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
+              aria-label="Close"></button>
           </div>
-          <div id="toast-message" class="toast-body flex-grow-1">
+        </div>
+      </div>
+
+      <div class="container py-4" style="background-color: #eafaf1; min-height: 100vh;">
+        <div class="row mb-4 align-items-center">
+          <div class="col-md-6">
+            <h2 class="text-success">Reproducción y Genética</h2>
           </div>
-          <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
-            aria-label="Close"></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="container py-4" style="background-color: #eafaf1; min-height: 100vh;">
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-          <h2 class="text-success">Reproducción y Genética</h2>
-        </div>
-        <div class="col-md-6 text-end">
-          <button class="btn btn-danger btn-lg shadow-sm" @click="confirmNewProtocol">
-            <i class="fas fa-redo-alt me-2"></i> Comenzar De Nuevo
-          </button>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-3">
-          <nav class="nav flex-column bg-white rounded shadow-sm p-3">
-            <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
-            <button v-for="(proceso) in etapas" :key="proceso" class="btn mb-2"
-              :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
-              @click="goTomanagement(etapaRoutes[proceso])">
-              {{ proceso }}
+          <div class="col-md-6 text-end">
+            <button class="btn btn-danger btn-lg shadow-sm" @click="confirmNewProtocol">
+              <i class="fas fa-redo-alt me-2"></i> Comenzar De Nuevo
             </button>
-          </nav>
-        </div>
-        <div class="col-md-9">
-          <div class="bg-white rounded shadow-sm p-4">
-            <h4 class="text-success">{{ getTitleFromRoute() }}</h4>
-            <!-- El componente de la ruta se renderizará aquí -->
-            <RouterView />
           </div>
         </div>
-      </div>
 
-      <!-- Modal de Confirmación -->
-      <div v-if="showConfirmation" class="confirmation-overlay">
-        <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
-          <p class="mb-4">¿Estás seguro de que quieres iniciar un nuevo protocolo? Se eliminarán los datos del protocolo
-            actual.</p>
-          <div class="d-flex justify-content-center gap-3">
-            <button class="btn btn-success" @click="startNewProtocol">Sí, continuar</button>
-            <button class="btn btn-outline-danger" @click="showConfirmation = false">Cancelar</button>
+        <div class="row">
+          <div class="col-md-3">
+            <nav class="nav flex-column bg-white rounded shadow-sm p-3">
+              <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
+              <button v-for="(proceso) in etapas" :key="proceso" class="btn mb-2"
+                :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
+                @click="goTomanagement(etapaRoutes[proceso])">
+                {{ proceso }}
+              </button>
+            </nav>
+          </div>
+          <div class="col-md-9 content-container">
+            <div class="bg-white rounded shadow-sm p-4">
+              <h4 class="text-success">{{ getTitleFromRoute() }}</h4>
+              <!-- El componente de la ruta se renderizará aquí -->
+              <RouterView />
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Confirmación -->
+        <div v-if="showConfirmation" class="confirmation-overlay">
+          <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
+            <p class="mb-4">¿Estás seguro de que quieres iniciar un nuevo protocolo? Se eliminarán los datos del
+              protocolo
+              actual.</p>
+            <div class="d-flex justify-content-center gap-3">
+              <button class="btn btn-success" @click="startNewProtocol">Sí, continuar</button>
+              <button class="btn btn-outline-danger" @click="showConfirmation = false">Cancelar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -166,8 +169,40 @@ function showToast(type, message) {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 body {
   background-color: #eafaf1;
+}
+
+.content-container {
+  /* ¡CAMBIOS CLAVE PARA EL SCROLL DE TODA LA PLANTILLA! */
+  height: 100%;
+  max-height: calc(100vh - 80px);
+  /* Ajusta a 100% del viewport menos la altura del header/footer si existen */
+  overflow-y: auto;
+  /* Habilita el scroll vertical cuando el contenido es muy largo */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Fondo degradado verde suave */
+  background: linear-gradient(135deg, #e6f4ea 0%, #b6e2c7 100%);
+  font-family: 'Poppins', sans-serif;
+}
+
+.account-container {
+   /* ¡CAMBIOS CLAVE PARA EL SCROLL DE TODA LA PLANTILLA! */
+  height: 100%;
+  max-height: calc(100vh - 80px);
+  /* Ajusta a 100% del viewport menos la altura del header/footer si existen */
+  overflow-y: auto;
+  /* Habilita el scroll vertical cuando el contenido es muy largo */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Fondo degradado verde suave */
+  background: linear-gradient(135deg, #e6f4ea 0%, #b6e2c7 100%);
+  font-family: 'Poppins', sans-serif;
 }
 
 .confirmation-overlay {

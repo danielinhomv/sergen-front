@@ -130,7 +130,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(protocol, index) in protocolsHistory" :key="index">
+                            <tr v-for="(protocol, index) in inseminations" :key="index">
                                 <td>{{ protocol.date }}</td>
                                 <td>{{ protocol.bull }}</td>
                                 <td>{{ protocol.bodyConditionScore }}</td>
@@ -165,11 +165,12 @@
                                     <button @click="openEditInseminationModal(protocol)"
                                         class="btn btn-sm btn-outline-info me-2" title="Editar Protocolo">
                                         <i class="fas fa-edit"></i> </button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar"><i
+                                    <button @click="openConfirmationDeleteModal(protocol.id)"
+                                        class="btn btn-sm btn-outline-danger" title="Eliminar"><i
                                             class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
-                            <tr v-if="protocolsHistory.length === 0">
+                            <tr v-if="inseminations.length === 0">
                                 <td colspan="7" class="text-center text-muted py-3">No hay protocolos registrados para
                                     este bovino.</td>
                             </tr>
@@ -187,8 +188,8 @@
                     <div class="modal-header">
                         <h5 class="modal-title section-title-modal" id="protocolModalLabel">Nuevo Protocolo de Datos
                         </h5>
-                        <button type="button" class="btn-close" insemination-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="btn-close" @click="closeModalInsemination()"
+                            insemination-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form @submit.prevent="submitFormAndCloseModal">
@@ -249,15 +250,15 @@
                         <h5 class="modal-title section-title-modal" id="inseminationEditModalLabel">Editar Protocolo de
                             Datos
                         </h5>
-                        <button type="button" class="btn-close" insemination-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                        <button type="button" class="btn-close" @click="closeEditInseminationModal()"
+                            insemination-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form @submit.prevent="submitEditFormAndCloseModal">
                             <div class="form-group">
                                 <label for="toro-edit" class="form-label"><i
                                         class="fas fa-bullhorn me-2"></i>Toro</label>
-                                <select v-model="formEdit.toro" id="toro-edit" class="form-control" required>
+                                <select v-model="form.toro" id="toro-edit" class="form-control" required>
                                     <option disabled value="">Seleccione un toro</option>
                                     <option v-for="bull in bulls" :key="bull" :value="bull">{{ bull }}</option>
                                 </select>
@@ -266,17 +267,16 @@
                             <div class="form-group">
                                 <label for="cc-edit" class="form-label"><i class="fas fa-percentage me-2"></i>Condición
                                     Corporal (CC)</label>
-                                <input v-model="formEdit.bodyConditionScore" id="cc-edit" type="number" min="1" max="5"
+                                <input v-model="form.bodyConditionScore" id="cc-edit" type="number" min="1" max="5"
                                     step="0.5" class="form-control" placeholder="1.0-5.0" required />
                             </div>
 
                             <div class="form-group">
                                 <label for="celo-edit" class="form-label"><i
                                         class="fas fa-heartbeat me-2"></i>Celo</label>
-                                <select v-model="formEdit.heatQuality" id="celo-edit" class="form-control" required>
-                                    <option disabled value="">Seleccione la calidad de celo</option>
+                                <select v-model="form.heatQuality" id="heatQuality" class="form-control" required>
                                     <option value="well">Bueno</option>
-                                    <option value="Regular">Regular</option>
+                                    <option value="regular">Regular</option>
                                     <option value="bad">Malo</option>
                                 </select>
                             </div>
@@ -284,14 +284,14 @@
                             <div class="form-group">
                                 <label for="observation-edit" class="form-label"><i
                                         class="fas fa-eye me-2"></i>Observación</label>
-                                <textarea v-model="formEdit.observation" id="observation-edit" class="form-control"
+                                <textarea v-model="form.observation" id="observation-edit" class="form-control"
                                     rows="3"></textarea>
                             </div>
 
                             <div class="form-group">
                                 <label for="others-edit" class="form-label"><i
                                         class="fas fa-ellipsis-h me-2"></i>Otros</label>
-                                <textarea v-model="formEdit.others" id="others-edit" class="form-control"
+                                <textarea v-model="form.others" id="others-edit" class="form-control"
                                     rows="3"></textarea>
                             </div>
 
@@ -343,6 +343,15 @@
                 </div>
             </div>
         </div>
+        <div v-if="confirmationDeleteModal" class="confirmation-overlay ">
+            <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
+                <p class="mb-4">¿Estás seguro de que quieres eliminar esta inseminacion?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-success" @click="deleteInsemination()">Sí, continuar</button>
+                    <button class="btn btn-outline-danger" @click="confirmationDeleteModal = false">Cancelar</button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -359,7 +368,10 @@ const isLoading = ref(true);
 const loadingText = ref('Escaneando...');
 const fullTextContent = ref('');
 const fullTextTitle = ref('');
+const confirmationDeleteModal = ref(false);
 let intervalId = null;
+let inseminationId = null;
+
 const texts = [
     'Escaneando...',
     'Analizando datos...',
@@ -377,12 +389,13 @@ const bovine = ref({
 });
 const editableBovine = ref({ ...bovine.value });
 const isEditing = ref(false);
-const protocolsHistory = ref([]);
+const inseminations = ref([]);
 const bulls = [
-    'mukesh', 'cia caribu', 'pancho cachon', 'delta eao', 'cia gandhi',
+    'mukesh', 'Toro A', 'pancho cachon', 'delta eao', 'cia gandhi',
     'magnum', 'maxima', 'upgrade', 'pro metido', 'timor', 'emblema eao', 'ferrati'
 ];
 const form = ref({
+    id: null,
     toro: '',
     bodyConditionScore: null,
     heatQuality: '',
@@ -391,14 +404,6 @@ const form = ref({
     date: new Date().toISOString().slice(0, 10),
 });
 
-const formEdit = ref({
-    id: null,
-    toro: '',
-    bodyConditionScore: null,
-    heatQuality: '',
-    observation: null,
-    others: null,
-})
 
 const hasChanges = computed(() => {
     return JSON.stringify(editableBovine.value) !== JSON.stringify(bovine.value);
@@ -442,6 +447,8 @@ const isFormValid = computed(() => {
 });
 
 
+
+
 const openAddInseminationModal = () => {
     const modal = new Modal(document.getElementById('protocolModal'));
     modal.show();
@@ -453,17 +460,23 @@ const opentextViewerModal = () => {
 };
 
 const openEditInseminationModal = (insemination) => {
-    formEdit.value.id = insemination.id;
-    formEdit.value.toro = insemination.bull;
-    formEdit.value.bodyConditionScore = insemination.bodyConditionScore;
-    formEdit.value.heatQuality = insemination.heatQuality;
-    formEdit.value.observation = insemination.observation;
-    formEdit.value.others = insemination.others;
+    form.value.id = insemination.id;
+    form.value.toro = insemination.bull;
+    form.value.bodyConditionScore = insemination.bodyConditionScore;
+    form.value.heatQuality = insemination.heatQuality;
+    form.value.observation = insemination.observation;
+    form.value.others = insemination.others;
 
-    console.log(formEdit);
+    console.log(form);
     const modal = new Modal(document.getElementById('inseminationEditModal'));
     modal.show();
 };
+
+function openConfirmationDeleteModal(id) {
+    confirmationDeleteModal.value = true;
+    inseminationId = id;
+    console.log("id del bovino a eliminar:" + id);
+}
 
 onMounted(() => {
     let textIndex = 0;
@@ -482,9 +495,9 @@ onUnmounted(() => {
 async function fetchInseminations() {
     try {
         isLoading.value = true;
-        protocolsHistory.value = await inseminationService.listInseminations();
+        inseminations.value = await inseminationService.listInseminations();
     } catch (error) {
-        console.error('Error al cargar inseminaciones:', error);
+        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
     } finally {
         isLoading.value = false;
     }
@@ -499,11 +512,11 @@ async function submitProtocol() {
             others: form.value.others,
             date: new Date().toISOString().slice(0, 10),
             bull: 1,
-            controlBovineId: 1,
+            controlBovineId: 3,
         });
 
         isLoading.value = true;
-        protocolsHistory.value = await inseminationService.createInsemination(newInsemination);
+        inseminations.value = await inseminationService.createInsemination(newInsemination);
 
         showToast('success', 'Registro guardado con éxito.');
     } catch (error) {
@@ -515,22 +528,33 @@ async function submitProtocol() {
 
 async function submitEditProtocol() {
     try {
-        // const newInsemination = new Insemination({
-        //     bodyConditionScore: formEdit.value.bodyConditionScore,
-        //     heatQuality: formEdit.value.heatQuality,
-        //     observation: formEdit.value.observation,
-        //     others: formEdit.value.others,
-        //     bull: 1,
-        //     controlBovineId: 1,
-        // });
+        const newInsemination = new Insemination({
+            bodyConditionScore: form.value.bodyConditionScore,
+            heatQuality: form.value.heatQuality,
+            observation: form.value.observation,
+            others: form.value.others,
+            bull: 1,
+        });
         isLoading.value = true;
-        //id = formEdit.value.id;
-        //protocolsHistory.value = await inseminationService.editInsemination(id, newInsemination);
+        inseminations.value = await inseminationService.editInsemination(form.value.id, newInsemination);
         showToast('success', 'Registro actualizado con éxito.');
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
     } finally {
         isLoading.value = false;
+    }
+}
+
+async function deleteInsemination() {
+    try {
+        isLoading.value = true;
+        inseminations.value = await inseminationService.deleteInsemination(inseminationId);
+        showToast('success', 'Inseminacion eliminada con éxito.');
+    } catch (error) {
+        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    } finally {
+        isLoading.value = false;
+        confirmationDeleteModal.value = false;
     }
 }
 
@@ -660,6 +684,7 @@ function calculateAge(birthdate) {
     justify-content: flex-start;
     /* Alineación al inicio para dar espacio a la tabla */
     align-items: center;
+
 }
 
 /* --- Estilos de Carga (Sin cambios) --- */
@@ -738,6 +763,7 @@ function calculateAge(birthdate) {
     width: 100%;
     align-items: center;
     max-width: 1200px;
+
     /* Ancho máximo para el contenido principal */
 }
 
@@ -1019,5 +1045,18 @@ function calculateAge(birthdate) {
         cursor: pointer;
         text-decoration: underline dotted #ccc;
     }
+}
+
+.confirmation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
 }
 </style>
