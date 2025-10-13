@@ -40,7 +40,7 @@ export class Bovine {
     static fromJson(data) {
         return new Bovine({
             id: data.id,
-            motherId: data.mother_id,
+            motherId: data.mother_rgd,
             serie: data.serie,
             rgd: data.rgd,
             sex: data.sex,

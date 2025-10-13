@@ -199,7 +199,7 @@
                   <td>{{ bovine.birthdate }}</td>
                   <td>{{ calculateAge(bovine.birthdate) }} años</td>
                   <td>
-                    <span v-if="bovine.mother_id" class="text-muted">{{ getMotherRGD(bovine.mother_id) }}</span>
+                    <span v-if="bovine.motherId" class="text-muted">{{ bovine.motherId }}</span>
                     <span v-else class="text-muted">Ninguna</span>
                   </td>
                   <td>
@@ -509,6 +509,7 @@ function openAddBovineModal() {
 
 function openEditBovineModal(bovine) {
   isEditing.value = true;
+  console.log(bovine);
   newBovineForm.value = {
     id: bovine.id,
     serie: bovine.serie,
@@ -516,10 +517,19 @@ function openEditBovineModal(bovine) {
     sex: bovine.sex,
     weight: bovine.weight,
     birthdate: bovine.birthdate,
-    mother_id: !bovine.motherId?null:bovine.motherId
+    mother_id: search(bovine.motherId) //aqui motherId es en realidad el rgd recibido desde el backend
   };
+  console.log(newBovineForm);
   const modal = new Modal(document.getElementById('bovineModal'));
   modal.show();
+}
+
+function search(rgd) {
+  if(!rgd){
+    return null;
+  }
+  const bovine = bovines.value.find(b => b.rgd?.toLowerCase() === rgd.toLowerCase());
+  return bovine ? bovine.id : null;
 }
 
 function closeModalBovine() {
@@ -540,12 +550,7 @@ function resetNewBovineForm() {
   };
 }
 
-// === FUNCIONES AUXILIARES === //
-function getMotherRGD(motherId) {
-  const mother = bovines.value.find(b => b.id === motherId);
-  return mother ? mother.rgd : 'Desconocida';
-}
-
+//funciones auxiliares
 function calculateAge(birthdate) {
   const birth = new Date(birthdate);
   const today = new Date();
