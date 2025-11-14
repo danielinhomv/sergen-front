@@ -212,7 +212,7 @@
                         <i class="fas fa-trash-alt"></i>
                       </button>
                       <!-- Botón de Historial (Verde Naturaleza) -->
-                      <button @click="viewHistory(bovine.id)" class="btn btn-sm btn-success"
+                      <button @click="viewHistory(bovine.id,bovine.rgd)" class="btn btn-sm btn-success"
                         title="Ver Historial de Procesos">
                         <i class="fas fa-history"></i>
                       </button>
@@ -269,6 +269,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import LayoutApp from '../LayoutApp.vue';
 import { useNavigation } from '@/utils/navigation';
+import { useRouter } from 'vue-router';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { Modal, Toast } from 'bootstrap';
 import { BovineService } from '@/services/management/BovineService';
@@ -278,7 +279,7 @@ const bovineService = new BovineService();
 let bovineId = null;
 const sessionPropertyStore = useSessionPropertyStore();
 const { replaceTo } = useNavigation();
-
+const router = useRouter();
 // Estado general
 const isEditing = ref(false);
 const isEditingProperty = ref(false);
@@ -489,6 +490,10 @@ async function deleteBovine() {
   }
 }
 
+function viewHistory(bovineId,bovineRgd) {
+  router.push({ name: 'historial-bovine-report', query: { id: bovineId, rgd: bovineRgd } });
+}
+
 // === MODALES === //
 function openModalConfirmation() {
   openConfirmationPropertyModal.value = true;
@@ -562,7 +567,6 @@ function calculateAge(birthdate) {
   return age;
 }
 
-//funcion para filtrar bovinos
 const filteredBovines = computed(() => {
   if (!debouncedSearch.value) return bovines.value;
   return bovines.value.filter(
@@ -597,7 +601,6 @@ function showToast(type, message) {
   toast.show();
 }
 
-// === Mantiene la función original sin cambios === //
 async function closeProperty() {
   console.log('Redireccionando a la ruta "select-property"');
   isLoading.value = true;
@@ -615,23 +618,16 @@ async function closeProperty() {
 
 
 <style scoped>
-/* Importamos las fuentes */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Estilos personalizados para replicar el diseño de la cuenta */
 .account-container {
-  /* ¡CAMBIOS CLAVE PARA EL SCROLL DE TODA LA PLANTILLA! */
   height: 100%;
   max-height: calc(100vh - 80px);
-  /* Ajusta a 100% del viewport menos la altura del header/footer si existen */
   overflow-y: auto;
-  /* Habilita el scroll vertical cuando el contenido es muy largo */
-
   padding: 3rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Fondo degradado verde suave */
   background: linear-gradient(135deg, #e6f4ea 0%, #b6e2c7 100%);
   font-family: 'Poppins', sans-serif;
 }
@@ -639,7 +635,6 @@ async function closeProperty() {
 .account-card {
   background: #fff;
   border-radius: 16px;
-  /* Sombra de tarjeta verde suave */
   box-shadow: 0 4px 24px rgba(67, 160, 71, 0.15);
   padding: 2.5rem 2rem;
   width: 100%;

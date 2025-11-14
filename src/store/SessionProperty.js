@@ -7,10 +7,18 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
     const isWorking = ref(false);
     const propertyId = ref(null);
+    const name = ref(null);
+    const place = ref(null);
+    const phone = ref(null);
+    const owner = ref(null);
     const protocolId = ref(null);
     const isWorked = computed(() => isWorking.value);
     const isLoaded = ref(false);
     const getPropertyId = computed(() => propertyId.value);
+    const getName = computed(() => name.value);
+    const getPlace = computed(() => place.value);
+    const getPhone = computed(() => phone.value);
+    const getOwner = computed(() => owner.value);   
     const getProtocolId = computed(() => protocolId.value);
     const PREFIX = '/management/';
     const baseUrl = `${API_URL}${PREFIX}`;
@@ -27,6 +35,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
                 if (active) {
                     isWorking.value = true;
                     propertyId.value = data.property_id;
+                    name.value = data.name;
+                    place.value = data.place;
+                    phone.value = data.phone_number;
+                    owner.value = data.owner_name;
                     protocolId.value = data.protocol_id;
                 } else {
                     isWorking.value = false;
@@ -39,6 +51,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
             console.error("Error al cargar estado inicial del servidor:", error);
             isWorking.value = false;
             propertyId.value = null;
+            name.value = null;
+            place.value = null;
+            phone.value = null;
+            owner.value = null;
             protocolId.value = null;
         } finally {
             isLoaded.value = true;
@@ -63,6 +79,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
         const dataProcesedCurrentSession = dataProcesed.current_session;
         propertyId.value = dataProcesedCurrentSession.property_id;
+        name.value = dataProcesedCurrentSession.name;
+        place.value = dataProcesedCurrentSession.place;
+        phone.value = dataProcesedCurrentSession.phone_number;
+        owner.value = dataProcesedCurrentSession.owner_name;
         protocolId.value = dataProcesed.protocol_id;
         isWorking.value = true;
 
@@ -108,6 +128,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     return {
         isWorked,
         getPropertyId,
+        getName,
+        getPlace,
+        getPhone,
+        getOwner,
         protocolId,
         getProtocolId,
         startWork,
@@ -122,7 +146,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     {
         persist:
         {
-            paths: ['isWorking', 'propertyId', 'protocolId']
+            paths: ['isWorking', 'propertyId', 'protocolId', 'name', 'place', 'phone', 'owner']
         }
     }
 )

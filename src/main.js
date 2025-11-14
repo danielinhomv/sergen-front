@@ -20,7 +20,7 @@ async function prepareApp() {
     app.use(router);
     app.use(pinia);
 
-    await router.isReady(); //se espera a que las rutas esten listas
+    await router.isReady(); 
 
     const sessionPropertyStore = useSessionPropertyStore();
 

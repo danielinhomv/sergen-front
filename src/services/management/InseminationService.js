@@ -32,7 +32,7 @@ export class InseminationService {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    "control_bovine_id": 3,
+                    "control_bovine_id": 5,
                 }),
 
             });

@@ -23,6 +23,7 @@ import GeneralPalpationManagement from '../components/management/GeneralPalpatio
 import ImplantRemovalManagement from '../components/management/ImplantRemovalManagement.vue';
 import PresynchronizationManagement from '../components/management/PresynchronizationManagement.vue';
 import UltraSoundManagement from '../components/management/UltraSoundManagement.vue';
+import HistorialBovineReport from '@/components/report/HistorialBovineReport.vue';
 
 import LayoutReport from '../components/report/LayoutReport.vue';
 import LayoutManagement from '../components/management/LayoutManagement.vue'; 
@@ -32,6 +33,7 @@ const routes = [
   { path: '/login', name: 'login', component: Login },
   { path: '/management/account', name: 'account-management', component: AccountManagement },
   { path: '/select-property', name: 'select-property', component: SelectProperty },
+  { path: '/reports/historial-bovine', name: 'historial-bovine-report', component: HistorialBovineReport },
 
   {
     path: '/reports',

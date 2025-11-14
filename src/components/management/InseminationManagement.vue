@@ -512,7 +512,7 @@ async function submitProtocol() {
             others: form.value.others,
             date: new Date().toISOString().slice(0, 10),
             bull: 1,
-            controlBovineId: 3,
+            controlBovineId: 5,
         });
 
         isLoading.value = true;
@@ -684,7 +684,6 @@ function calculateAge(birthdate) {
     justify-content: flex-start;
     /* Alineación al inicio para dar espacio a la tabla */
     align-items: center;
-
 }
 
 /* --- Estilos de Carga (Sin cambios) --- */
