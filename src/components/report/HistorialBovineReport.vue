@@ -406,6 +406,13 @@ function exportToPdf() {
         return;
     }
 
+    // Obtener la fecha actual para el reporte
+    const reportDate = new Date().toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    });
+
     // 1. Inicializar el Documento
     const doc = new jsPDF({
         orientation: 'landscape',
@@ -425,10 +432,20 @@ function exportToPdf() {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 51, 51);
 
+    // Fila 1 de datos de cabecera
     doc.text(`RGD Bovino: ${bovineRgd || 'N/A'}`, 15, y);
     doc.text(`Propiedad: ${name || 'No definido'}`, 100, y);
     doc.text(`Dueño: ${owner || 'No definido'}`, 200, y);
-    y += 10;
+    
+    y += 5; // Salto para la siguiente fila de datos
+
+    // Fila 2 de datos de cabecera (Fecha de Reporte)
+    // Se inserta la fecha aquí
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Fecha de Reporte: ${reportDate}`, 15, y);
+    doc.setFont('helvetica', 'normal'); // Volver a normal para el resto del texto
+    
+    y += 5;
 
     // Línea separadora
     doc.setDrawColor(200);

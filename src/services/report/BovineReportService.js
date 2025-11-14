@@ -1,47 +1,78 @@
 import axios from 'axios';
-import { API_URL } from '@/environment/Api'; // Asegúrate de que esta ruta sea correcta
+import { API_URL } from '@/environment/Api'; 
 
-// La URL base del endpoint de reporte
-// Según tu imagen, el endpoint completo es: http://127.0.0.1:8000/api/report/bovine-history
+// Endpoints
 const PREFIX = '/report';
-const ENDPOINT = '/bovine-history';
+const ENDPOINT_BOVINE_INDIVIDUAL = '/bovine-history'; // Endpoint hipotético para un solo bovino
+const ENDPOINT_PROPERTY_LIST = '/property-bovine-history'; // Endpoint basado en tu imagen
 
 /**
  * Servicio para manejar las llamadas a la API relacionadas con los reportes
- * del historial de un bovino.
+ * del historial de un bovino o una propiedad.
  */
 class BovineReportService {
 
     /**
-     * Obtiene el historial completo de un bovino (inseminaciones, ecografías, etc.).
+     * 1. Obtiene el historial completo de UN bovino (función original).
+     * Asume que el endpoint espera 'bovine_id' y devuelve UN objeto { ... }.
      * * @param {number} bovineId El ID del bovino a consultar.
-     * @param {number} propertyId El ID de la propiedad donde reside el bovino (como se requiere en el body).
+     * @param {number} propertyId El ID de la propiedad donde reside el bovino.
      * @returns {Promise<object>} Un objeto con el historial del bovino (inseminations, ultrasound, etc.).
      */
     static async getBovineHistory(bovineId, propertyId) {
         try {
-            // Datos que se enviarán en el cuerpo de la solicitud POST (JSON)
+            // Datos que se enviarán al endpoint INDIVIDUAL (el que usa tu componente)
             const requestBody = {
                 bovine_id: bovineId,
                 property_id: propertyId
             };
 
             const response = await axios.post(
-                `${API_URL}${PREFIX}${ENDPOINT}`,
+                `${API_URL}${PREFIX}${ENDPOINT_BOVINE_INDIVIDUAL}`,
                 requestBody
             );
             
-            // Dado que es un reporte y no estás usando un modelo, 
-            // simplemente devolvemos la data tal como viene del backend.
+            // Si la respuesta es un array de un solo elemento (común en APIs que usan listas),
+            // devolvemos solo ese elemento.
+            if (Array.isArray(response.data) && response.data.length > 0) {
+                 return response.data[0]; 
+            }
+            
+            // Si devuelve el objeto directamente
             return response.data; 
 
         } catch (error) {
-            console.error('Error obteniendo el historial del bovino:', error.response?.data || error);
-            // Propagar el error para que el componente que lo llama pueda manejarlo
+            console.error('Error obteniendo el historial del bovino individual:', error.response?.data || error);
+            throw error;
+        }
+    }
+
+    /**
+     * 2. Obtiene la lista de historiales de TODOS los bovinos de una propiedad.
+     * Utiliza el endpoint `/property-bovine-history` basado en tu imagen.
+     * * @param {number} propertyId El ID de la propiedad a consultar.
+     * @returns {Promise<Array<object>>} Una lista de objetos, donde cada objeto es el historial de un bovino.
+     */
+    static async getBovinesHistoryByProperty(propertyId) {
+        try {
+            // Datos que se enviarán al endpoint de la LISTA
+            const requestBody = {
+                property_id: propertyId
+            };
+
+            const response = await axios.post(
+                `${API_URL}${PREFIX}${ENDPOINT_PROPERTY_LIST}`,
+                requestBody
+            );
+            
+            // Devolvemos el array de historiales tal como viene de la API.
+            return response.data; 
+
+        } catch (error) {
+            console.error('Error obteniendo el historial de bovinos por propiedad:', error.response?.data || error);
             throw error;
         }
     }
 }
 
-export { BovineReportService }; 
-// Exportamos como nombrado por si luego quieres añadir más servicios al archivo
+export { BovineReportService };
