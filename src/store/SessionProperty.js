@@ -44,6 +44,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
                     isWorking.value = false;
                     propertyId.value = null;
                     protocolId.value = null;
+                    name.value = null;
+                    place.value = null;
+                    phone.value = null;
+                    owner.value = null;
                 }
             }
 
@@ -79,10 +83,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
         const dataProcesedCurrentSession = dataProcesed.current_session;
         propertyId.value = dataProcesedCurrentSession.property_id;
-        name.value = dataProcesedCurrentSession.name;
-        place.value = dataProcesedCurrentSession.place;
-        phone.value = dataProcesedCurrentSession.phone_number;
-        owner.value = dataProcesedCurrentSession.owner_name;
+        name.value = dataProcesed.name;
+        place.value = dataProcesed.place;
+        phone.value = dataProcesed.phone_number;
+        owner.value = dataProcesed.owner_name;
         protocolId.value = dataProcesed.protocol_id;
         isWorking.value = true;
 
