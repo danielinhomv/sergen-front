@@ -158,14 +158,14 @@ const sendReport = async () => {
       property_id: sessionPropertyStore.getPropertyId,
       start_date: props.fechaInicio ? `${props.fechaInicio}T00:00:00` : null,
       end_date: props.fechaFin ? `${props.fechaFin}T23:59:59` : null,
-      user_id: 1 // Fijo
+      user_id: 2 // Fijo
     };
 
     const result = await inseminationReportService.getInseminationReport(request);
     reportData.value = result;
     hasSearched.value = true;
     reportText.value = '';
-    isRecording.value = !isRecording.value;
+    isRecording.value = false;
     recognition.stop();
 
   } catch (error) {

@@ -7,7 +7,7 @@ const PREFIX = '/management/property'
 
 class PropertyService {
 
-    static async list(user_id = 1) {
+    static async list(user_id = 2) {
         try {
             const response = await axios.get(`${API_URL}${PREFIX}/list`, {
                 params: user_id ? { user_id } : {}

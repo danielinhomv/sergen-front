@@ -141,7 +141,7 @@ export default {
       place: '',
       owner_name: '',
       phone_number: '',
-      user_id: 1
+      user_id: 2
     });
 
     const nameExists = ref(false);
@@ -160,7 +160,7 @@ export default {
     const startWork = async (propertyId) => {
       loading.value = true;
       try {
-        await sessionPropertyStore.startWork(propertyId, 1);
+        await sessionPropertyStore.startWork(propertyId, 2);
         emit('start-work', propertyId);
         replaceTo('dashboard');
       } catch (error) {
@@ -171,7 +171,7 @@ export default {
 
     const openAddPropertyModal = () => {
       nameExists.value = false;
-      newProperty.value = { name: '', place: '', owner_name: '', phone_number: '', user_id: 1 };
+      newProperty.value = { name: '', place: '', owner_name: '', phone_number: '', user_id: 2 };
       const modal = new Modal(document.getElementById('createPropertyModal'));
       modal.show();
     };

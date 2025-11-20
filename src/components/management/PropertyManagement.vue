@@ -617,7 +617,7 @@ async function closeProperty() {
     console.log('Redireccionando a la ruta "select-property"');
     isLoading.value = true;
     try {
-        await sessionPropertyStore.finishWork(sessionPropertyStore.getPropertyId, 1);
+        await sessionPropertyStore.finishWork(sessionPropertyStore.getPropertyId, 2);
         replaceTo({ name: "select-property" });
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
