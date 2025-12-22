@@ -1,69 +1,75 @@
 <template>
   <LayoutApp>
-    <div class="account-container">
+    <div class="management-fixed-wrapper">
       <div v-if="loading" class="loading-overlay">
-        <div class="spinner-border text-success" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="mt-3 text-success">Iniciando nuevo protocolo</p>
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-3 text-success fw-bold">Iniciando nuevo protocolo...</p>
       </div>
 
-      <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
-        <div id="liveToast" class="toast align-items-center w-100" role="alert" aria-live="assertive"
-          aria-atomic="true">
-          <div class="d-flex">
-            <div id="toast-icon" class="toast-body me-2">
+      <header class="management-header flex-shrink-0 bg-light-green">
+        <div class="container-fluid pt-3 px-4">
+          <div class="row align-items-center mb-3">
+            <div class="col-md-6">
+              <h2 class="text-success fw-bold m-0">Reproducción y Genética</h2>
             </div>
-            <div id="toast-message" class="toast-body flex-grow-1">
-            </div>
-            <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
-              aria-label="Close"></button>
-          </div>
-        </div>
-      </div>
-
-      <div class="container py-4" style="background-color: #eafaf1; min-height: 100vh;">
-        <div class="row mb-4 align-items-center">
-          <div class="col-md-6">
-            <h2 class="text-success">Reproducción y Genética</h2>
-          </div>
-          <div class="col-md-6 text-end">
-            <button class="btn btn-danger btn-lg shadow-sm" @click="confirmNewProtocol">
-              <i class="fas fa-redo-alt me-2"></i> Comenzar De Nuevo
-            </button>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-3">
-            <nav class="nav flex-column bg-white rounded shadow-sm p-3">
-              <span class="fw-bold text-success mb-2">Etapas de Protocolo</span>
-              <button v-for="(proceso) in etapas" :key="proceso" class="btn mb-2"
-                :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success' : 'btn-outline-success'"
-                @click="goTomanagement(etapaRoutes[proceso])">
-                {{ proceso }}
+            <div class="col-md-6 text-end">
+              <button class="btn btn-danger shadow-sm fw-bold px-4" @click="confirmNewProtocol">
+                <i class="fas fa-redo-alt me-2"></i> Comenzar De Nuevo
               </button>
-            </nav>
+            </div>
           </div>
-          <div class="col-md-9 content-container">
-            <div class="bg-white rounded shadow-sm p-4">
-              <h4 class="text-success">{{ getTitleFromRoute() }}</h4>
-              <!-- El componente de la ruta se renderizará aquí -->
-              <RouterView />
+          
+          <div class="row pb-2">
+            <div class="col-12">
+              <RFIDSerialClient />
             </div>
           </div>
         </div>
+      </header>
 
-        <!-- Modal de Confirmación -->
-        <div v-if="showConfirmation" class="confirmation-overlay">
-          <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
-            <p class="mb-4">¿Estás seguro de que quieres iniciar un nuevo protocolo? Se eliminarán los datos del
-              protocolo
-              actual.</p>
-            <div class="d-flex justify-content-center gap-3">
-              <button class="btn btn-success" @click="startNewProtocol">Sí, continuar</button>
-              <button class="btn btn-outline-danger" @click="showConfirmation = false">Cancelar</button>
+      <main class="management-body flex-grow-1 overflow-hidden px-4 pb-3">
+        <div class="row h-100 gx-3">
+          
+          <aside class="col-md-3 h-100 d-flex flex-column py-2">
+            <nav class="bg-white rounded-4 shadow-sm p-3 border border-success-subtle d-flex flex-column h-100 overflow-hidden">
+              <span class="fw-bold text-success mb-3 border-bottom pb-2 text-uppercase small" style="letter-spacing: 1px;">
+                Etapas de Protocolo
+              </span>
+              
+              <div class="flex-grow-1 overflow-y-auto overflow-x-hidden custom-scroll pe-1">
+                <button v-for="(proceso) in etapas" :key="proceso" 
+                  class="btn mb-2 text-start w-100 d-block py-2 px-3 fw-medium transition-btn"
+                  :class="currentRouteName === etapaRoutes[proceso] ? 'btn-success shadow-sm' : 'btn-outline-success border-0'"
+                  @click="goTomanagement(etapaRoutes[proceso])">
+                  <i class="fas fa-chevron-right me-2 small"></i>{{ proceso }}
+                </button>
+              </div>
+            </nav>
+          </aside>
+
+          <section class="col-md-9 h-100 py-2 d-flex flex-column">
+            <div class="bg-white rounded-4 shadow-sm p-4 h-100 d-flex flex-column border border-success-subtle overflow-hidden">
+              <div class="flex-shrink-0 mb-3 border-bottom pb-2">
+                 <h4 class="text-success fw-bold m-0">{{ getTitleFromRoute() }}</h4>
+              </div>
+              
+              <div class="flex-grow-1 overflow-y-auto overflow-x-hidden custom-scroll pe-2">
+                <RouterView />
+              </div>
             </div>
+          </section>
+
+        </div>
+      </main>
+
+      <div v-if="showConfirmation" class="confirmation-overlay">
+        <div class="confirmation-box bg-white rounded-4 shadow-lg p-5 text-center">
+          <i class="fas fa-exclamation-triangle text-warning fs-1 mb-3"></i>
+          <h4 class="fw-bold">¿Reiniciar protocolo?</h4>
+          <p class="text-muted mb-4">Se eliminarán los datos del protocolo actual.</p>
+          <div class="d-flex justify-content-center gap-3">
+            <button class="btn btn-success px-4 fw-bold" @click="startNewProtocol">Sí, continuar</button>
+            <button class="btn btn-outline-danger px-4 fw-bold" @click="showConfirmation = false">Cancelar</button>
           </div>
         </div>
       </div>
@@ -77,7 +83,7 @@ import { useRouter, useRoute } from 'vue-router';
 import LayoutApp from '../LayoutApp.vue';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { Toast } from 'bootstrap';
-
+import RFIDSerialClient from '@/components/RFIDSerialClient.vue';
 
 const loading = ref(false);
 const showConfirmation = ref(false);
@@ -87,13 +93,8 @@ const currentRouteName = computed(() => route.name);
 const sessionPropertyStore = useSessionPropertyStore();
 
 const etapas = [
-  'Presincronización',
-  'Ecografía',
-  'Retiro de Implante',
-  'Inseminación',
-  'Ecografía de Confirmación',
-  'Palpación General',
-  'Parto'
+  'Presincronización', 'Ecografía', 'Retiro de Implante', 
+  'Inseminación', 'Ecografía de Confirmación', 'Palpación General', 'Parto'
 ];
 
 const etapaRoutes = {
@@ -106,23 +107,18 @@ const etapaRoutes = {
   'Presincronización': 'presynchronization-management'
 };
 
-
 function goTomanagement(routeName) {
   router.push({ name: routeName });
 }
 
 function getTitleFromRoute() {
   for (const etapa in etapaRoutes) {
-    if (etapaRoutes[etapa] === currentRouteName.value) {
-      return etapa;
-    }
+    if (etapaRoutes[etapa] === currentRouteName.value) return etapa;
   }
-  return "Selecciona una etapa"; // Título por defecto
+  return "Selecciona una etapa";
 }
 
-function confirmNewProtocol() {
-  showConfirmation.value = true;
-}
+function confirmNewProtocol() { showConfirmation.value = true; }
 
 async function startNewProtocol() {
   showConfirmation.value = false;
@@ -130,11 +126,10 @@ async function startNewProtocol() {
   try {
     await sessionPropertyStore.startNewProtocol();
     loading.value = false;
-    showToast('success', 'Se ha iniciado un nuevo protocolo!!');
+    showToast('success', '¡Nuevo protocolo iniciado!');
   } catch (error) {
     loading.value = false;
-    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
-
+    showToast('error', 'Error al reiniciar protocolo.');
   }
 }
 
@@ -142,101 +137,56 @@ function showToast(type, message) {
   const toastEl = document.getElementById('liveToast');
   const toastMessage = document.getElementById('toast-message');
   const toastIcon = document.getElementById('toast-icon');
-
-
-  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
-
-  let iconHtml = '';
-
+  toastEl.classList.remove('text-bg-success', 'text-bg-danger');
   if (type === 'success') {
     toastEl.classList.add('text-bg-success');
-    iconHtml = '<i class="fas fa-check-circle fs-5"></i>';
-  } else if (type === 'error') {
+    toastIcon.innerHTML = '<i class="fas fa-check-circle fs-5"></i>';
+  } else {
     toastEl.classList.add('text-bg-danger');
-    iconHtml = '<i class="fas fa-times-circle fs-5"></i>';
-  } else if (type === 'warning') {
-    toastEl.classList.add('text-bg-warning');
-    iconHtml = '<i class="fas fa-exclamation-triangle fs-5"></i>';
+    toastIcon.innerHTML = '<i class="fas fa-times-circle fs-5"></i>';
   }
-
   toastMessage.textContent = message;
-  toastIcon.innerHTML = iconHtml;
-
-  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
+  const toast = new Toast(toastEl, { delay: 3000 });
   toast.show();
 }
-
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-body {
+/* Evita que el layout se rompa y asegura el alto total */
+.management-fixed-wrapper {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Elimina scroll del navegador */
+  background-color: #eafaf1; /* Color base de tus imágenes */
+  font-family: 'Poppins', sans-serif;
+}
+
+.bg-light-green {
   background-color: #eafaf1;
 }
 
-.content-container {
-  /* ¡CAMBIOS CLAVE PARA EL SCROLL DE TODA LA PLANTILLA! */
-  height: 100%;
-  max-height: calc(100vh - 80px);
-  /* Ajusta a 100% del viewport menos la altura del header/footer si existen */
-  overflow-y: auto;
-  /* Habilita el scroll vertical cuando el contenido es muy largo */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Fondo degradado verde suave */
-  background: linear-gradient(135deg, #e6f4ea 0%, #b6e2c7 100%);
-  font-family: 'Poppins', sans-serif;
-}
+/* Scrollbars personalizados */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #28a745; border-radius: 10px; }
 
-.account-container {
-   /* ¡CAMBIOS CLAVE PARA EL SCROLL DE TODA LA PLANTILLA! */
-  height: 100%;
-  max-height: calc(100vh - 80px);
-  /* Ajusta a 100% del viewport menos la altura del header/footer si existen */
-  overflow-y: auto;
-  /* Habilita el scroll vertical cuando el contenido es muy largo */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Fondo degradado verde suave */
-  background: linear-gradient(135deg, #e6f4ea 0%, #b6e2c7 100%);
-  font-family: 'Poppins', sans-serif;
+/* Efecto en botones del menú */
+.transition-btn { transition: all 0.2s ease; }
+.transition-btn:hover { background-color: #508660; padding-left: 1.25rem; }
+
+.loading-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255, 255, 255, 0.85); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 3000;
 }
 
 .confirmation-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
-
-.confirmation-box {
-  width: 90%;
-  max-width: 450px;
-  padding: 2.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+  display: flex; justify-content: center; align-items: center; z-index: 2000;
 }
 </style>

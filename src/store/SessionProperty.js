@@ -5,23 +5,27 @@ import { API_URL } from '@/environment/Api';
 
 export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
+    const PREFIX = '/management/';
+    const baseUrl = `${API_URL}${PREFIX}`;
+
     const isWorking = ref(false);
     const propertyId = ref(null);
+    const chipSerie = ref(null);
     const name = ref(null);
     const place = ref(null);
     const phone = ref(null);
     const owner = ref(null);
     const protocolId = ref(null);
-    const isWorked = computed(() => isWorking.value);
     const isLoaded = ref(false);
+    
+    const isWorked = computed(() => isWorking.value);
     const getPropertyId = computed(() => propertyId.value);
     const getName = computed(() => name.value);
     const getPlace = computed(() => place.value);
     const getPhone = computed(() => phone.value);
-    const getOwner = computed(() => owner.value);   
+    const getOwner = computed(() => owner.value);
     const getProtocolId = computed(() => protocolId.value);
-    const PREFIX = '/management/';
-    const baseUrl = `${API_URL}${PREFIX}`;
+    const getChipSerie = computed(() => chipSerie.value);
 
     async function fetchInitialWorkStatus(userId) {
 
@@ -64,6 +68,14 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
             isLoaded.value = true;
         }
 
+    }
+
+    function setChipSerie(serie) {
+        chipSerie.value = serie;
+    }
+
+    function onScanned() {
+        return chipSerie.value !== null;
     }
 
     async function _processResponse(response) {
@@ -144,13 +156,17 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         propertyId,
         isLoaded,
         fetchInitialWorkStatus,
-        startNewProtocol
+        startNewProtocol,
+        chipSerie,
+        getChipSerie,
+        setChipSerie,
+        onScanned
     }
 },
     {
         persist:
         {
-            paths: ['isWorking', 'propertyId', 'protocolId', 'name', 'place', 'phone', 'owner']
+            paths: ['isWorking', 'propertyId', 'protocolId', 'name', 'place', 'phone', 'owner', 'chipSerie'],
         }
     }
 )

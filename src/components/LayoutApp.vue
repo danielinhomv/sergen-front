@@ -195,4 +195,19 @@ html, body {
     color: #fff !important;
     font-weight: bold;
 }
+#page-content-wrapper {
+  flex-grow: 1;
+  width: 100%;
+  height: 100vh;      /* Ocupa todo el alto */
+  overflow: hidden;   /* BLOQUEA EL SCROLL EXTERIOR */
+  display: flex;
+  flex-direction: column;
+}
+
+.container-fluid.p-4 {
+  flex-grow: 1;
+  overflow: hidden;   /* Sigue bloqueando el scroll hacia afuera */
+  display: flex;
+  flex-direction: column;
+}
 </style>

@@ -13,97 +13,6 @@
 
         <div v-else class="content-container">
 
-            <div class="card-section info-section">
-                <h2 class="section-title">
-                    Información del Bovino
-                    <i class="fas fa-pencil-alt edit-icon" @click="toggleEdit"></i>
-                </h2>
-                <div v-if="!isEditing" class="info-grid">
-                    <div class="info-item">
-                        <i class="fas fa-id-card-alt icon-info"></i>
-                        <span class="label">RGD:</span>
-                        <span class="value">{{ bovine.rgd }}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-tag icon-info"></i>
-                        <span class="label">Serie:</span>
-                        <span class="value">{{ bovine.serie }}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-venus-mars icon-info"></i>
-                        <span class="label">Sexo:</span>
-                        <span class="value">{{ bovine.sex === 'male' ? 'Macho' : 'Hembra' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-weight-hanging icon-info"></i>
-                        <span class="label">Peso:</span>
-                        <span class="value">{{ bovine.weight }} kg</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-birthday-cake icon-info"></i>
-                        <span class="label">Nacimiento:</span>
-                        <span class="value">{{ bovine.birthdate }}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-clock icon-info"></i>
-                        <span class="label">Edad:</span>
-                        <span class="value">{{ calculateAge(bovine.birthdate) }} años</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-child icon-info"></i>
-                        <span class="label">Madre:</span>
-                        <span class="value">{{ bovine.motherId ? 'RG-D: ' + bovine.motherId : 'N/A' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-baby-carriage icon-info"></i>
-                        <span class="label">Hijo:</span>
-                        <span class="value">{{ bovine.childId ? 'RG-D: ' + bovine.childId : 'N/A' }}</span>
-                    </div>
-                </div>
-                <div v-else class="edit-form-container">
-
-                    <div class="form-group">
-                        <label for="edit-rgd" class="form-label"><i class="fas fa-id-card-alt me-2"></i>RGD</label>
-                        <input v-model="editableBovine.rgd" id="edit-rgd" type="text" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-serie" class="form-label"><i class="fas fa-tag me-2"></i>Serie</label>
-                        <input v-model="editableBovine.serie" id="edit-serie" type="text" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-sex" class="form-label"><i class="fas fa-venus-mars me-2"></i>Sexo</label>
-                        <select v-model="editableBovine.sex" id="edit-sex" class="form-control">
-                            <option value="male">Macho</option>
-                            <option value="female">Hembra</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-weight" class="form-label"><i
-                                class="fas fa-weight-hanging me-2"></i>Peso</label>
-                        <input v-model.number="editableBovine.weight" id="edit-weight" type="number"
-                            class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-mother" class="form-label"><i class="fas fa-child me-2"></i>Madre
-                            (RG-D)</label>
-                        <input v-model="editableBovine.motherId" id="edit-mother" type="text" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-child" class="form-label"><i class="fas fa-baby-carriage me-2"></i>Hijo
-                            (RG-D)</label>
-                        <input v-model="editableBovine.childId" id="edit-child" type="text" class="form-control" />
-                    </div>
-                    <div class="d-flex justify-content-between mt-3">
-                        <button class="btn btn-secondary" @click="toggleEdit">
-                            <i class="fas fa-times me-2"></i>Cancelar
-                        </button>
-                        <button class="btn btn-submit" @click="saveChanges" :disabled="!isSaveBovineEnabled">
-                            <i class="fas fa-save me-2"></i>Guardar Cambios
-                        </button>
-                    </div>
-                </div>
-            </div>
-
 
             <div class="card-section protocols-section">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -362,15 +271,17 @@ import { InseminationService } from '@/services/management/InseminationService';
 import { Insemination } from '@/model/management/Insemination';
 import { Modal } from 'bootstrap';
 import { Toast } from 'bootstrap';
+import { useSessionPropertyStore } from '@/store/SessionProperty';
 
 const inseminationService = new InseminationService();
-const isLoading = ref(true);
 const loadingText = ref('Escaneando...');
 const fullTextContent = ref('');
 const fullTextTitle = ref('');
 const confirmationDeleteModal = ref(false);
 let intervalId = null;
 let inseminationId = null;
+const sessionPropertyStore = useSessionPropertyStore();
+const isLoading = computed(() => !sessionPropertyStore.onScanned);
 
 const texts = [
     'Escaneando...',
@@ -378,17 +289,17 @@ const texts = [
     'Conectando con el escáner...',
     'Procesando información...'
 ];
-const bovine = ref({
-    rgd: 'S1-456',
-    serie: 'A123',
-    sex: 'female',
-    weight: 450.5,
-    birthdate: '2022-01-15',
-    motherId: 'S1-455',
-    childId: 'S1-459'
-});
-const editableBovine = ref({ ...bovine.value });
-const isEditing = ref(false);
+// const bovine = ref({
+//     rgd: 'S1-456',
+//     serie: 'A123',
+//     sex: 'female',
+//     weight: 450.5,
+//     birthdate: '2022-01-15',
+//     motherId: 'S1-455',
+//     childId: 'S1-459'
+// });
+// const editableBovine = ref({ ...bovine.value });
+// const isEditing = ref(false);
 const inseminations = ref([]);
 const bulls = [
     'mukesh', 'Toro A', 'pancho cachon', 'delta eao', 'cia gandhi',
@@ -405,22 +316,22 @@ const form = ref({
 });
 
 
-const hasChanges = computed(() => {
-    return JSON.stringify(editableBovine.value) !== JSON.stringify(bovine.value);
-});
-const areRequiredFieldsValid = computed(() => {
-    const { rgd, serie, sex, weight } = editableBovine.value;
-    return rgd && rgd.trim() !== '' &&
-        serie && serie.trim() !== '' &&
-        sex && sex.trim() !== '' &&
-        weight !== null && weight >= 0;
-});
-const isRelationshipValid = computed(() => {
-    const { motherId, childId } = editableBovine.value;
-    const motherFilled = motherId && motherId.trim() !== '';
-    const childFilled = childId && childId.trim() !== '';
-    return !(motherFilled && childFilled);
-});
+// const hasChanges = computed(() => {
+//     return JSON.stringify(editableBovine.value) !== JSON.stringify(bovine.value);
+// });
+// const areRequiredFieldsValid = computed(() => {
+//     const { rgd, serie, sex, weight } = editableBovine.value;
+//     return rgd && rgd.trim() !== '' &&
+//         serie && serie.trim() !== '' &&
+//         sex && sex.trim() !== '' &&
+//         weight !== null && weight >= 0;
+// });
+// const isRelationshipValid = computed(() => {
+//     const { motherId, childId } = editableBovine.value;
+//     const motherFilled = motherId && motherId.trim() !== '';
+//     const childFilled = childId && childId.trim() !== '';
+//     return !(motherFilled && childFilled);
+// });
 
 const isCcValid = computed(() => {
     const cc = form.value.bodyConditionScore;
@@ -434,11 +345,11 @@ const isCcValid = computed(() => {
     return (multiplied % 5) === 0;
 });
 
-const isSaveBovineEnabled = computed(() => {
-    return hasChanges.value &&
-        areRequiredFieldsValid.value &&
-        isRelationshipValid.value
-});
+// const isSaveBovineEnabled = computed(() => {
+//     return hasChanges.value &&
+//         areRequiredFieldsValid.value &&
+//         isRelationshipValid.value
+// });
 
 const isFormValid = computed(() => {
     return form.value.toro &&
@@ -479,11 +390,13 @@ function openConfirmationDeleteModal(id) {
 }
 
 onMounted(() => {
-    let textIndex = 0;
-    intervalId = setInterval(() => {
-        textIndex = (textIndex + 1) % texts.length;
-        loadingText.value = texts[textIndex];
-    }, 2000);
+if (isLoading.value) {
+        let textIndex = 0;
+        intervalId = setInterval(() => {
+            textIndex = (textIndex + 1) % texts.length;
+            loadingText.value = texts[textIndex];
+        }, 2000);
+}
     fetchInseminations();
 
 });
@@ -494,12 +407,9 @@ onUnmounted(() => {
 
 async function fetchInseminations() {
     try {
-        isLoading.value = true;
         inseminations.value = await inseminationService.listInseminations();
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
-    } finally {
-        isLoading.value = false;
     }
 }
 
@@ -515,14 +425,11 @@ async function submitProtocol() {
             controlBovineId: 5,
         });
 
-        isLoading.value = true;
         inseminations.value = await inseminationService.createInsemination(newInsemination);
 
         showToast('success', 'Registro guardado con éxito.');
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
-    } finally {
-        isLoading.value = false;
     }
 }
 
@@ -535,45 +442,31 @@ async function submitEditProtocol() {
             others: form.value.others,
             bull: 1,
         });
-        isLoading.value = true;
         inseminations.value = await inseminationService.editInsemination(form.value.id, newInsemination);
         showToast('success', 'Registro actualizado con éxito.');
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
-    } finally {
-        isLoading.value = false;
     }
 }
 
 async function deleteInsemination() {
     try {
-        isLoading.value = true;
         inseminations.value = await inseminationService.deleteInsemination(inseminationId);
         showToast('success', 'Inseminacion eliminada con éxito.');
     } catch (error) {
         showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
     } finally {
-        isLoading.value = false;
         confirmationDeleteModal.value = false;
     }
 }
 
-function toggleEdit() {
-    isEditing.value = !isEditing.value;
-    if (!isEditing.value) {
-        editableBovine.value = { ...bovine.value };
-    }
-}
+// function toggleEdit() {
+//     isEditing.value = !isEditing.value;
+//     if (!isEditing.value) {
+//         editableBovine.value = { ...bovine.value };
+//     }
+// }
 
-function saveChanges() {
-    if (isSaveBovineEnabled.value) {
-        bovine.value = { ...editableBovine.value };
-        isEditing.value = false;
-        console.log('Datos del bovino actualizados:', bovine.value);
-    } else {
-        console.log('No se pueden guardar los cambios debido a errores de validación.');
-    }
-}
 
 function submitFormAndCloseModal() {
     submitProtocol();
@@ -656,16 +549,16 @@ function showFullText(text, title) {
     opentextViewerModal();
 }
 
-function calculateAge(birthdate) {
-    const birth = new Date(birthdate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
-}
+// function calculateAge(birthdate) {
+//     const birth = new Date(birthdate);
+//     const today = new Date();
+//     let age = today.getFullYear() - birth.getFullYear();
+//     const m = today.getMonth() - birth.getMonth();
+//     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+//         age--;
+//     }
+//     return age;
+// }
 
 </script>
 
