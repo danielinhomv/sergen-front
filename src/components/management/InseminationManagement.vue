@@ -1,87 +1,80 @@
 <template>
-    <div class="bovine-detail-container">
-
+    <div class="insemination-container">
         <div v-if="isLoading" class="loading-container">
             <div class="spinner-container">
                 <div class="pulsing-circle"></div>
             </div>
-            <div class="text-container">
-                <p class="loading-text">{{ loadingText }}</p>
-            </div>
+            <p class="loading-text">{{ loadingText }}</p>
         </div>
 
+        <div v-else class="content-container animate__animated animate__fadeIn">
 
-        <div v-else class="content-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="text-success fw-bold m-0">
+                    <i class="fas fa-history me-2"></i>Historial de Inseminaciones
+                </h4>
+                <button class="btn btn-success shadow-sm fw-bold px-4" @click="openModal()">
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Registro
+                </button>
+            </div>
 
-
-            <div class="card-section protocols-section">
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                    <h2 class="section-title mb-0">Historial de Inseminaciones</h2>
-
-
-                    <button class="btn btn-primary-custom" @click="openAddInseminationModal">
-                        <i class="fas fa-plus me-2"></i>Nuevo Registro
-                    </button>
-                </div>
-
-
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover protocol-table">
-                        <thead class="table-green-header">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light-success">
                             <tr>
-                                <th>Fecha</th>
+                                <th class="ps-4">Fecha</th>
                                 <th>Toro</th>
                                 <th>CC</th>
                                 <th>Celo</th>
-                                <th>Observación</th>
-                                <th>Otros</th>
-                                <th>Acciones</th>
+                                <th>Notas (Obs / Otros)</th>
+                                <th class="text-end pe-4">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(protocol, index) in inseminations" :key="index">
-                                <td>{{ protocol.date }}</td>
-                                <td>{{ protocol.bull }}</td>
-                                <td>{{ protocol.bodyConditionScore }}</td>
-
-                                <td class="protocol-detail-cell" :title="protocol.heatQuality || 'No tiene'">{{
-                                    protocol.heatQuality || 'No tiene' }}</td>
-
-                                <td class="protocol-detail-cell text-center">
-                                    <template v-if="protocol.observation && protocol.observation.trim() !== ''">
-                                        <i class="fas fa-eye text-primary clickable-icon"
-                                            title="Ver Observación Completa"
-                                            @click="showFullText(protocol.observation, 'Observación')"></i>
-                                    </template>
-                                    <template v-else>
-                                        No tiene
-                                    </template>
-                                </td>
-
-                                <td class="protocol-detail-cell text-center">
-                                    <template v-if="protocol.others && protocol.others.trim() !== ''">
-                                        <i class="fas fa-eye text-primary clickable-icon" title="Ver Otros Detalles"
-                                            @click="showFullText(protocol.others, 'Otros')"></i>
-                                    </template>
-                                    <template v-else>
-                                        No tiene
-                                    </template>
-                                </td>
-
-
-
+                            <tr v-for="item in inseminations" :key="item.id">
+                                <td class="ps-4 fw-medium text-dark">{{ item.date }}</td>
                                 <td>
-                                    <button @click="openEditInseminationModal(protocol)"
-                                        class="btn btn-sm btn-outline-info me-2" title="Editar Protocolo">
-                                        <i class="fas fa-edit"></i> </button>
-                                    <button @click="openConfirmationDeleteModal(protocol.id)"
-                                        class="btn btn-sm btn-outline-danger" title="Eliminar"><i
-                                            class="fas fa-trash"></i></button>
+                                    <span class="badge bg-light text-success border border-success-subtle px-3 py-2">
+                                        <i class="fas fa-bull me-1"></i> {{ item.bull_name || item.bull }}
+                                    </span>
+                                </td>
+                                <td><span class="fw-bold text-muted">{{ item.bodyConditionScore }}</span></td>
+                                <td>
+                                    <span :class="heatBadgeClass(item.heatQuality)">
+                                        {{ heatLabel(item.heatQuality) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button v-if="item.observation"
+                                            class="btn btn-sm btn-light-primary rounded-pill px-3"
+                                            @click="viewFullText('Observaciones', item.observation)">
+                                            <i class="fas fa-comment-alt me-1"></i> Obs.
+                                        </button>
+                                        <button v-if="item.others" class="btn btn-sm btn-light-info rounded-pill px-3"
+                                            @click="viewFullText('Otros Detalles', item.others)">
+                                            <i class="fas fa-ellipsis-h me-1"></i> Otros
+                                        </button>
+                                        <span v-if="!item.observation && !item.others"
+                                            class="text-muted small italic">Sin notas</span>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-warning border-0"
+                                            @click="openModal(item)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger border-0"
+                                            @click="confirmDelete(item.id)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr v-if="inseminations.length === 0">
-                                <td colspan="7" class="text-center text-muted py-3">No hay protocolos registrados para
-                                    este bovino.</td>
+                                <td colspan="6" class="text-center py-5 text-muted">No hay registros aún.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -89,61 +82,69 @@
             </div>
         </div>
 
-
-        <div class="modal fade" id="protocolModal" tabindex="-1" aria-labelledby="protocolModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modal-green-border">
-                    <div class="modal-header">
-                        <h5 class="modal-title section-title-modal" id="protocolModalLabel">Nuevo Protocolo de Datos
+        <div class="modal fade" id="inseminationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0 pb-0 ps-4 pt-4">
+                        <h5 class="modal-title fw-bold text-success">
+                            <i class="fas fa-syringe me-2"></i>{{ editing ? 'Editar Inseminación' : 'Nueva Inseminación'
+                            }}
                         </h5>
-                        <button type="button" class="btn-close" @click="closeModalInsemination()"
-                            insemination-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        <form @submit.prevent="submitFormAndCloseModal">
-                            <div class="form-group">
-                                <label for="toro" class="form-label"><i class="fas fa-bullhorn me-2"></i>Toro</label>
-                                <select v-model="form.toro" id="toro" class="form-control" required>
-                                    <option disabled value="">Seleccione un toro</option>
-                                    <option v-for="bull in bulls" :key="bull" :value="bull">{{ bull }}</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="cc" class="form-label"><i class="fas fa-percentage me-2"></i>Condición
-                                    Corporal (CC)</label>
-                                <input v-model="form.bodyConditionScore" id="cc" min="1" max="5" class="form-control"
-                                    placeholder="1-5" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="celo" class="form-label"><i class="fas fa-heartbeat me-2"></i>Celo</label>
-                                <select v-model="form.heatQuality" id="celo" class="form-control" required>
-                                    <option disabled value="">Seleccione la calidad de celo</option>
-                                    <option value="well">Bueno</option>
-                                    <option value="Regular">Regular</option>
-                                    <option value="bad">Malo</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="observation" class="form-label"><i
-                                        class="fas fa-eye me-2"></i>Observación</label>
-                                <textarea v-model="form.observation" id="observation" class="form-control"
-                                    rows="3"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="others" class="form-label"><i
-                                        class="fas fa-ellipsis-h me-2"></i>Otros</label>
-                                <textarea v-model="form.others" id="others" class="form-control" rows="3"></textarea>
+                    <div class="modal-body p-4">
+                        <form @submit.prevent="saveInsemination">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Toro / Semental
+                                        *</label>
+                                    <select v-model="form.bull" class="form-select border-success-subtle shadow-none"
+                                        required>
+                                        <option value="" disabled>Seleccione un toro...</option>
+                                        <option v-for="bull in bullsList" :key="bull.id" :value="bull.id">
+                                            {{ bull.name }} {{ bull.rgd ? `(${bull.rgd})` : '' }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">CC (1-5) *</label>
+                                    <input type="number" v-model="form.bodyConditionScore" step="0.5" min="1" max="5"
+                                        class="form-control border-success-subtle shadow-none" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Celo *</label>
+                                    <select v-model="form.heatQuality"
+                                        class="form-select border-success-subtle shadow-none" required>
+                                        <option value="well">Bueno</option>
+                                        <option value="regular">Regular</option>
+                                        <option value="bad">Malo</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label
+                                        class="form-label small fw-bold text-muted text-uppercase">Observaciones</label>
+                                    <textarea v-model="form.observation"
+                                        class="form-control border-success-subtle shadow-none" rows="4"
+                                        placeholder="Notas sobre el procedimiento..."></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Otros
+                                        Detalles</label>
+                                    <textarea v-model="form.others"
+                                        class="form-control border-success-subtle shadow-none" rows="4"
+                                        placeholder="Información adicional..."></textarea>
+                                </div>
                             </div>
 
-                            <div class="modal-footer px-0 pb-0 pt-3">
-                                <button @click="closeModalInsemination()" type="button" class="btn btn-secondary"
-                                    insemination-bs-dismiss="modal">
-                                    <i class="fas fa-times me-2"></i>Cerrar
+                            <div class="d-flex gap-2 mt-4">
+                                <button type="submit" class="btn btn-success flex-grow-1 fw-bold py-2 shadow-sm"
+                                    :disabled="!isFormValid || isSaving">
+                                    <i class="fas fa-save me-2"></i> {{ isSaving ? 'Guardando...' : 'Guardar Registro'
+                                    }}
                                 </button>
-                                <button type="submit" class="btn btn-submit-modal" :disabled="!isFormValid">
-                                    <i class="fas fa-paper-plane me-2"></i>Guardar
-                                </button>
+                                <button type="button" class="btn btn-light px-4 fw-bold"
+                                    data-bs-dismiss="modal">Cancelar</button>
                             </div>
                         </form>
                     </div>
@@ -151,113 +152,29 @@
             </div>
         </div>
 
-        <div class="modal fade" id="inseminationEditModal" tabindex="-1" aria-labelledby="inseminationEditModalLabel"
-            aria-hidden="true">
+        <div class="modal fade" id="textViewModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modal-green-border">
-                    <div class="modal-header">
-                        <h5 class="modal-title section-title-modal" id="inseminationEditModalLabel">Editar Protocolo de
-                            Datos
-                        </h5>
-                        <button type="button" class="btn-close" @click="closeEditInseminationModal()"
-                            insemination-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h6 class="modal-title fw-bold text-success text-uppercase small">{{ textModalTitle }}</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <form @submit.prevent="submitEditFormAndCloseModal">
-                            <div class="form-group">
-                                <label for="toro-edit" class="form-label"><i
-                                        class="fas fa-bullhorn me-2"></i>Toro</label>
-                                <select v-model="form.toro" id="toro-edit" class="form-control" required>
-                                    <option disabled value="">Seleccione un toro</option>
-                                    <option v-for="bull in bulls" :key="bull" :value="bull">{{ bull }}</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="cc-edit" class="form-label"><i class="fas fa-percentage me-2"></i>Condición
-                                    Corporal (CC)</label>
-                                <input v-model="form.bodyConditionScore" id="cc-edit" type="number" min="1" max="5"
-                                    step="0.5" class="form-control" placeholder="1.0-5.0" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="celo-edit" class="form-label"><i
-                                        class="fas fa-heartbeat me-2"></i>Celo</label>
-                                <select v-model="form.heatQuality" id="heatQuality" class="form-control" required>
-                                    <option value="well">Bueno</option>
-                                    <option value="regular">Regular</option>
-                                    <option value="bad">Malo</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="observation-edit" class="form-label"><i
-                                        class="fas fa-eye me-2"></i>Observación</label>
-                                <textarea v-model="form.observation" id="observation-edit" class="form-control"
-                                    rows="3"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="others-edit" class="form-label"><i
-                                        class="fas fa-ellipsis-h me-2"></i>Otros</label>
-                                <textarea v-model="form.others" id="others-edit" class="form-control"
-                                    rows="3"></textarea>
-                            </div>
-
-                            <div class="modal-footer px-0 pb-0 pt-3">
-                                <button @click="closeEditInseminationModal()" type="button" class="btn btn-secondary"
-                                    insemination-bs-dismiss="modal">
-                                    <i class="fas fa-times me-2"></i>Cancelar
-                                </button>
-                                <button type="submit" class="btn btn-warning" :disabled="!isFormValid">
-                                    <i class="fas fa-save me-2"></i>Guardar Cambios
-                                </button>
-                            </div>
-                        </form>
+                        <p class="text-dark bg-light p-3 rounded-3 mb-0" style="white-space: pre-wrap;">{{
+                            textModalContent }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="modal fade" id="textViewerModal" tabindex="-1" aria-labelledby="textViewerModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="textViewerModalLabel">Detalle: {{ fullTextTitle }}</h5>
-                        <button type="button" class="btn-close" insemination-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p style="white-space: pre-wrap;">{{ fullTextContent }}</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button @click="closeTextViewerModal()" type="button" class="btn btn-secondary"
-                            insemination-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
-            <div id="liveToast" class="toast align-items-center w-100" role="alert" aria-live="assertive"
-                aria-atomic="true">
-                <div class="d-flex">
-                    <div id="toast-icon" class="toast-body me-2">
-                    </div>
-                    <div id="toast-message" class="toast-body flex-grow-1">
-                    </div>
-                    <button type="button" class="btn-close me-2 m-auto" insemination-bs-dismiss="toast"
-                        aria-label="Close"></button>
-                </div>
-            </div>
-        </div>
-        <div v-if="confirmationDeleteModal" class="confirmation-overlay ">
+        <div v-if="confirmationDeleteModal" class="confirmation-overlay">
             <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
-                <p class="mb-4">¿Estás seguro de que quieres eliminar esta inseminacion?</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <button class="btn btn-success" @click="deleteInsemination()">Sí, continuar</button>
-                    <button class="btn btn-outline-danger" @click="confirmationDeleteModal = false">Cancelar</button>
+                <div class="icon-circle bg-light-danger text-danger mb-3"><i class="fas fa-trash-alt fs-4"></i></div>
+                <h5 class="fw-bold">¿Eliminar registro?</h5>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button class="btn btn-danger px-4 fw-bold" @click="deleteInsemination">Eliminar</button>
+                    <button class="btn btn-light px-4 fw-bold"
+                        @click="confirmationDeleteModal = false">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -265,678 +182,218 @@
 </template>
 
 <script setup>
-
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { InseminationService } from '@/services/management/InseminationService';
+import { BullService } from '@/services/management/BullService';
+import { ControlBovineService } from '@/services/management/ControlBovineService'; // Nuevo servicio
 import { Insemination } from '@/model/management/Insemination';
-import { Modal } from 'bootstrap';
-import { Toast } from 'bootstrap';
+import { Modal, Toast } from 'bootstrap';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 
-const inseminationService = new InseminationService();
-const loadingText = ref('Escaneando...');
-const fullTextContent = ref('');
-const fullTextTitle = ref('');
-const confirmationDeleteModal = ref(false);
-let intervalId = null;
-let inseminationId = null;
+/* --- SERVICIOS --- */
+const service = new InseminationService();
+const bullService = new BullService();
+const controlBovineService = new ControlBovineService();
 const sessionPropertyStore = useSessionPropertyStore();
+
+/* ======================
+   STATE
+====================== */
+const inseminations = ref([]);
+const bullsList = ref([]);
+const controlBovineId = ref(null); // Guardará el ID dinámico de la relación
+const editing = ref(false);
+const isSaving = ref(false);
+const confirmationDeleteModal = ref(false);
+const selectedId = ref(null);
+const loadingText = ref('Sincronizando protocolo...');
+
+const textModalTitle = ref('');
+const textModalContent = ref('');
+
 const isLoading = computed(() => !sessionPropertyStore.onScanned);
 
-const texts = [
-    'Escaneando...',
-    'Analizando datos...',
-    'Conectando con el escáner...',
-    'Procesando información...'
-];
-// const bovine = ref({
-//     rgd: 'S1-456',
-//     serie: 'A123',
-//     sex: 'female',
-//     weight: 450.5,
-//     birthdate: '2022-01-15',
-//     motherId: 'S1-455',
-//     childId: 'S1-459'
-// });
-// const editableBovine = ref({ ...bovine.value });
-// const isEditing = ref(false);
-const inseminations = ref([]);
-const bulls = [
-    'mukesh', 'Toro A', 'pancho cachon', 'delta eao', 'cia gandhi',
-    'magnum', 'maxima', 'upgrade', 'pro metido', 'timor', 'emblema eao', 'ferrati'
-];
 const form = ref({
-    id: null,
-    toro: '',
+    id: null, 
+    bull: '', 
     bodyConditionScore: null,
-    heatQuality: '',
-    observation: null,
-    others: null,
-    date: new Date().toISOString().slice(0, 10),
+    heatQuality: 'well', 
+    observation: '', 
+    others: '',
+    date: new Date().toISOString().split('T')[0]
 });
 
+/* ======================
+   VALIDACIONES
+====================== */
+const isFormValid = computed(() => form.value.bull && form.value.bodyConditionScore >= 1);
 
-// const hasChanges = computed(() => {
-//     return JSON.stringify(editableBovine.value) !== JSON.stringify(bovine.value);
-// });
-// const areRequiredFieldsValid = computed(() => {
-//     const { rgd, serie, sex, weight } = editableBovine.value;
-//     return rgd && rgd.trim() !== '' &&
-//         serie && serie.trim() !== '' &&
-//         sex && sex.trim() !== '' &&
-//         weight !== null && weight >= 0;
-// });
-// const isRelationshipValid = computed(() => {
-//     const { motherId, childId } = editableBovine.value;
-//     const motherFilled = motherId && motherId.trim() !== '';
-//     const childFilled = childId && childId.trim() !== '';
-//     return !(motherFilled && childFilled);
-// });
+/* ======================
+   CRUD & DATA LOAD
+====================== */
 
-const isCcValid = computed(() => {
-    const cc = form.value.bodyConditionScore;
-
-    if (cc === null || cc === undefined || isNaN(cc) || cc < 1 || cc > 5) {
-        return false;
-    }
-
-    const multiplied = cc * 10;
-
-    return (multiplied % 5) === 0;
-});
-
-// const isSaveBovineEnabled = computed(() => {
-//     return hasChanges.value &&
-//         areRequiredFieldsValid.value &&
-//         isRelationshipValid.value
-// });
-
-const isFormValid = computed(() => {
-    return form.value.toro &&
-        form.value.heatQuality &&
-        isCcValid.value;
-});
-
-
-
-
-const openAddInseminationModal = () => {
-    const modal = new Modal(document.getElementById('protocolModal'));
-    modal.show();
-};
-
-const opentextViewerModal = () => {
-    const modal = new Modal(document.getElementById('textViewerModal'));
-    modal.show();
-};
-
-const openEditInseminationModal = (insemination) => {
-    form.value.id = insemination.id;
-    form.value.toro = insemination.bull;
-    form.value.bodyConditionScore = insemination.bodyConditionScore;
-    form.value.heatQuality = insemination.heatQuality;
-    form.value.observation = insemination.observation;
-    form.value.others = insemination.others;
-
-    console.log(form);
-    const modal = new Modal(document.getElementById('inseminationEditModal'));
-    modal.show();
-};
-
-function openConfirmationDeleteModal(id) {
-    confirmationDeleteModal.value = true;
-    inseminationId = id;
-    console.log("id del bovino a eliminar:" + id);
-}
-
-onMounted(() => {
-if (isLoading.value) {
-        let textIndex = 0;
-        intervalId = setInterval(() => {
-            textIndex = (textIndex + 1) % texts.length;
-            loadingText.value = texts[textIndex];
-        }, 2000);
-}
-    fetchInseminations();
-
-});
-
-onUnmounted(() => {
-    clearInterval(intervalId);
-});
-
-async function fetchInseminations() {
+/**
+ * Proceso Secuencial:
+ * 1. Crea/Obtiene el vínculo (ControlBovine)
+ * 2. Carga en paralelo: Toros e Inseminaciones usando el ID obtenido
+ */
+async function loadInitialData() {
     try {
-        inseminations.value = await inseminationService.listInseminations();
+        const bovineId = sessionPropertyStore.getBovineId; 
+        const protocolId = sessionPropertyStore.getProtocolId;
+
+        // 1. Asegurar el vínculo Control-Bovine
+        const relation = await controlBovineService.createControlBovine({
+            bovine_id: bovineId,
+            control_id: protocolId
+        });
+        
+        controlBovineId.value = relation.id;
+
+        // 2. Carga de datos dependientes
+        const [inseminationData, bullsData] = await Promise.all([
+            service.listInseminations(controlBovineId.value),
+            bullService.listBulls() 
+        ]);
+
+        inseminations.value = inseminationData;
+        bullsList.value = bullsData;
     } catch (error) {
-        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+        console.error(error);
+        showToast('error', 'Error al sincronizar protocolo: ' + error.message);
     }
 }
 
-async function submitProtocol() {
+async function saveInsemination() {
+    isSaving.value = true;
     try {
-        const newInsemination = new Insemination({
-            bodyConditionScore: form.value.bodyConditionScore,
-            heatQuality: form.value.heatQuality,
-            observation: form.value.observation,
-            others: form.value.others,
-            date: new Date().toISOString().slice(0, 10),
-            bull: 1,
-            controlBovineId: 5,
+        // Usamos el controlBovineId obtenido dinámicamente
+        const data = new Insemination({ 
+            ...form.value, 
+            control_bovine_id: controlBovineId.value 
         });
 
-        inseminations.value = await inseminationService.createInsemination(newInsemination);
-
-        showToast('success', 'Registro guardado con éxito.');
+        if (editing.value) {
+            inseminations.value = await service.editInsemination(form.value.id, data);
+            showToast('success', 'Historial actualizado.');
+        } else {
+            inseminations.value = await service.createInsemination(data);
+            showToast('success', 'Inseminación registrada.');
+        }
+        
+        bootstrap.Modal.getInstance(document.getElementById('inseminationModal')).hide();
     } catch (error) {
-        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+        showToast('error', 'Error al guardar.');
+    } finally {
+        isSaving.value = false;
     }
 }
 
-async function submitEditProtocol() {
-    try {
-        const newInsemination = new Insemination({
-            bodyConditionScore: form.value.bodyConditionScore,
-            heatQuality: form.value.heatQuality,
-            observation: form.value.observation,
-            others: form.value.others,
-            bull: 1,
-        });
-        inseminations.value = await inseminationService.editInsemination(form.value.id, newInsemination);
-        showToast('success', 'Registro actualizado con éxito.');
-    } catch (error) {
-        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+/* ======================
+   HELPERS UI
+====================== */
+function getBullName(bullId) {
+    const bull = bullsList.value.find(b => b.id == bullId);
+    return bull ? bull.name : (bullId || 'Semental no identificado');
+}
+
+function openModal(item = null) {
+    if (item) {
+        editing.value = true;
+        form.value = {
+            id: item.id,
+            bull: item.bull, 
+            bodyConditionScore: item.bodyConditionScore,
+            heatQuality: item.heatQuality,
+            observation: item.observation,
+            others: item.others,
+            date: item.date
+        };
+    } else {
+        editing.value = false;
+        resetForm();
     }
+    new Modal(document.getElementById('inseminationModal')).show();
 }
 
 async function deleteInsemination() {
     try {
-        inseminations.value = await inseminationService.deleteInsemination(inseminationId);
-        showToast('success', 'Inseminacion eliminada con éxito.');
-    } catch (error) {
-        showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
-    } finally {
+        inseminations.value = await service.deleteInsemination(selectedId.value);
+        showToast('success', 'Eliminado correctamente.');
         confirmationDeleteModal.value = false;
+    } catch (error) {
+        showToast('error', 'Error al eliminar.');
     }
 }
 
-// function toggleEdit() {
-//     isEditing.value = !isEditing.value;
-//     if (!isEditing.value) {
-//         editableBovine.value = { ...bovine.value };
-//     }
-// }
-
-
-function submitFormAndCloseModal() {
-    submitProtocol();
-    closeModalInsemination()
+function viewFullText(title, content) {
+    textModalTitle.value = title;
+    textModalContent.value = content;
+    new Modal(document.getElementById('textViewModal')).show();
 }
 
-function submitEditFormAndCloseModal() {
-    submitEditProtocol();
-    closeEditInseminationModal();
+function confirmDelete(id) {
+    selectedId.value = id;
+    confirmationDeleteModal.value = true;
 }
 
-
-function closeModalInsemination() {
-    const modalElement = document.getElementById('protocolModal');
-    const modalInstance = Modal.getInstance(modalElement);
-    modalInstance.hide();
-    resetForm();
-
+function heatLabel(val) {
+    const map = { well: 'Bueno', regular: 'Regular', bad: 'Malo' };
+    return map[val] || val;
 }
 
-function closeEditInseminationModal() {
-    const modalElement = document.getElementById('inseminationEditModal');
-    const modalInstance = Modal.getInstance(modalElement);
-    modalInstance.hide();
-}
-
-function closeTextViewerModal() {
-    const modalElement = document.getElementById('textViewerModal');
-    const modalInstance = Modal.getInstance(modalElement);
-    modalInstance.hide();
+function heatBadgeClass(val) {
+    const map = { well: 'bg-light-success text-success', regular: 'bg-light-warning text-warning', bad: 'bg-light-danger text-danger' };
+    return `badge px-3 py-2 ${map[val] || 'bg-light'}`;
 }
 
 function resetForm() {
-    form.value = {
-        toro: '',
-        bodyConditionScore: null,
-        heatQuality: '',
-        observation: '',
-        others: '',
-        date: new Date().toISOString().slice(0, 10),
-    };
+    form.value = { id: null, bull: '', bodyConditionScore: null, heatQuality: 'well', observation: '', others: '', date: new Date().toISOString().split('T')[0] };
 }
 
 function showToast(type, message) {
     const toastEl = document.getElementById('liveToast');
-    const toastMessage = document.getElementById('toast-message');
-    const toastIcon = document.getElementById('toast-icon');
-
-
-    toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
-
-    let iconHtml = '';
-
-    if (type === 'success') {
-        toastEl.classList.add('text-bg-success');
-        iconHtml = '<i class="fas fa-check-circle fs-5"></i>';
-    } else if (type === 'error') {
-        toastEl.classList.add('text-bg-danger');
-        iconHtml = '<i class="fas fa-times-circle fs-5"></i>';
-    } else if (type === 'warning') {
-        toastEl.classList.add('text-bg-warning');
-        iconHtml = '<i class="fas fa-exclamation-triangle fs-5"></i>';
-    }
-
-    toastMessage.textContent = message;
-    toastIcon.innerHTML = iconHtml;
-
-    const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
-    toast.show();
+    if (!toastEl) return;
+    toastEl.className = `toast align-items-center w-100 text-white border-0 ${type === 'success' ? 'bg-success' : 'bg-danger'}`;
+    document.getElementById('toast-message').textContent = message;
+    Toast.getOrCreateInstance(toastEl).show();
 }
 
-function showFullText(text, title) {
-    if (!text || text.trim() === '') {
-        return;
-    }
-
-    fullTextContent.value = text;
-    fullTextTitle.value = title;
-
-    opentextViewerModal();
-}
-
-// function calculateAge(birthdate) {
-//     const birth = new Date(birthdate);
-//     const today = new Date();
-//     let age = today.getFullYear() - birth.getFullYear();
-//     const m = today.getMonth() - birth.getMonth();
-//     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-//         age--;
-//     }
-//     return age;
-// }
-
+onMounted(loadInitialData);
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
-.bovine-detail-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    padding: 2rem;
-    background-color: #f0fdf4;
-    /* Fondo muy claro (casi blanco verde) */
-    font-family: 'Poppins', sans-serif;
-    min-height: 100vh;
-    justify-content: flex-start;
-    /* Alineación al inicio para dar espacio a la tabla */
-    align-items: center;
+/* (Estilos idénticos al anterior para mantener la estética profesional) */
+.insemination-container {
+    padding: 1.5rem;
 }
 
-/* --- Estilos de Carga (Sin cambios) --- */
-.loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    text-align: center;
-    width: 100%;
-    height: 100%;
-    min-height: 80vh;
+.bg-light-success {
+    background-color: #f0fdf4 !important;
 }
 
-.spinner-container {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 1rem;
+.bg-light-warning {
+    background-color: #fffbeb !important;
 }
 
-.pulsing-circle {
-    width: 100px;
-    height: 100px;
-    background-color: #388e3c;
-    border-radius: 50%;
-    opacity: 0.5;
-    animation: pulse 2s infinite ease-out;
+.bg-light-danger {
+    background-color: #fef2f2 !important;
 }
 
-.loading-text {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: #388e3c;
-    animation: fade 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(0.6);
-        opacity: 0.5;
-    }
-
-    50% {
-        transform: scale(1.1);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(0.6);
-        opacity: 0.5;
-    }
-}
-
-@keyframes fade {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
-/* --- Estilos de Contenido General --- */
-.content-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    width: 100%;
-    align-items: center;
-    max-width: 1200px;
-
-    /* Ancho máximo para el contenido principal */
-}
-
-.card-section {
-    background-color: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(46, 125, 50, 0.1);
-    padding: 2.5rem;
-    width: 100%;
-    /* Ajuste de ancho para info section */
-    max-width: 700px;
-}
-
-.info-section {
-    border: 1px solid #a5d6a7;
-}
-
-/* La sección de protocolos se ajusta al ancho máximo para la tabla */
-.protocols-section {
-    max-width: 1200px;
-    border: 1px solid #a5d6a7;
-}
-
-.section-title {
-    color: #1b5e20;
-    font-size: 1.8rem;
-    font-weight: 700;
-    text-align: center;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.edit-icon {
-    color: #2e7d32;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    font-size: 1.2rem;
-}
-
-.edit-icon:hover {
-    transform: scale(1.1);
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-}
-
-.info-item .label {
-    font-weight: 600;
-    color: #388e3c;
-    margin-right: 0.5rem;
-}
-
-.info-item .value {
-    color: #555;
-    font-weight: 400;
-    flex-grow: 1;
-}
-
-.icon-info {
-    color: #388e3c;
-    margin-right: 0.75rem;
-}
-
-/* --- Estilos de Formulario y Controles --- */
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #2e7d32;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border: 1px solid #b6e2c7;
-    border-radius: 12px;
-    background-color: #f6fff8;
-    font-size: 1rem;
-    color: #333;
-    transition: all 0.3s ease-in-out;
-}
-
-.form-control:focus {
-    border-color: #43a047;
-    box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.2);
-    outline: none;
-}
-
-/* Botón de Guardar Cambios Bovino (Verde) */
-.btn-submit {
-    width: auto;
-    padding: 1rem;
-    background-color: #388e3c;
-    color: #ffffff;
+.btn-light-primary {
+    background-color: #e0f2fe;
+    color: #0369a1;
     border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
 }
 
-.btn-submit:hover {
-    background-color: #2e7d32;
-    transform: translateY(-2px);
-}
-
-.btn-submit:disabled {
-    background-color: #a5d6a7;
-    cursor: not-allowed;
-}
-
-/* Botón Secundario (Gris) */
-.btn-secondary {
-    background-color: #757575;
-    color: #ffffff;
+.btn-light-info {
+    background-color: #f0f9ff;
+    color: #0891b2;
     border: none;
-    border-radius: 12px;
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 4px 12px rgba(117, 117, 117, 0.25);
-}
-
-.btn-secondary:hover {
-    background-color: #616161;
-    transform: translateY(-2px);
-}
-
-.edit-form-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-top: 1rem;
-}
-
-/* --- Estilos Personalizados: Botón Azul y Modal Verde --- */
-
-/* 1. Botón Azul (Requisito: Agregar nuevo registro) */
-.btn-primary-custom {
-    padding: 0.75rem 1.5rem;
-    background-color: #1976d2;
-    /* Azul Profundo */
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-}
-
-.btn-primary-custom:hover {
-    background-color: #1565c0;
-    transform: translateY(-2px);
-}
-
-/* 2. Estilos de Tabla de Protocolos */
-.protocol-table {
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.table-green-header th {
-    background-color: #388e3c;
-    /* Verde Oscuro para el encabezado */
-    color: #ffffff;
-    font-weight: 600;
-    border-bottom: 2px solid #1b5e20;
-}
-
-.protocol-table tbody tr:nth-child(even) {
-    background-color: #f6fff8;
-    /* Fila alterna clara */
-}
-
-/* Estilo para que las celdas de detalle no sean demasiado anchas */
-.protocol-detail-cell {
-    max-width: 150px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 3. Estilos del Modal (Temática Verde) */
-.modal-content {
-    border-radius: 16px;
-}
-
-.modal-green-border {
-    border: 3px solid #66bb6a;
-    /* Borde verde claro */
-}
-
-.section-title-modal {
-    color: #1b5e20;
-    font-weight: 700;
-    font-size: 1.5rem;
-}
-
-/* Botón de Guardar Protocolo dentro del modal (Verde) */
-.btn-submit-modal {
-    padding: 0.75rem 1.5rem;
-    background-color: #388e3c;
-    /* Verde Oscuro */
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 3px 8px rgba(46, 125, 50, 0.2);
-}
-
-.btn-submit-modal:hover {
-    background-color: #2e7d32;
-    transform: translateY(-1px);
-}
-
-/* Responsividad */
-@media (max-width: 1000px) {
-    .content-container {
-        max-width: 95%;
-    }
-
-    .card-section {
-        padding: 1.5rem;
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 600px) {
-    .bovine-detail-container {
-        padding: 1rem;
-    }
-
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .d-flex {
-        flex-direction: column;
-        align-items: stretch !important;
-    }
-
-    .btn-primary-custom {
-        width: 100%;
-    }
-
-    .protocol-detail-cell {
-        max-width: 100px;
-        /* Reducir aún más en móvil */
-    }
-
-    .clickable-text {
-        cursor: pointer;
-        text-decoration: underline dotted #ccc;
-    }
 }
 
 .confirmation-overlay {
@@ -945,10 +402,43 @@ function showFullText(text, title) {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1050;
+    z-index: 2000;
+}
+
+.confirmation-box {
+    width: 350px;
+}
+
+.loading-container {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulsing-circle {
+    width: 80px;
+    height: 80px;
+    background-color: #28a745;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
 }
 </style>

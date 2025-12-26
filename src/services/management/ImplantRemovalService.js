@@ -8,26 +8,31 @@ export class ImplantRemovalService {
         this.baseUrl = baseUrl;
     }
 
-async get() {
-    const response = await fetch(`${this.baseUrl}/get`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-    })
+    /**
+     * Coincide con Route::post('/get', ...)
+     */
+    async get() {
+        const response = await fetch(`${this.baseUrl}/get`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
 
-    if (!response.ok) {
-        throw new Error('Error al obtener pre-sincronización')
+        if (!response.ok) {
+            throw new Error('Error al obtener los datos de retiro de implante');
+        }
+
+        const data = await response.json();
+        if (!data) return null;
+
+        return ImplantRemoval.fromJson(data);
     }
 
-    const data = await response.json()
-    if (!data) return null
-
-    return ImplantRemoval.fromJson(data);
-}
-
-
+    /**
+     * Coincide con Route::post('/create', ...)
+     */
     async create(item) {
         const response = await fetch(`${this.baseUrl}/create`, {
             method: 'POST',
@@ -35,19 +40,25 @@ async get() {
             body: JSON.stringify(item.toJson()),
         });
 
-        if (!response.ok) throw new Error('Error al crear');
+        if (!response.ok) throw new Error('Error al registrar el retiro de implante');
         return await response.json();
     }
 
+    /**
+     * Coincide con Route::post('/update', ...)
+     * Se eliminó el ID de la URL y se cambió PUT por POST.
+     */
     async update(id, item) {
-        const response = await fetch(`${this.baseUrl}/update/${id}`, {
-            method: 'PUT',
+        const response = await fetch(`${this.baseUrl}/update`, {
+            method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.toJson()),
+            body: JSON.stringify({
+                id: id,
+                ...item.toJson()
+            }),
         });
 
-        if (!response.ok) throw new Error('Error al actualizar');
+        if (!response.ok) throw new Error('Error al actualizar el retiro de implante');
         return await response.json();
     }
-
 }

@@ -1,7 +1,6 @@
 <template>
-  <div class="ultrasound-container">
+  <div class="presynch-container">
 
-    <!-- LOADER -->
     <div v-if="isLoading" class="loading-container">
       <div class="spinner-container">
         <div class="pulsing-circle"></div>
@@ -9,112 +8,102 @@
       <p class="loading-text">{{ loadingText }}</p>
     </div>
 
-    <!-- CONTENIDO -->
-    <div v-else class="result-container">
+    <div v-else class="result-container animate__animated animate__fadeIn">
 
-      <!-- BOTÓN REGISTRAR (solo si NO existe) -->
-      <button
-        v-if="!item && !showForm"
-        class="btn btn-primary mb-3"
-        @click="openAddForm"
-      >
-        Registrar Pre-Sincronización
-      </button>
+        <button v-if="!item && !showForm" class="btn btn-success shadow-sm fw-bold px-4" @click="openAddForm">
+          <i class="fas fa-plus-circle me-2"></i>Registrar Pre-sincronizacion
+        </button>
 
-      <!-- DETALLE -->
-      <div v-if="item && !showForm" class="detail-card">
-        <div class="detail-header">
-          <h4>Pre-Sincronización</h4>
-          <button class="btn btn-warning btn-sm" @click="openEditForm">
-            ✏️
+
+      <div v-if="item && !showForm"
+        class="detail-card border-start border-success border-4 shadow-sm bg-white p-4 rounded-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h5 class="fw-bold text-dark m-0">Protocolo Aplicado</h5>
+          <button class="btn btn-outline-warning btn-sm border-0" @click="openEditForm">
+            <i class="fas fa-edit fs-5"></i>
           </button>
         </div>
 
-        <p><strong>Vacuna reproductiva:</strong> {{ item.reproductive_vaccine }}</p>
-        <p><strong>Sincrogest:</strong> {{ item.sincrogest_product }}</p>
-        <p><strong>Antiparasitario:</strong> {{ item.antiparasitic_product }}</p>
-        <p>
-          <strong>Vitaminas y minerales:</strong>
-          {{ item.vitamins_and_minerals ? 'Sí' : 'No' }}
-        </p>
-        <p><strong>Fecha aplicación:</strong> {{ item.application_date }}</p>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <p class="mb-1 text-muted small text-uppercase fw-bold">Fecha Aplicación</p>
+            <p class="fw-medium text-success"><i class="fas fa-calendar-alt me-2"></i>{{ item.application_date }}</p>
+          </div>
+          <div class="col-md-6">
+            <p class="mb-1 text-muted small text-uppercase fw-bold">Vitaminas y Minerales</p>
+            <p class="fw-medium">
+              <i :class="item.vitamins_and_minerals ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"
+                class="me-2"></i>
+              {{ item.vitamins_and_minerals ? 'Aplicado' : 'No aplicado' }}
+            </p>
+          </div>
+          <div class="col-md-4">
+            <p class="mb-1 text-muted small text-uppercase fw-bold">Vacuna Reproductiva</p>
+            <p class="fw-medium text-dark">{{ item.reproductive_vaccine }}</p>
+          </div>
+          <div class="col-md-4">
+            <p class="mb-1 text-muted small text-uppercase fw-bold">Sincrogest</p>
+            <p class="fw-medium text-dark">{{ item.sincrogest_product }}</p>
+          </div>
+          <div class="col-md-4">
+            <p class="mb-1 text-muted small text-uppercase fw-bold">Antiparasitario</p>
+            <p class="fw-medium text-dark">{{ item.antiparasitic_product }}</p>
+          </div>
+        </div>
       </div>
-      
 
-      <!-- FORMULARIO -->
-      <div v-if="showForm" class="form-container mt-3 p-3 border rounded">
-        <h4>{{ editing ? 'Editar Pre-Sincronización' : 'Registrar Pre-Sincronización' }}</h4>
+      <div v-if="showForm" class="form-container p-4 bg-white border border-success-subtle rounded-4 shadow-sm">
+        <h5 class="text-success fw-bold mb-4">
+          <i class="fas fa-clipboard-list me-2"></i>{{ editing ? 'Editar Protocolo' : 'Nuevo Registro de Protocolo' }}
+        </h5>
 
         <form @submit.prevent="submitForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Vacuna Reproductiva *</label>
+              <input v-model="form.reproductive_vaccine" class="form-control border-success-subtle"
+                :class="{ 'is-invalid': errors.reproductive_vaccine }" placeholder="Nombre de la vacuna" />
+            </div>
 
-          <div class="mb-2">
-            <label>Vacuna Reproductiva *</label>
-            <input
-              v-model="form.reproductive_vaccine"
-              class="form-control"
-              :class="{ 'is-invalid': errors.reproductive_vaccine }"
-            />
-            <div class="invalid-feedback">Campo obligatorio</div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Sincrogest *</label>
+              <input v-model="form.sincrogest_product" class="form-control border-success-subtle"
+                :class="{ 'is-invalid': errors.sincrogest_product }" placeholder="Producto Sincrogest" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Antiparasitario *</label>
+              <input v-model="form.antiparasitic_product" class="form-control border-success-subtle"
+                :class="{ 'is-invalid': errors.antiparasitic_product }" placeholder="Nombre antiparasitario" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Fecha de Aplicación *</label>
+              <input type="date" v-model="form.application_date" class="form-control border-success-subtle"
+                :class="{ 'is-invalid': errors.application_date }" />
+            </div>
+
+            <div class="col-12">
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" role="switch" id="vitaminsSwitch"
+                  v-model="form.vitamins_and_minerals">
+                <label class="form-check-label fw-bold text-muted" for="vitaminsSwitch">
+                  ¿Se aplicaron Vitaminas y Minerales?
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div class="mb-2">
-            <label>Sincrogest *</label>
-            <input
-              v-model="form.sincrogest_product"
-              class="form-control"
-              :class="{ 'is-invalid': errors.sincrogest_product }"
-            />
-            <div class="invalid-feedback">Campo obligatorio</div>
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-success px-4 shadow-sm fw-bold" type="submit" :disabled="!isFormValid || isSaving">
+              <i class="fas fa-save me-2"></i>
+              {{ isSaving ? 'Guardando...' : (editing ? 'Actualizar' : 'Guardar') }}
+            </button>
+
+            <button class="btn btn-outline-secondary px-4 fw-bold" type="button" @click="cancelForm">
+              Cancelar
+            </button>
           </div>
-
-          <div class="mb-2">
-            <label>Antiparasitario *</label>
-            <input
-              v-model="form.antiparasitic_product"
-              class="form-control"
-              :class="{ 'is-invalid': errors.antiparasitic_product }"
-            />
-            <div class="invalid-feedback">Campo obligatorio</div>
-          </div>
-
-          <div class="mb-2 form-check">
-            <input
-              type="checkbox"
-              class="form-check-input"
-              v-model="form.vitamins_and_minerals"
-              id="vitamins"
-            />
-            <label class="form-check-label" for="vitamins">
-              Vitaminas y Minerales
-            </label>
-          </div>
-
-          <div class="mb-2">
-            <label>Fecha de aplicación *</label>
-            <input
-              type="date"
-              v-model="form.application_date"
-              class="form-control"
-              :class="{ 'is-invalid': errors.application_date }"
-            />
-            <div class="invalid-feedback">Campo obligatorio</div>
-          </div>
-
-          <button
-            class="btn btn-success mt-2"
-            type="submit"
-            :disabled="!isFormValid"
-          >
-            {{ editing ? 'Actualizar' : 'Guardar' }}
-          </button>
-
-          <button
-            class="btn btn-secondary mt-2 ms-2"
-            type="button"
-            @click="cancelForm"
-          >
-            Cancelar
-          </button>
         </form>
       </div>
 
@@ -124,6 +113,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
+import { Toast } from 'bootstrap'
 import { PresynchronizationService } from '@/services/management/PresynchronizationService'
 
 const service = new PresynchronizationService()
@@ -133,7 +123,8 @@ const service = new PresynchronizationService()
 ====================== */
 const item = ref(null)
 const isLoading = ref(true)
-const loadingText = ref('Escaneando...')
+const isSaving = ref(false)
+const loadingText = ref('Cargando pre-sincronización...')
 const showForm = ref(false)
 const editing = ref(false)
 
@@ -142,27 +133,27 @@ const form = ref({
   reproductive_vaccine: '',
   sincrogest_product: '',
   antiparasitic_product: '',
-  vitamins_and_minerals: true, // por defecto SI
-  application_date: ''
+  vitamins_and_minerals: true,
+  application_date: new Date().toISOString().split('T')[0]
 })
 
-const errors = ref({})
+const errors = ref({
+  reproductive_vaccine: false,
+  sincrogest_product: false,
+  antiparasitic_product: false,
+  application_date: false
+})
 
 /* ======================
    VALIDACIONES EN TIEMPO REAL
 ====================== */
-watch(form, () => {
-  errors.value = {
-    reproductive_vaccine: !form.value.reproductive_vaccine,
-    sincrogest_product: !form.value.sincrogest_product,
-    antiparasitic_product: !form.value.antiparasitic_product,
-    application_date: !form.value.application_date
-  }
+watch(() => form.value, () => {
+  errors.value.reproductive_vaccine = !form.value.reproductive_vaccine
+  errors.value.sincrogest_product = !form.value.sincrogest_product
+  errors.value.antiparasitic_product = !form.value.antiparasitic_product
+  errors.value.application_date = !form.value.application_date
 }, { deep: true })
 
-/* ======================
-   VALIDACIÓN FINAL (CLAVE)
-====================== */
 const isFormValid = computed(() => {
   return (
     !!form.value.reproductive_vaccine &&
@@ -173,15 +164,51 @@ const isFormValid = computed(() => {
 })
 
 /* ======================
+   TOAST HELPER
+====================== */
+function showToast(type, message) {
+  const toastEl = document.getElementById('liveToast');
+  if (!toastEl) return;
+  const toastMessage = document.getElementById('toast-message');
+  const toastIcon = document.getElementById('toast-icon');
+
+  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
+
+  if (type === 'success') {
+    toastEl.classList.add('text-bg-success');
+    toastIcon.innerHTML = '<i class="fas fa-check-circle fs-5"></i>';
+  } else if (type === 'error') {
+    toastEl.classList.add('text-bg-danger');
+    toastIcon.innerHTML = '<i class="fas fa-times-circle fs-5"></i>';
+  }
+
+  toastMessage.textContent = message;
+  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
+  toast.show();
+}
+
+/* ======================
    CRUD
 ====================== */
 async function loadItem() {
-  const response = await service.get()
-  item.value = response || null
+  isLoading.value = true
+  try {
+    const response = await service.get()
+    item.value = response || null
+  } catch (error) {
+    showToast('error', 'Error al cargar los datos.')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function openAddForm() {
   editing.value = false
+  form.value = {
+    id: null, reproductive_vaccine: '', sincrogest_product: '',
+    antiparasitic_product: '', vitamins_and_minerals: true,
+    application_date: new Date().toISOString().split('T')[0]
+  }
   showForm.value = true
 }
 
@@ -197,36 +224,64 @@ function cancelForm() {
 
 async function submitForm() {
   if (!isFormValid.value) return
-
-  if (editing.value) {
-    await service.update(form.value.id, form.value)
-  } else {
-    await service.create(form.value)
+  isSaving.value = true
+  try {
+    if (editing.value) {
+      // Usando POST /update con ID en body (según el servicio corregido)
+      await service.update(form.value.id, form.value)
+      showToast('success', 'Protocolo actualizado correctamente.')
+    } else {
+      await service.create(form.value)
+      showToast('success', 'Protocolo registrado correctamente.')
+    }
+    await loadItem()
+    showForm.value = false
+  } catch (error) {
+    showToast('error', 'Ocurrió un error al guardar.')
+  } finally {
+    isSaving.value = false
   }
-
-  await loadItem()
-  showForm.value = false
 }
 
-/* ======================
-   LIFECYCLE
-====================== */
-onMounted(async () => {
-  //await loadItem()
-  isLoading.value = false
-})
+onMounted(loadItem)
 </script>
 
 <style scoped>
-.detail-card {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 12px;
+.result-container {
+  width: 100%;
+  max-width: 900px;
 }
 
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.detail-card {
+  transition: transform 0.2s;
+}
+
+.detail-card:hover {
+  transform: translateY(-3px);
+}
+
+.form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.1);
+}
+
+.pulsing-circle {
+  width: 80px;
+  height: 80px;
+  background-color: #28a745;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
 }
 </style>

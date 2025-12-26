@@ -7,7 +7,7 @@ export class Bull {
     }
 
     static fromJson(data) {
-        return new BirthToro({
+        return new Bull({
             id: data.id,
             name: data.name
         });

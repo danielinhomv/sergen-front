@@ -10,26 +10,32 @@
         <h2 class="text-white mt-3 mb-0">Sergen</h2>
       </div>
       <div class="list-group list-group-flush flex-grow-1">
-        <router-link :to="{ name:'dashboard'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
+        <router-link :to="{ name: 'dashboard' }"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
           <i class="fas fa-chart-line me-3"></i>Panel
         </router-link>
-         <router-link :to="{ name: 'account-management' }" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
+        <router-link :to="{ name: 'account-management' }"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
           <i class="fas fa-user-circle me-3"></i>Mi Cuenta
         </router-link>
-        <router-link :to="{ name: 'property-management'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
+        <router-link :to="{ name: 'property-management' }"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-tractor me-3"></i>Propiedad Actual
         </router-link>
-        <router-link :to="{ name:'insemination-management'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
+        <router-link :to="{ name: 'insemination-management' }"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-clipboard-list me-3"></i>Etapas
         </router-link>
-        <router-link :to="{ name:'insemination-report'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
+        <router-link :to="{ name: 'insemination-report' }"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-file-alt me-3"></i>Reportes
         </router-link>
-       
+
       </div>
       <!-- Separador y opción de Cerrar Sesión -->
       <div class="mt-auto p-3">
-        <router-link :to="{ name:'login'}" class="list-group-item list-group-item-action bg-transparent text-white fw-bold ">
+        <router-link :to="{ name: 'login' }"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold ">
           <i class="fas fa-sign-out-alt me-3"></i>Cerrar Sesión
         </router-link>
       </div>
@@ -60,43 +66,43 @@ import { onMounted } from 'vue';
 
 onMounted(() => {
 
-const toggleButton = document.getElementById('menu-toggle');
+  const toggleButton = document.getElementById('menu-toggle');
 
-const wrapper = document.getElementById('wrapper');
-
-
-
-if (toggleButton && wrapper) {
-
-toggleButton.addEventListener('click', (e) => {
-
-e.preventDefault();
-
-wrapper.classList.toggle('toggled');
-
-// Oculta el botón al hacer clic en él
-
-toggleButton.style.display = 'none';
-
-});
+  const wrapper = document.getElementById('wrapper');
 
 
 
-// Muestra el botón cuando el menú lateral se oculta
+  if (toggleButton && wrapper) {
 
-const sidebar = document.getElementById('sidebar-wrapper');
+    toggleButton.addEventListener('click', (e) => {
 
-sidebar.addEventListener('transitionend', () => {
+      e.preventDefault();
 
-if (!wrapper.classList.contains('toggled')) {
+      wrapper.classList.toggle('toggled');
 
-toggleButton.style.display = 'block';
+      // Oculta el botón al hacer clic en él
 
-}
+      toggleButton.style.display = 'none';
 
-});
+    });
 
-}
+
+
+    // Muestra el botón cuando el menú lateral se oculta
+
+    const sidebar = document.getElementById('sidebar-wrapper');
+
+    sidebar.addEventListener('transitionend', () => {
+
+      if (!wrapper.classList.contains('toggled')) {
+
+        toggleButton.style.display = 'block';
+
+      }
+
+    });
+
+  }
 
 });
 
@@ -104,30 +110,44 @@ toggleButton.style.display = 'block';
 
 <style>
 /* Reset de estilos para eliminar márgenes y paddings por defecto */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
 }
 
-#app, #wrapper {
+#app,
+#wrapper {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
 }
 
 /* Colores de ganadería */
-.bg-brown-dark { background-color: #5C4A38; }
-.bg-terracotta { background-color: #A65A42; }
-.bg-light-cream { background-color: #F8F4E6; }
-.text-white { color: #fff; }
+.bg-brown-dark {
+  background-color: #5C4A38;
+}
+
+.bg-terracotta {
+  background-color: #A65A42;
+}
+
+.bg-light-cream {
+  background-color: #F8F4E6;
+}
+
+.text-white {
+  color: #fff;
+}
 
 #wrapper {
   display: flex;
 }
 
 #sidebar-wrapper {
-  width: 17rem; /* Ancho fijo del sidebar */
+  width: 17rem;
+  /* Ancho fijo del sidebar */
   min-height: 100vh;
   transition: transform .25s ease-out;
   transform: translateX(-17rem);
@@ -150,10 +170,13 @@ html, body {
 .list-group-item-action {
   transition: all .2s ease-in-out;
 }
+
 /* Cambia el color del sidebar al color usado en SelectProperty */
 #sidebar-wrapper {
-  background-color: #4F7B3A; /* Verde naturaleza usado en las tarjetas de SelectProperty */
+  background-color: #4F7B3A;
+  /* Verde naturaleza usado en las tarjetas de SelectProperty */
 }
+
 .list-group-item-action:hover {
   background-color: rgba(255, 255, 255, 0.35) !important;
   transform: scale(1.0);
@@ -170,7 +193,12 @@ html, body {
   margin: 0 auto;
 }
 
-.fa-cow, .fa-tractor, .fa-chart-line, .fa-clipboard-list, .fa-file-alt, .fa-user-circle {
+.fa-cow,
+.fa-tractor,
+.fa-chart-line,
+.fa-clipboard-list,
+.fa-file-alt,
+.fa-user-circle {
   font-size: 2rem;
 }
 
@@ -186,27 +214,33 @@ html, body {
   #wrapper #sidebar-wrapper {
     transform: translateX(0);
   }
+
   .menu-toggle-btn {
     display: none !important;
   }
 }
+
 .list-group-item.router-link-exact-active {
-    background-color: #76A868 !important;
-    color: #fff !important;
-    font-weight: bold;
+  background-color: #76A868 !important;
+  color: #fff !important;
+  font-weight: bold;
 }
+
 #page-content-wrapper {
   flex-grow: 1;
   width: 100%;
-  height: 100vh;      /* Ocupa todo el alto */
-  overflow: hidden;   /* BLOQUEA EL SCROLL EXTERIOR */
+  height: 100vh;
+  /* Ocupa todo el alto */
+  overflow: hidden;
+  /* BLOQUEA EL SCROLL EXTERIOR */
   display: flex;
   flex-direction: column;
 }
 
 .container-fluid.p-4 {
   flex-grow: 1;
-  overflow: hidden;   /* Sigue bloqueando el scroll hacia afuera */
+  overflow: hidden;
+  /* Sigue bloqueando el scroll hacia afuera */
   display: flex;
   flex-direction: column;
 }

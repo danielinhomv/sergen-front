@@ -1,7 +1,6 @@
 <template>
   <div class="confirmatory-ultrasound-container">
 
-    <!-- LOADER -->
     <div v-if="isLoading" class="loading-container">
       <div class="spinner-container">
         <div class="pulsing-circle"></div>
@@ -9,104 +8,95 @@
       <p class="loading-text">{{ loadingText }}</p>
     </div>
 
-    <!-- CONTENIDO -->
-    <div v-else class="result-container">
+    <div v-else class="result-container animate__animated animate__fadeIn">
 
-      <!-- BOTÓN AGREGAR -->
-      <button
-        v-if="!showForm"
-        class="btn btn-primary mb-3"
-        @click="openAddForm"
-      >
-        Agregar Ecografía Confirmatoria
-      </button>
 
-      <!-- TABLA -->
-      <table v-if="ultrasounds.length" class="table table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Status</th>
-            <th>Observación</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in ultrasounds" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ statusLabel(item.status) }}</td>
-            <td>{{ item.observation || '-' }}</td>
-            <td>{{ item.date }}</td>
-            <td>
-              <button class="btn btn-sm btn-warning me-1" @click="openEditForm(item)">Editar</button>
-              <button class="btn btn-sm btn-danger" @click="deleteUltrasound(item.id)">Eliminar</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <button v-if="!showForm" class="btn btn-success shadow-sm fw-bold px-4 mb-4" @click="openAddForm">
+          <i class="fas fa-plus me-2"></i>Nueva Ecografía
+        </button>
+      
 
-      <div v-else class="text-muted">
-        No hay registros de ecografías confirmatorias.
+      <div v-if="ultrasounds.length && !showForm" class="table-responsive rounded-4 shadow-sm border">
+        <table class="table table-hover align-middle m-0">
+          <thead class="bg-light-success text-success">
+            <tr>
+              <th class="ps-4">Fecha</th>
+              <th>Estado</th>
+              <th>Observación</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in ultrasounds" :key="item.id" class="transition-row">
+              <td class="ps-4 fw-medium">{{ item.date }}</td>
+              <td>
+                <span :class="statusBadgeClass(item.status)">
+                  {{ statusLabel(item.status) }}
+                </span>
+              </td>
+              <td class="text-muted small">
+                {{ item.observation || 'Sin observaciones' }}
+              </td>
+              <td class="text-end pe-4">
+                <button class="btn btn-outline-warning btn-sm border-0 me-1" @click="openEditForm(item)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm border-0" @click="deleteUltrasound(item.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- FORMULARIO AGREGAR/EDITAR -->
-      <div v-if="showForm" class="form-container mt-3 p-3 border rounded">
-        <h4>{{ editing ? 'Editar Ecografía' : 'Agregar Ecografía' }}</h4>
+      <div v-else-if="!showForm" class="text-center py-5 border rounded-4 bg-light">
+        <i class="fas fa-folder-open text-muted fs-1 mb-3"></i>
+        <p class="text-muted fw-bold">No hay registros de ecografías confirmatorias.</p>
+      </div>
+
+      <div v-if="showForm" class="form-container p-4 bg-white border border-success-subtle rounded-4 shadow-sm">
+        <h5 class="text-success fw-bold mb-4">
+          <i class="fas fa-pen-square me-2"></i>{{ editing ? 'Editar Ecografía' : 'Registrar Ecografía' }}
+        </h5>
 
         <form @submit.prevent="submitForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Estado *</label>
+              <select v-model="form.status" class="form-select border-success-subtle"
+                :class="{ 'is-invalid': errors.status }">
+                <option value="">Seleccione...</option>
+                <option value="pregnant">Preñada</option>
+                <option value="empty">Vacía</option>
+                <option value="refuge">Refugio</option>
+                <option value="discart">Descartada</option>
+              </select>
+            </div>
 
-          <!-- STATUS -->
-          <div class="mb-2">
-            <label>Status *</label>
-            <select
-              v-model="form.status"
-              class="form-select"
-              :class="{ 'is-invalid': errors.status }"
-            >
-              <option value="">Seleccione...</option>
-              <option value="pregnant">Preñada</option>
-              <option value="empty">Vacía</option>
-              <option value="refuge">Refugio</option>
-              <option value="discart">Descartada</option>
-            </select>
-            <div class="invalid-feedback">Campo obligatorio</div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Fecha *</label>
+              <input type="date" v-model="form.date" class="form-control border-success-subtle"
+                :class="{ 'is-invalid': errors.date }" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold small text-uppercase">Observación</label>
+              <textarea v-model="form.observation" class="form-control border-success-subtle" rows="3"
+                placeholder="Detalles adicionales..."></textarea>
+            </div>
           </div>
 
-          <!-- OBSERVACIÓN OPCIONAL -->
-          <div class="mb-2">
-            <label>Observación</label>
-            <textarea v-model="form.observation" class="form-control" />
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-success px-4 shadow-sm fw-bold" type="submit" :disabled="!isFormValid || isSaving">
+              <i class="fas fa-save me-2"></i>
+              {{ isSaving ? 'Guardando...' : (editing ? 'Actualizar' : 'Guardar Registro') }}
+            </button>
+
+            <button class="btn btn-outline-secondary px-4 fw-bold" type="button" @click="cancelForm">
+              Cancelar
+            </button>
           </div>
-
-          <!-- FECHA -->
-          <div class="mb-2">
-            <label>Fecha *</label>
-            <input
-              type="date"
-              v-model="form.date"
-              class="form-control"
-              :class="{ 'is-invalid': errors.date }"
-            />
-            <div class="invalid-feedback">Campo obligatorio</div>
-          </div>
-
-          <button
-            class="btn btn-success mt-2"
-            type="submit"
-            :disabled="!isFormValid"
-          >
-            {{ editing ? 'Actualizar' : 'Guardar' }}
-          </button>
-
-          <button
-            class="btn btn-secondary mt-2 ms-2"
-            type="button"
-            @click="cancelForm"
-          >
-            Cancelar
-          </button>
-
         </form>
       </div>
 
@@ -116,6 +106,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
+import { Toast } from 'bootstrap'
 import { ConfirmatoryUltrasoundService } from '@/services/management/ConfirmatoryUltrasoundService'
 
 const service = new ConfirmatoryUltrasoundService()
@@ -125,7 +116,8 @@ const service = new ConfirmatoryUltrasoundService()
 ========================= */
 const ultrasounds = ref([])
 const isLoading = ref(true)
-const loadingText = ref('Escaneando...')
+const isSaving = ref(false)
+const loadingText = ref('Cargando...')
 const intervalId = ref(null)
 
 const showForm = ref(false)
@@ -134,22 +126,44 @@ const form = ref({
   id: null,
   status: '',
   observation: '',
-  date: ''
+  date: new Date().toISOString().split('T')[0]
 })
 
-const errors = ref({})
+const errors = ref({ status: false, date: false })
 
 /* =========================
-   VALIDACIONES EN TIEMPO REAL
+   VALIDACIONES
 ========================= */
-watch(form, () => {
-  errors.value = {
-    status: !form.value.status,
-    date: !form.value.date
-  }
+watch(() => form.value, (val) => {
+  errors.value.status = !val.status
+  errors.value.date = !val.date
 }, { deep: true })
 
 const isFormValid = computed(() => !!form.value.status && !!form.value.date)
+
+/* =========================
+   TOAST HELPER
+========================= */
+function showToast(type, message) {
+  const toastEl = document.getElementById('liveToast');
+  if (!toastEl) return;
+  const toastMessage = document.getElementById('toast-message');
+  const toastIcon = document.getElementById('toast-icon');
+
+  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
+
+  if (type === 'success') {
+    toastEl.classList.add('text-bg-success');
+    toastIcon.innerHTML = '<i class="fas fa-check-circle fs-5"></i>';
+  } else if (type === 'error') {
+    toastEl.classList.add('text-bg-danger');
+    toastIcon.innerHTML = '<i class="fas fa-times-circle fs-5"></i>';
+  }
+
+  toastMessage.textContent = message;
+  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
+  toast.show();
+}
 
 /* =========================
    CRUD
@@ -157,10 +171,10 @@ const isFormValid = computed(() => !!form.value.status && !!form.value.date)
 async function listUltrasounds() {
   isLoading.value = true
   try {
-    const response = await service.list()
-    ultrasounds.value = response['confirmatory_ultrasounds'] || []
+    // El servicio corregido ahora usa POST /all
+    ultrasounds.value = await service.list()
   } catch (error) {
-    console.error('Error listando ecografías confirmatorias:', error)
+    showToast('error', 'Error al cargar la lista de ecografías.')
   } finally {
     isLoading.value = false
   }
@@ -168,7 +182,7 @@ async function listUltrasounds() {
 
 function openAddForm() {
   editing.value = false
-  form.value = { id: null, status: '', observation: '', date: '' }
+  form.value = { id: null, status: '', observation: '', date: new Date().toISOString().split('T')[0] }
   showForm.value = true
 }
 
@@ -180,32 +194,36 @@ function openEditForm(item) {
 
 function cancelForm() {
   showForm.value = false
-  form.value = {}
 }
 
 async function submitForm() {
   if (!isFormValid.value) return
-
+  isSaving.value = true
   try {
     if (editing.value) {
       await service.update(form.value.id, form.value)
+      showToast('success', 'Registro actualizado correctamente.')
     } else {
       await service.create(form.value)
+      showToast('success', 'Registro creado con éxito.')
     }
     await listUltrasounds()
     showForm.value = false
   } catch (error) {
-    console.error('Error guardando ecografía confirmatoria:', error)
+    showToast('error', 'Error al procesar la solicitud.')
+  } finally {
+    isSaving.value = false
   }
 }
 
 async function deleteUltrasound(id) {
-  if (!confirm('¿Está seguro de eliminar esta ecografía confirmatoria?')) return
+  if (!confirm('¿Está seguro de eliminar esta ecografía?')) return
   try {
-    await service.delete(id)
+    await service.delete(id) // El servicio corregido usa POST /delete
+    showToast('success', 'Registro eliminado.')
     await listUltrasounds()
   } catch (error) {
-    console.error('Error eliminando ecografía confirmatoria:', error)
+    showToast('error', 'No se pudo eliminar el registro.')
   }
 }
 
@@ -213,13 +231,18 @@ async function deleteUltrasound(id) {
    HELPERS
 ========================= */
 function statusLabel(value) {
-  switch (value) {
-    case 'pregnant': return 'Preñada'
-    case 'empty': return 'Vacía'
-    case 'refuge': return 'Refugio'
-    case 'discart': return 'Descartada'
-    default: return value
+  const labels = { 'pregnant': 'Preñada', 'empty': 'Vacía', 'refuge': 'Refugio', 'discart': 'Descartada' }
+  return labels[value] || value
+}
+
+function statusBadgeClass(value) {
+  const classes = {
+    'pregnant': 'badge bg-success shadow-sm',
+    'empty': 'badge bg-danger shadow-sm',
+    'refuge': 'badge bg-warning text-dark shadow-sm',
+    'discart': 'badge bg-secondary shadow-sm'
   }
+  return classes[value] || 'badge bg-light text-dark'
 }
 
 /* =========================
@@ -234,87 +257,47 @@ function startLoadingText() {
   let index = 0
   intervalId.value = setInterval(() => {
     index = (index + 1) % 4
-    loadingText.value = ['Escaneando...', 'Analizando datos...', 'Conectando...', 'Procesando información...'][index]
+    loadingText.value = ['Analizando...', 'Procesando...', 'Verificando...', 'Cargando...'][index]
   }, 2000)
 }
 
 function stopLoadingText() {
-  clearInterval(intervalId.value)
+  if (intervalId.value) clearInterval(intervalId.value)
 }
 </script>
 
 <style scoped>
-.confirmatory-ultrasound-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
+.bg-light-success {
+  background-color: #f0fdf4;
 }
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  width: 100%;
-  min-height: 60vh;
+.transition-row:hover {
+  background-color: #f8faf9;
 }
 
-.spinner-container {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 1rem;
+.form-control:focus,
+.form-select:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.1);
 }
 
 .pulsing-circle {
-  width: 100px;
-  height: 100px;
-  background-color: #388e3c;
+  width: 80px;
+  height: 80px;
+  background-color: #28a745;
   border-radius: 50%;
-  opacity: 0.5;
-  animation: pulse 2s infinite ease-out;
-}
-
-.loading-text {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #388e3c;
-  animation: fade 2s infinite;
-}
-
-.result-container {
-  background: #ffffff;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 800px;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.table th, .table td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.form-container {
-  background: #f8f9fa;
+  animation: pulse 1.5s infinite ease-out;
 }
 
 @keyframes pulse {
-  0% { transform: scale(0.6); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 0; }
-  100% { transform: scale(0.6); opacity: 0.5; }
-}
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
 
-@keyframes fade {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
 }
 </style>

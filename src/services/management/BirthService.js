@@ -15,37 +15,40 @@ export class BirthService {
             body: JSON.stringify(birth.toJson()),
         });
 
-        if (!response.ok) throw new Error('Error al crear Birth');
+        if (!response.ok) throw new Error('Error al crear el registro de parto');
         return await response.json();
     }
 
     async updateBirth(id, birth) {
-        const response = await fetch(`${this.baseUrl}/update/${id}`, {
-            method: 'PUT',
+        const response = await fetch(`${this.baseUrl}/update`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(birth.toJson()),
+            body: JSON.stringify({
+                id: id,
+                ...birth.toJson()
+            }),
         });
 
-        if (!response.ok) throw new Error('Error al actualizar Birth');
+        if (!response.ok) throw new Error('Error al actualizar el registro de parto');
         return await response.json();
     }
 
-async get() {
-    const response = await fetch(`${this.baseUrl}/get`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-    })
+    async get() {
+        const response = await fetch(`${this.baseUrl}/get`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
 
-    if (!response.ok) {
-        throw new Error('Error al obtener pre-sincronización')
+        if (!response.ok) {
+            throw new Error('Error al obtener los datos de parto');
+        }
+
+        const data = await response.json();
+        if (!data) return null;
+
+        return Birth.fromJson(data);
     }
-
-    const data = await response.json()
-    if (!data) return null
-
-    return Birth.fromJson(data);
-}
 }

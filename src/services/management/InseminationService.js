@@ -8,7 +8,6 @@ export class InseminationService {
         this.baseUrl = baseUrl;
     }
 
-
     async _processResponse(response) {
         if (!response.ok) {
             const errorData = await response.json();
@@ -17,27 +16,19 @@ export class InseminationService {
         const data = await response.json();
 
         const inseminationList = data.insemination || data.inseminations || [];
-
-        console.log(inseminationList.map(item => Insemination.fromJson(item)));
         return inseminationList.map(item => Insemination.fromJson(item));
-
     }
 
-    async listInseminations() {
+    async listInseminations(controlBovineId) {
         try {
             const response = await fetch(`${this.baseUrl}/all`, {
                 method: 'POST',
-                headers: {
-                    // 'Authorization': 'Bearer TU_TOKEN_AQUI', // Si es necesario
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    "control_bovine_id": 5,
+                    "control_bovine_id": controlBovineId,
                 }),
-
             });
             return await this._processResponse(response);
-
         } catch (error) {
             console.error('Error al obtener la lista de inseminaciones:', error);
             throw error;
@@ -58,10 +49,9 @@ export class InseminationService {
         }
     }
 
-    async editInsemination(id,insemination) {
+    async editInsemination(id, insemination) {
         try {
-            const url = `${this.baseUrl}/update/${id}`;
-            const response = await fetch(url, {
+            const response = await fetch(`${this.baseUrl}/update/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(insemination.toJson()),
@@ -73,19 +63,12 @@ export class InseminationService {
         }
     }
 
-
     async deleteInsemination(id) {
         try {
-            const url = `${this.baseUrl}/delete`;
-            const response = await fetch(url, {
+            const response = await fetch(`${this.baseUrl}/delete`, {
                 method: 'POST',
-                 headers: {
-                    // 'Authorization': 'Bearer TU_TOKEN_AQUI', // Si es necesario
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "id": id,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "id": id }),
             });
             return await this._processResponse(response);
         } catch (error) {
