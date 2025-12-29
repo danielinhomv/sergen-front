@@ -1,56 +1,67 @@
 import { API_URL } from '@/environment/Api';
 import { Ultrasound } from '@/model/management/Ultrasound';
+import { HttpService } from './HttpService';
 
 const PREFIX = '/management/ultrasound';
 
-export class UltrasoundService {
+export class UltrasoundService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
     }
 
     async get(controlBovineId) {
-        const response = await fetch(`${this.baseUrl}/get`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "control_bovine_id": controlBovineId,
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/get`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    "control_bovine_id": controlBovineId,
+                }),
+            });
 
-        if (!response.ok) {
-            throw new Error('Error al obtener los datos de ecografía');
+            const data = await this.handleResponse(response);
+            if (!data || data.error) return null;
+
+            return Ultrasound.fromJson(data);
+        } catch (error) {
+            console.error('UltrasoundService GET Error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        if (!data) return null;
-
-        return Ultrasound.fromJson(data);
     }
 
     async create(item) {
-        const response = await fetch(`${this.baseUrl}/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.toJson()),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(item.toJson()),
+            });
 
-        if (!response.ok) throw new Error('Error al registrar la ecografía');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('UltrasoundService CREATE Error:', error);
+            throw error;
+        }
     }
 
     async update(id, item) {
-        const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...item.toJson()
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...item.toJson()
+                }),
+            });
 
-        if (!response.ok) throw new Error('Error al actualizar la ecografía');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('UltrasoundService UPDATE Error:', error);
+            throw error;
+        }
     }
 }
+
+export default UltrasoundService;

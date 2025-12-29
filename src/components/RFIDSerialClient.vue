@@ -1,17 +1,35 @@
 <template>
   <div class="rfid-banner rounded-3 shadow-sm px-3 py-2" :class="connectionClass">
     <div class="d-flex align-items-center justify-content-between">
+
+      <!-- Estado conexión -->
       <span class="fw-bold d-flex align-items-center status-text">
         <i :class="connectionIcon" class="me-2"></i> 
         <span class="d-none d-sm-inline">{{ connectionStatus }}</span>
       </span>
 
       <div class="d-flex align-items-center gap-3">
-        <div v-if="sessionPropertyStore.chipSerie" class="chip-info text-white px-2 py-1 rounded">
-          <small class="opacity-75">Chip:</small>
+
+        <!-- CHIP -->
+        <div v-if="sessionPropertyStore.onScanned" class="chip-info text-white px-2 py-1 rounded">
+          <small class="opacity-75">Chip</small>
           <strong class="text-warning ms-1">{{ sessionPropertyStore.chipSerie }}</strong>
         </div>
 
+        <!-- 🐄 BOVINO -->
+        <div v-if="bovine" class="bovine-info px-3 py-2 rounded shadow-sm">
+          <div class="fw-bold text-success">
+            🐄 {{ bovine.rgd }}
+          </div>
+          <div class="small text-muted">
+            {{ bovine.sex === 'female' ? 'Hembra' : 'Macho' }} • {{ bovine.weight }} kg
+          </div>
+          <div class="small text-muted">
+            Nac: {{ bovine.birthdate }}
+          </div>
+        </div>
+
+        <!-- BOTÓN -->
         <button
           @click="connectReader"
           :disabled="connectionState !== 'disconnected' || isConnecting"
@@ -22,16 +40,18 @@
             <i class="fas fa-plug me-1"></i> Conectar
           </span>
           <span v-else-if="connectionState === 'connecting'">
-            <span class="spinner-border spinner-border-sm me-1" role="status"></span>...
+            <span class="spinner-border spinner-border-sm me-1"></span>
           </span>
           <span v-else>
             <i class="fas fa-check-circle me-1"></i> En Línea
           </span>
         </button>
+
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { useSerialReader } from '@/composables/useSerialReader';

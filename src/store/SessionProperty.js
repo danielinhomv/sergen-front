@@ -1,13 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { API_URL } from '@/environment/Api';
+import { User } from '@/model/management/User';
 
 
 export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
     const PREFIX = '/management/';
     const baseUrl = `${API_URL}${PREFIX}`;
+    const USER_PREFIX = '/user/';
+    const userUrl = `${API_URL}${USER_PREFIX}`;
 
+    const token = ref(null);
+    const user = ref(null);
     const isWorking = ref(false);
     const propertyId = ref(null);
     const chipSerie = ref(null);
@@ -21,6 +26,9 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const bovine = ref(null);
     const controlBovineId = ref(null);
 
+    const isAuthenticated = computed(() => !!token.value);
+    const getUser = computed(() => user.value);
+    const getToken = computed(() => token.value);
     const isWorked = computed(() => isWorking.value);
     const getPropertyId = computed(() => propertyId.value);
     const getName = computed(() => name.value);
@@ -34,16 +42,13 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const getControlBovineId = computed(() => controlBovineId.value);
 
 
-    async function fetchInitialWorkStatus(userId) {
-
+   async function fetchInitialWorkStatus(userId) {
         try {
             const response = await _sendRequestHttp('property/isWorked', userId, null);
 
             if (response.ok) {
                 const data = await response.json();
-                const active = data.active;
-
-                if (active) {
+                if (data.active) {
                     isWorking.value = true;
                     propertyId.value = data.property_id;
                     name.value = data.name;
@@ -51,30 +56,67 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
                     phone.value = data.phone_number;
                     owner.value = data.owner_name;
                     protocolId.value = data.protocol_id;
-                } else {
-                    isWorking.value = false;
-                    propertyId.value = null;
-                    protocolId.value = null;
-                    name.value = null;
-                    place.value = null;
-                    phone.value = null;
-                    owner.value = null;
                 }
             }
-
         } catch (error) {
-            console.error("Error al cargar estado inicial del servidor:", error);
-            isWorking.value = false;
-            propertyId.value = null;
-            name.value = null;
-            place.value = null;
-            phone.value = null;
-            owner.value = null;
-            protocolId.value = null;
+            console.error("Error al cargar estado inicial:", error);
         } finally {
             isLoaded.value = true;
         }
+    }
 
+    async function login(username, password) {
+        try {
+            const response = await fetch(`${userUrl}login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: username, password: password })
+            });
+
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            token.value = data.token;
+            
+            await fetchUserProfile();
+
+            return { success: true };
+        } catch (error) {
+            console.error("Login error:", error);
+            throw error;
+        }
+    }
+
+    async function fetchUserProfile() {
+        if (!token.value) return;
+        try {
+            const response = await fetch(`${userUrl}get`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token.value}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error("Sesión inválida");
+            
+            const userData = await response.json();
+            user.value = User.fromJson(userData);
+        } catch (error) {
+            logout();
+        }
+    }
+
+    function logout() {
+        token.value = null;
+        user.value = null;
+        isWorking.value = false;
+        propertyId.value = null;
+        protocolId.value = null;
+        chipSerie.value = null;
+        bovine.value = null;
+        controlBovineId.value = null;
     }
 
     function setBovine(b) {
@@ -143,26 +185,31 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     }
 
 
-    async function _sendRequestHttp(valor, userId, selectedPropertyId) {
-        try {
-            const response = await fetch(`${baseUrl}${valor}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "user_id": userId,
-                    "property_id": selectedPropertyId
-                })
-            })
-            return response;
-        } catch (error) {
-            console.log(error);
+   async function _sendRequestHttp(endpoint, userId, selectedPropertyId) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (getToken.value) {
+            headers['Authorization'] = `Bearer ${token.value}`;
         }
 
+        return await fetch(`${baseUrl}${endpoint}`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                "user_id": userId,
+                "property_id": selectedPropertyId
+            })
+        });
     }
 
     return {
+        token,
+        user,
+        getToken,
+        isAuthenticated,
+        getUser,
+        login,
+        logout,
+        fetchUserProfile,
         isWorked,
         getPropertyId,
         getName,
@@ -194,6 +241,8 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     {
         persist: {
             paths: [
+                'token',
+                'user', 
                 'isWorking',
                 'propertyId',
                 'protocolId',

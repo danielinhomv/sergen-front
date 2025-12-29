@@ -1,61 +1,81 @@
 import { API_URL } from '@/environment/Api';
 import { ConfirmatoryUltrasound } from '@/model/management/ConfirmatoryUltrasound';
+import { HttpService } from './HttpService';
 
 const PREFIX = '/management/confirmatory-ultrasound';
 
-export class ConfirmatoryUltrasoundService {
+export class ConfirmatoryUltrasoundService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
     }
 
     async list(controlBovineId) {
-        const response = await fetch(`${this.baseUrl}/all`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                "control_bovine_id": controlBovineId
-            })
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/all`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    "control_bovine_id": controlBovineId
+                })
+            });
 
-        if (!response.ok) throw new Error('Error al listar ecografías de confirmación');
-
-        const data = await response.json();
-        return data.map(item => ConfirmatoryUltrasound.fromJson(item));
+            const data = await this.handleResponse(response);
+            const list = Array.isArray(data) ? data : (data.ultrasounds || []);
+            return list.map(item => ConfirmatoryUltrasound.fromJson(item));
+        } catch (error) {
+            console.error('ConfirmatoryUltrasoundService list Error:', error);
+            throw error;
+        }
     }
 
     async create(item) {
-        const response = await fetch(`${this.baseUrl}/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.toJson()),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(item.toJson()),
+            });
 
-        if (!response.ok) throw new Error('Error al crear ecografía de confirmación');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('ConfirmatoryUltrasoundService create Error:', error);
+            throw error;
+        }
     }
 
     async update(id, item) {
-        const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...item.toJson()
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST', 
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...item.toJson()
+                }),
+            });
 
-        if (!response.ok) throw new Error('Error al actualizar ecografía de confirmación');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('ConfirmatoryUltrasoundService update Error:', error);
+            throw error;
+        }
     }
 
     async delete(id) {
-        const response = await fetch(`${this.baseUrl}/delete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/delete`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ id: id }),
+            });
 
-        if (!response.ok) throw new Error('Error al eliminar ecografía de confirmación');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('ConfirmatoryUltrasoundService delete Error:', error);
+            throw error;
+        }
     }
 }
+
+export default ConfirmatoryUltrasoundService;

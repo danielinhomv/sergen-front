@@ -1,56 +1,68 @@
 import { API_URL } from '@/environment/Api';
 import { Birth } from '@/model/management/Birth';
+import { HttpService } from './HttpService';
 
 const PREFIX = '/management/birth';
 
-export class BirthService {
+export class BirthService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
     }
 
     async createBirth(birth) {
-        const response = await fetch(`${this.baseUrl}/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(birth.toJson()),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(birth.toJson()),
+            });
 
-        if (!response.ok) throw new Error('Error al crear el registro de parto');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('BirthService Create Error:', error);
+            throw error;
+        }
     }
 
     async updateBirth(id, birth) {
-        const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...birth.toJson()
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...birth.toJson()
+                }),
+            });
 
-        if (!response.ok) throw new Error('Error al actualizar el registro de parto');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('BirthService Update Error:', error);
+            throw error;
+        }
     }
 
     async get(controlBovineId) {
-        const response = await fetch(`${this.baseUrl}/get`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "control_bovine_id": controlBovineId
-            })
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/get`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    "control_bovine_id": controlBovineId
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error('Error al obtener los datos de parto');
+            const data = await this.handleResponse(response);
+            
+            if (!data || Object.keys(data).length === 0) return null;
+
+            return Birth.fromJson(data);
+        } catch (error) {
+            console.error('BirthService Get Error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        if (!data) return null;
-
-        return Birth.fromJson(data);
     }
 }
+
+export default BirthService;

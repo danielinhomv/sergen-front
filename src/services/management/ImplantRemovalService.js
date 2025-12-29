@@ -1,66 +1,67 @@
 import { API_URL } from '@/environment/Api';
 import { ImplantRemoval } from '@/model/management/ImplantRemoval';
+import { HttpService } from './HttpService';
 
 const PREFIX = '/management/implant-retrieval';
 
-export class ImplantRemovalService {
+export class ImplantRemovalService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
     }
 
-    /**
-     * Coincide con Route::post('/get', ...)
-     */
     async get(controlBovineId) {
-        const response = await fetch(`${this.baseUrl}/get`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "control_bovine_id": controlBovineId,
-            })
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/get`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    "control_bovine_id": controlBovineId,
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error('Error al obtener los datos de retiro de implante');
+            const data = await this.handleResponse(response);
+            if (!data || data.error) return null;
+
+            return ImplantRemoval.fromJson(data);
+        } catch (error) {
+            console.error('ImplantRemovalService GET Error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        if (!data) return null;
-
-        return ImplantRemoval.fromJson(data);
     }
 
-    /**
-     * Coincide con Route::post('/create', ...)
-     */
     async create(item) {
-        const response = await fetch(`${this.baseUrl}/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.toJson()),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(item.toJson()),
+            });
 
-        if (!response.ok) throw new Error('Error al registrar el retiro de implante');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('ImplantRemovalService CREATE Error:', error);
+            throw error;
+        }
     }
 
-    /**
-     * Coincide con Route::post('/update', ...)
-     * Se eliminó el ID de la URL y se cambió PUT por POST.
-     */
     async update(id, item) {
-        const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...item.toJson()
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST', 
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...item.toJson()
+                }),
+            });
 
-        if (!response.ok) throw new Error('Error al actualizar el retiro de implante');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('ImplantRemovalService UPDATE Error:', error);
+            throw error;
+        }
     }
 }
+
+export default ImplantRemovalService;

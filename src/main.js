@@ -1,11 +1,10 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia';
-import piniaPluginPersistedState from 'pinia-plugin-persistedstate'; //para persistir la informacion en localstorage
+import piniaPluginPersistedState from 'pinia-plugin-persistedstate';
 import App from './App.vue'
 import router from './router/index.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { useSessionPropertyStore } from '@/store/SessionProperty.js';
 
@@ -14,35 +13,44 @@ const pinia = createPinia();
 
 pinia.use(piniaPluginPersistedState);
 
-
 async function prepareApp() {
-
-    app.use(router);
     app.use(pinia);
+    app.use(router);
 
-    await router.isReady(); 
-
-    const sessionPropertyStore = useSessionPropertyStore();
-
-    const currentUserId = 1;
-    await sessionPropertyStore.fetchInitialWorkStatus(currentUserId);
+    const sessionStore = useSessionPropertyStore();
     const currentRoute = router.currentRoute.value;
 
-    if (sessionPropertyStore.isWorked && currentRoute.name === 'select-property') {
-        router.replace(
-            { 
-                name: 'dashboard',
-                replace: true 
+    if (sessionStore.isAuthenticated) {
+        try {
+            await sessionStore.fetchUserProfile();
+            
+            if (sessionStore.getUser?.id) {
+                await sessionStore.fetchInitialWorkStatus(sessionStore.getUser.id);
             }
-        );
-    } else if (!sessionPropertyStore.isWorked && currentRoute.meta.requiresAuth) {
-        router.replace(
-            { 
-                name: 'select-property',
-                replace: true 
-             }
-        );
-    } 
+        } catch (error) {
+            console.error("Error al restaurar sesión:", error);
+            sessionStore.logout();
+        }
+    }
+
+    await router.isReady();
+
+    if (!sessionStore.isAuthenticated) {
+        if (currentRoute.meta.requiresAuth) {
+            router.replace({ name: 'login' });
+        }
+    } else {
+        if (sessionStore.isWorked) {
+            if (currentRoute.name === 'login' || currentRoute.name === 'select-property') {
+                router.replace({ name: 'dashboard' });
+            }
+        } else {
+            if (currentRoute.meta.requiresWorkSession) {
+                router.replace({ name: 'select-property' });
+            }
+        }
+    }
+
     app.mount('#app');
 }
 

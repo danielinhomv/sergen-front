@@ -1,36 +1,29 @@
 import { Insemination } from '@/model/management/Insemination';
 import { API_URL } from '@/environment/Api';
+import { HttpService } from './HttpService';
 
-const PREFIX = '/management/insemination'
+const PREFIX = '/management/insemination';
 
-export class InseminationService {
+export class InseminationService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
-    }
-
-    async _processResponse(response) {
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Error en la petición: ${response.status}`);
-        }
-        const data = await response.json();
-
-        const inseminationList = data.insemination || data.inseminations || [];
-        return inseminationList.map(item => Insemination.fromJson(item));
     }
 
     async listInseminations(controlBovineId) {
         try {
             const response = await fetch(`${this.baseUrl}/all`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: this.getHeaders(),
                 body: JSON.stringify({
                     "control_bovine_id": controlBovineId,
                 }),
             });
-            return await this._processResponse(response);
+            const data = await this.handleResponse(response);
+            const list = data.insemination || data.inseminations || [];
+            return list.map(item => Insemination.fromJson(item));
         } catch (error) {
-            console.error('Error al obtener la lista de inseminaciones:', error);
+            console.error('InseminationService List Error:', error);
             throw error;
         }
     }
@@ -39,26 +32,33 @@ export class InseminationService {
         try {
             const response = await fetch(`${this.baseUrl}/create`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: this.getHeaders(),
                 body: JSON.stringify(insemination.toJson()),
             });
-            return await this._processResponse(response);
+            const data = await this.handleResponse(response);
+            const list = data.insemination || data.inseminations || [];
+            return list.map(item => Insemination.fromJson(item));
         } catch (error) {
-            console.error('Error al crear la inseminación:', error);
+            console.error('InseminationService Create Error:', error);
             throw error;
         }
     }
 
     async editInsemination(id, insemination) {
         try {
-            const response = await fetch(`${this.baseUrl}/update/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(insemination.toJson()),
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...insemination.toJson()
+                }),
             });
-            return await this._processResponse(response);
+            const data = await this.handleResponse(response);
+            const list = data.insemination || data.inseminations || [];
+            return list.map(item => Insemination.fromJson(item));
         } catch (error) {
-            console.error('Error al editar la inseminación:', error);
+            console.error('InseminationService Update Error:', error);
             throw error;
         }
     }
@@ -67,13 +67,17 @@ export class InseminationService {
         try {
             const response = await fetch(`${this.baseUrl}/delete`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: this.getHeaders(),
                 body: JSON.stringify({ "id": id }),
             });
-            return await this._processResponse(response);
+            const data = await this.handleResponse(response);
+            const list = data.insemination || data.inseminations || [];
+            return list.map(item => Insemination.fromJson(item));
         } catch (error) {
-            console.error('Error al eliminar la inseminación:', error);
+            console.error('InseminationService Delete Error:', error);
             throw error;
         }
     }
 }
+
+export default InseminationService;

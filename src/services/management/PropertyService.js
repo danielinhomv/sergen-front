@@ -1,79 +1,106 @@
-import axios from 'axios';
-import Property from '@/model/management/Property'; // Ajusta la ruta según tu proyecto
+import Property from '@/model/management/Property';
+import { API_URL } from '@/environment/Api';
+import { HttpService } from './HttpService';
+import { useSessionPropertyStore } from '@/store/SessionProperty';
 
-import {API_URL} from '@/environment/Api';
+const PREFIX = '/management/property';
 
-const PREFIX = '/management/property'
+export class PropertyService extends HttpService {
+    constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
+        this.baseUrl = baseUrl;
+    }
 
-class PropertyService {
-
-    static async list(user_id = 2) {
+    async list() {
         try {
-            const response = await axios.get(`${API_URL}${PREFIX}/list`, {
-                params: user_id ? { user_id } : {}
+            const sessionStore = useSessionPropertyStore();
+            const response = await fetch(`${this.baseUrl}/list`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ user_id: sessionStore.getUser?.id })
             });
-            return response.data.properties.map(p => new Property(p));
+            const data = await this.handleResponse(response);
+            return (data.properties || []).map(p => new Property(p));
         } catch (error) {
-            console.error('Error listando propiedades:', error.response?.data || error);
+            console.error('PropertyService list Error:', error);
             throw error;
         }
     }
 
-    // Crear nueva propiedad
-    static async create(property) {
+    async create(property) {
         try {
-            const response = await axios.post(`${API_URL}${PREFIX}/create`, property);
-            return new Property(response.data.property || response.data);
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(property)
+            });
+            const data = await this.handleResponse(response);
+            return new Property(data.property || data);
         } catch (error) {
-            console.error('Error creando propiedad:', error.response?.data || error);
+            console.error('PropertyService create Error:', error);
             throw error;
         }
     }
 
-    // Actualizar propiedad
-    static async update(id, property) {
+    async update(id, property) {
         try {
-            const response = await axios.put(`${API_URL}${PREFIX}/update/${id}`, property);
-            return new Property(response.data.property || response.data);
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ id, ...property })
+            });
+            const data = await this.handleResponse(response);
+            return new Property(data.property || data);
         } catch (error) {
-            console.error('Error actualizando propiedad:', error.response?.data || error);
+            console.error('PropertyService update Error:', error);
             throw error;
         }
     }
 
-    // Eliminar propiedad
-    static async delete(id) {
+    async delete(id) {
         try {
-            const response = await axios.delete(`${API_URL}${PREFIX}/delete/${id}`);
-            return response.data;
+            const response = await fetch(`${this.baseUrl}/delete`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ id })
+            });
+            return await this.handleResponse(response);
         } catch (error) {
-            console.error('Error eliminando propiedad:', error.response?.data || error);
+            console.error('PropertyService delete Error:', error);
             throw error;
         }
     }
 
-    // Verificar si el nombre existe
-    static async nameExists(name,user_id = 1) {
+    async nameExists(name) {
         try {
-            const response = await axios.post(`${API_URL}${PREFIX}/name-exists`, { name , user_id});
-            return response.data.exists;
+            const sessionStore = useSessionPropertyStore();
+            const response = await fetch(`${this.baseUrl}/name-exists`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ name, user_id: sessionStore.getUser?.id })
+            });
+            const data = await this.handleResponse(response);
+            return data.exists;
         } catch (error) {
-            console.error('Error verificando nombre:', error.response?.data || error);
+            console.error('PropertyService nameExists Error:', error);
             throw error;
         }
     }
 
-    // Obtener propiedad por ID
-    static async getById(id) {
+    async getById(id) {
         try {
-            const response = await axios.get(`${API_URL}${PREFIX}/${id}`);
-            return new Property(response.data.property || response.data);
+            const response = await fetch(`${this.baseUrl}/get`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ id })
+            });
+            const data = await this.handleResponse(response);
+            return new Property(data.property || data);
         } catch (error) {
-            console.error('Error obteniendo propiedad por ID:', error.response?.data || error);
+            console.error('PropertyService getById Error:', error);
             throw error;
         }
     }
-
 }
 
 export default PropertyService;

@@ -1,55 +1,68 @@
 import { API_URL } from '@/environment/Api';
 import { Bull } from '@/model/management/Bull';
+import { HttpService } from './HttpService';
+import { useSessionPropertyStore } from '@/store/SessionProperty';
 
 const PREFIX = '/management/bull';
 
-export class BullService {
+export class BullService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
     }
 
-    /**
-     * El backend requiere un POST y el user_id en el cuerpo de la petición
-     */
-    async listBulls(userId = 2) {
-        const response = await fetch(`${this.baseUrl}/all`, {
-            method: 'POST', // Corregido a POST según tu Route::post
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId }) // Enviamos el user_id que espera el controlador
-        });
+    async listBulls() {
+        try {
+            const sessionStore = useSessionPropertyStore();
+            const userId = sessionStore.getUser?.id;
 
-        if (!response.ok) throw new Error('Error al listar toros');
+            const response = await fetch(`${this.baseUrl}/all`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ user_id: userId }) 
+            });
 
-        const data = await response.json();
-        
-        // Según tu backend, la lista viene en data.bovine
-        if (data.error) throw new Error(data.error);
-        
-        return data.bovine.map(item => Bull.fromJson(item));
+            const data = await this.handleResponse(response);
+            const list = data.bovine || [];
+            return list.map(item => Bull.fromJson(item));
+        } catch (error) {
+            console.error('BullService listBulls Error:', error);
+            throw error;
+        }
     }
 
     async createBull(bull) {
-        const response = await fetch(`${this.baseUrl}/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bull.toJson()),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(bull.toJson()),
+            });
 
-        if (!response.ok) throw new Error('Error al crear toro');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('BullService createBull Error:', error);
+            throw error;
+        }
     }
 
     async updateBull(id, bull) {
-        const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...bull.toJson()
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...bull.toJson()
+                }),
+            });
 
-        if (!response.ok) throw new Error('Error al actualizar toro');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('BullService updateBull Error:', error);
+            throw error;
+        }
     }
 }
+
+export default BullService;

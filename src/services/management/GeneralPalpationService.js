@@ -1,66 +1,67 @@
 import { API_URL } from '@/environment/Api';
 import { GeneralPalpation } from '@/model/management/GeneralPalpation';
+import { HttpService } from './HttpService';
 
 const PREFIX = '/management/general-palpation';
 
-export class GeneralPalpationService {
+export class GeneralPalpationService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {
+        super();
         this.baseUrl = baseUrl;
     }
 
-    /**
-     * Coincide con Route::post('/get', ...)
-     */
     async get(controlBovineId) {
-        const response = await fetch(`${this.baseUrl}/get`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "control_bovine_id": controlBovineId,
-            })
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/get`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    "control_bovine_id": controlBovineId,
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error('Error al obtener los datos de palpación general');
+            const data = await this.handleResponse(response);
+            if (!data || data.error) return null;
+
+            return GeneralPalpation.fromJson(data);
+        } catch (error) {
+            console.error('GeneralPalpationService GET Error:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        if (!data) return null;
-
-        return GeneralPalpation.fromJson(data);
     }
 
-    /**
-     * Coincide con Route::post('/create', ...)
-     */
     async create(item) {
-        const response = await fetch(`${this.baseUrl}/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item.toJson()),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/create`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(item.toJson()),
+            });
 
-        if (!response.ok) throw new Error('Error al crear el registro de palpación');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('GeneralPalpationService CREATE Error:', error);
+            throw error;
+        }
     }
 
-    /**
-     * Coincide con Route::post('/update', ...)
-     * Se cambió PUT por POST y se eliminó el ID de la URL.
-     */
     async update(id, item) {
-        const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                ...item.toJson()
-            }),
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/update`, {
+                method: 'POST', 
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    ...item.toJson()
+                }),
+            });
 
-        if (!response.ok) throw new Error('Error al actualizar el registro de palpación');
-        return await response.json();
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('GeneralPalpationService UPDATE Error:', error);
+            throw error;
+        }
     }
 }
+
+export default GeneralPalpationService;
