@@ -1,16 +1,8 @@
 import { useRouter } from 'vue-router';
 
-/**
- * Helper para navegación centralizada
- * @returns {object} Métodos de navegación
- */
 export function useNavigation() {
   const router = useRouter();
-
-  /**
-   * Navegar a una ruta agregando historial
-   * @param {string|object} route - Nombre de la ruta o un objeto de ruta
-   */
+  
   const goTo = (route) => {
     if (typeof route === 'string') {
       router.push({ name: route });

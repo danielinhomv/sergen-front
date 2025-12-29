@@ -8,11 +8,13 @@ export class ConfirmatoryUltrasoundService {
         this.baseUrl = baseUrl;
     }
 
-    async list() {
+    async list(controlBovineId) {
         const response = await fetch(`${this.baseUrl}/all`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
+            body: JSON.stringify({
+                "control_bovine_id": controlBovineId
+            })
         });
 
         if (!response.ok) throw new Error('Error al listar ecografías de confirmación');

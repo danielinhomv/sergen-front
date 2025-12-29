@@ -26,6 +26,35 @@ export class BovineService {
         return bovineList.map(item => Bovine.fromJson(item));
     }
 
+    async _processSingleResponse(response) {
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Error HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.bovine) return null;
+
+        return Bovine.fromJson(data.bovine);
+    }
+    async getBySerie(serie) {
+        try {
+            const response = await fetch(`${this.baseUrl}/get-by-serie`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serie })
+            });
+
+            return await this._processSingleResponse(response);
+
+        } catch (error) {
+            console.error('Error al buscar bovino por serie:', error);
+            throw error;
+        }
+    }
+
+
     /**
      * Obtiene la lista de bovinos.
      * @returns {Promise<Bovine[]>}

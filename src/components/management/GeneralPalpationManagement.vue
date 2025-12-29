@@ -94,8 +94,10 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { GeneralPalpationService } from '@/services/management/GeneralPalpationService'
+import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new GeneralPalpationService()
+const sessionPropertyStore = useSessionPropertyStore()
 
 /* ======================
    STATE
@@ -155,7 +157,7 @@ function showToast(type, message) {
 async function loadItem() {
   isLoading.value = true
   try {
-    const response = await service.get()
+    const response = await service.get(sessionPropertyStore.controlBovineId)
     if (response) {
       item.value = response
     } else {
@@ -240,8 +242,12 @@ function statusBadgeClass(value) {
    LIFECYCLE
 ====================== */
 onMounted(() => {
-  loadItem()
-})
+  if (sessionPropertyStore.onScanned()) {
+    loadItem()
+  } else {
+    showToast('warning', 'Debe escanear un bovino primero');
+  }
+});
 </script>
 
 <style scoped>

@@ -11,10 +11,10 @@
     <div v-else class="result-container animate__animated animate__fadeIn">
 
 
-        <button v-if="!showForm" class="btn btn-success shadow-sm fw-bold px-4 mb-4" @click="openAddForm">
-          <i class="fas fa-plus me-2"></i>Nueva Ecografía
-        </button>
-      
+      <button v-if="!showForm" class="btn btn-success shadow-sm fw-bold px-4 mb-4" @click="openAddForm">
+        <i class="fas fa-plus me-2"></i>Nueva Ecografía
+      </button>
+
 
       <div v-if="ultrasounds.length && !showForm" class="table-responsive rounded-4 shadow-sm border">
         <table class="table table-hover align-middle m-0">
@@ -108,8 +108,10 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { ConfirmatoryUltrasoundService } from '@/services/management/ConfirmatoryUltrasoundService'
+import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new ConfirmatoryUltrasoundService()
+const sessionPropertyStore = useSessionPropertyStore()
 
 /* =========================
    STATE
@@ -171,8 +173,7 @@ function showToast(type, message) {
 async function listUltrasounds() {
   isLoading.value = true
   try {
-    // El servicio corregido ahora usa POST /all
-    ultrasounds.value = await service.list()
+    ultrasounds.value = await service.list(sessionPropertyStore.controlBovineId)
   } catch (error) {
     showToast('error', 'Error al cargar la lista de ecografías.')
   } finally {
@@ -249,8 +250,12 @@ function statusBadgeClass(value) {
    LIFECYCLE
 ========================= */
 onMounted(() => {
-  startLoadingText()
-  listUltrasounds().finally(() => stopLoadingText())
+  if (sessionPropertyStore.onScanned()) {
+    startLoadingText()
+    listUltrasounds().finally(() => stopLoadingText())
+  } else {
+    showToast('warning', 'Debe escanear un bovino primero');
+  }
 })
 
 function startLoadingText() {

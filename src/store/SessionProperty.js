@@ -17,7 +17,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const owner = ref(null);
     const protocolId = ref(null);
     const isLoaded = ref(false);
-    
+
+    const bovine = ref(null);
+    const controlBovineId = ref(null);
+
     const isWorked = computed(() => isWorking.value);
     const getPropertyId = computed(() => propertyId.value);
     const getName = computed(() => name.value);
@@ -26,6 +29,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const getOwner = computed(() => owner.value);
     const getProtocolId = computed(() => protocolId.value);
     const getChipSerie = computed(() => chipSerie.value);
+
+    const getBovine = computed(() => bovine.value);
+    const getControlBovineId = computed(() => controlBovineId.value);
+
 
     async function fetchInitialWorkStatus(userId) {
 
@@ -69,6 +76,20 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         }
 
     }
+
+    function setBovine(b) {
+        bovine.value = b;
+    }
+
+    function setControlBovineId(id) {
+        controlBovineId.value = id;
+    }
+
+    function clearBovine() {
+        bovine.value = null;
+        controlBovineId.value = null;
+    }
+
 
     function setChipSerie(serie) {
         chipSerie.value = serie;
@@ -160,13 +181,31 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         chipSerie,
         getChipSerie,
         setChipSerie,
-        onScanned
+        onScanned,
+        bovine,
+        getBovine,
+        setBovine,
+        controlBovineId,
+        getControlBovineId,
+        setControlBovineId,
+        clearBovine
     }
 },
     {
-        persist:
-        {
-            paths: ['isWorking', 'propertyId', 'protocolId', 'name', 'place', 'phone', 'owner', 'chipSerie'],
+        persist: {
+            paths: [
+                'isWorking',
+                'propertyId',
+                'protocolId',
+                'name',
+                'place',
+                'phone',
+                'owner',
+                'chipSerie',
+                'bovine',
+                'controlBovineId'
+            ]
         }
+
     }
 )

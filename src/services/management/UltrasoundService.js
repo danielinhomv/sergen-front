@@ -8,13 +8,15 @@ export class UltrasoundService {
         this.baseUrl = baseUrl;
     }
 
-    async get() {
+    async get(controlBovineId) {
         const response = await fetch(`${this.baseUrl}/get`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({})
+            body: JSON.stringify({
+                "control_bovine_id": controlBovineId,
+            }),
         });
 
         if (!response.ok) {
@@ -40,10 +42,10 @@ export class UltrasoundService {
 
     async update(id, item) {
         const response = await fetch(`${this.baseUrl}/update`, {
-            method: 'POST', 
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id: id, 
+                id: id,
                 ...item.toJson()
             }),
         });

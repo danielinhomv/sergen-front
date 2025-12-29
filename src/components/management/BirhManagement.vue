@@ -125,8 +125,10 @@ import { Toast, Modal } from 'bootstrap'
 import { BirthService } from '@/services/management/BirthService'
 import { Birth } from '@/model/management/Birth'
 import BullManagement from '@/components/management/BullManagement.vue'
+import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const birthService = new BirthService()
+const sessionPropertyStore = useSessionPropertyStore()
 
 /* ======================
    STATE
@@ -173,8 +175,8 @@ watch(() => form.value, () => {
 
 const isFormValid = computed(() => {
   return (
-    form.value.birthdate && 
-    form.value.sex && 
+    form.value.birthdate &&
+    form.value.sex &&
     form.value.birthWeight > 0 && // El peso debe ser mayor a cero
     form.value.typeOfBirth &&
     !errors.value.birthWeight // Refuerzo de seguridad
@@ -218,7 +220,7 @@ function showToast(type, message) {
 async function loadItem() {
   isLoading.value = true
   try {
-    const response = await birthService.get()
+    const response = await birthService.get(sessionPropertyStore.controlBovineId)
     if (response) {
       item.value = response
     } else {
@@ -306,9 +308,13 @@ function typeOfBirthLabel(value) {
    LIFECYCLE
 ====================== */
 onMounted(() => {
-  loadItem()
-  const modalEl = document.getElementById('textViewerModal')
-  if (modalEl) bootstrapModal = new Modal(modalEl)
+  if (sessionPropertyStore.onScanned()) {
+    loadItem()
+    const modalEl = document.getElementById('textViewerModal')
+    if (modalEl) bootstrapModal = new Modal(modalEl)
+  } else {
+    showToast('warning', 'Debe escanear un bovino primero');
+  }
 })
 </script>
 

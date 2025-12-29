@@ -10,9 +10,9 @@
 
     <div v-else class="result-container animate__animated animate__fadeIn">
 
-        <button v-if="!item && !showForm" class="btn btn-success shadow-sm fw-bold px-4" @click="openAddForm">
-          <i class="fas fa-plus-circle me-2"></i>Registrar Ecografía
-        </button>
+      <button v-if="!item && !showForm" class="btn btn-success shadow-sm fw-bold px-4" @click="openAddForm">
+        <i class="fas fa-plus-circle me-2"></i>Registrar Ecografía
+      </button>
 
 
       <div v-if="item && !showForm"
@@ -136,8 +136,10 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { UltrasoundService } from '@/services/management/UltrasoundService'
+import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new UltrasoundService()
+const sessionPropertyStore = useSessionPropertyStore()
 
 /* ======================
    STATE
@@ -201,7 +203,7 @@ function showToast(type, message) {
 async function loadItem() {
   isLoading.value = true
   try {
-    const response = await service.get()
+    const response = await service.get(sessionPropertyStore.controlBovineId)
     item.value = response || null
   } catch (error) {
     showToast('error', 'Error al obtener datos de ecografía.')
@@ -278,7 +280,14 @@ function statusBadgeClass(value) {
 /* ======================
    LIFECYCLE
 ====================== */
-onMounted(loadItem)
+onMounted(() => {
+  if (sessionPropertyStore.onScanned()) {
+    loadItem()
+  } else {
+    showToast('warning', 'Debe escanear un bovino primero');
+  }
+});
+
 </script>
 
 <style scoped>

@@ -185,7 +185,6 @@
 import { ref, onMounted, computed } from 'vue';
 import { InseminationService } from '@/services/management/InseminationService';
 import { BullService } from '@/services/management/BullService';
-import { ControlBovineService } from '@/services/management/ControlBovineService'; // Nuevo servicio
 import { Insemination } from '@/model/management/Insemination';
 import { Modal, Toast } from 'bootstrap';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
@@ -193,7 +192,6 @@ import { useSessionPropertyStore } from '@/store/SessionProperty';
 /* --- SERVICIOS --- */
 const service = new InseminationService();
 const bullService = new BullService();
-const controlBovineService = new ControlBovineService();
 const sessionPropertyStore = useSessionPropertyStore();
 
 /* ======================
@@ -211,14 +209,14 @@ const loadingText = ref('Sincronizando protocolo...');
 const textModalTitle = ref('');
 const textModalContent = ref('');
 
-const isLoading = computed(() => !sessionPropertyStore.onScanned);
+const isLoading = computed(() => !sessionPropertyStore.onScanned());
 
 const form = ref({
-    id: null, 
-    bull: '', 
+    id: null,
+    bull: '',
     bodyConditionScore: null,
-    heatQuality: 'well', 
-    observation: '', 
+    heatQuality: 'well',
+    observation: '',
     others: '',
     date: new Date().toISOString().split('T')[0]
 });
@@ -239,21 +237,11 @@ const isFormValid = computed(() => form.value.bull && form.value.bodyConditionSc
  */
 async function loadInitialData() {
     try {
-        const bovineId = sessionPropertyStore.getBovineId; 
-        const protocolId = sessionPropertyStore.getProtocolId;
+        let controlBovineId = sessionPropertyStore.getControlBovineId;
 
-        // 1. Asegurar el vínculo Control-Bovine
-        const relation = await controlBovineService.createControlBovine({
-            bovine_id: bovineId,
-            control_id: protocolId
-        });
-        
-        controlBovineId.value = relation.id;
-
-        // 2. Carga de datos dependientes
         const [inseminationData, bullsData] = await Promise.all([
             service.listInseminations(controlBovineId.value),
-            bullService.listBulls() 
+            bullService.listBulls()
         ]);
 
         inseminations.value = inseminationData;
@@ -267,10 +255,9 @@ async function loadInitialData() {
 async function saveInsemination() {
     isSaving.value = true;
     try {
-        // Usamos el controlBovineId obtenido dinámicamente
-        const data = new Insemination({ 
-            ...form.value, 
-            control_bovine_id: controlBovineId.value 
+        const data = new Insemination({
+            ...form.value,
+            control_bovine_id: controlBovineId.value
         });
 
         if (editing.value) {
@@ -280,7 +267,7 @@ async function saveInsemination() {
             inseminations.value = await service.createInsemination(data);
             showToast('success', 'Inseminación registrada.');
         }
-        
+
         bootstrap.Modal.getInstance(document.getElementById('inseminationModal')).hide();
     } catch (error) {
         showToast('error', 'Error al guardar.');
@@ -302,7 +289,7 @@ function openModal(item = null) {
         editing.value = true;
         form.value = {
             id: item.id,
-            bull: item.bull, 
+            bull: item.bull,
             bodyConditionScore: item.bodyConditionScore,
             heatQuality: item.heatQuality,
             observation: item.observation,
@@ -359,7 +346,14 @@ function showToast(type, message) {
     Toast.getOrCreateInstance(toastEl).show();
 }
 
-onMounted(loadInitialData);
+onMounted(() => {
+    if (sessionPropertyStore.onScanned()) {
+        loadInitialData();
+    } else {
+        showToast('warning', 'Debe escanear un bovino primero');
+    }
+});
+
 </script>
 
 <style scoped>

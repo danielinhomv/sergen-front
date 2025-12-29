@@ -115,8 +115,10 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { PresynchronizationService } from '@/services/management/PresynchronizationService'
+import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new PresynchronizationService()
+const sessionPropertyStore = useSessionPropertyStore()
 
 /* ======================
    STATE
@@ -193,7 +195,7 @@ function showToast(type, message) {
 async function loadItem() {
   isLoading.value = true
   try {
-    const response = await service.get()
+    const response = await service.get(sessionPropertyStore.controlBovineId)
     item.value = response || null
   } catch (error) {
     showToast('error', 'Error al cargar los datos.')
@@ -243,7 +245,14 @@ async function submitForm() {
   }
 }
 
-onMounted(loadItem)
+onMounted(() => {
+  if (sessionPropertyStore.onScanned()) {
+    loadItem()
+  } else {
+    showToast('warning', 'Debe escanear un bovino primero');
+  }
+});
+
 </script>
 
 <style scoped>

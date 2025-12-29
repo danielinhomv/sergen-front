@@ -1,5 +1,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
+import { BovineService } from '@/services/management/BovineService';
+import { ControlBovineService } from '@/services/management/ControlBovineService';
 
 export function useSerialReader() {
   const port = ref(null);
@@ -8,6 +10,9 @@ export function useSerialReader() {
   const isConnecting = ref(false);
   const chipId = ref(null);
   const sessionPropertyStore = useSessionPropertyStore();
+
+  const bovineService = new BovineService();
+  const controlBovineService = new ControlBovineService();
 
   const BAUD_RATE = 9600;
   const TEXT_DECODER = new TextDecoder();
@@ -111,10 +116,7 @@ export function useSerialReader() {
   }
 
   async function readSerialData() {
-    if (!port.value || !port.value.readable) {
-      console.warn("Puerto no disponible para lectura.");
-      return;
-    }
+    if (!port.value || !port.value.readable) return;
 
     reader.value = port.value.readable.getReader();
     let buffer = '';
@@ -124,17 +126,46 @@ export function useSerialReader() {
         const { value, done } = await reader.value.read();
         if (done) break;
 
-        buffer = TEXT_DECODER.decode(value, { stream: true });
+        buffer = TEXT_DECODER.decode(value, { stream: true }).trim();
+        if (!buffer) continue;
+
         chipId.value = buffer;
-        sessionPropertyStore.setChipSerie(chipId.value);
-        console.log("chip en la session:",sessionPropertyStore.chipSerie);
-        console.log("Chip leído:", chipId.value);
+        sessionPropertyStore.setChipSerie(buffer);
+
+        console.log("RFID leído:", buffer);
+
+        // 1️⃣ Buscar bovino
+        const bovine = await bovineService.getBySerie(buffer);
+
+        if (!bovine) {
+          console.warn("No existe bovino con ese chip");
+          sessionPropertyStore.clearBovine();
+          return;
+        }
+
+        // 2️⃣ Guardar en sesión
+        sessionPropertyStore.setBovine(bovine);
+
+        console.log("Bovino activo:", bovine.name);
+
+        // 3️⃣ Crear vínculo Control-Bovine
+        const protocolId = sessionPropertyStore.getProtocolId;
+        const relation = await controlBovineService.createControlBovine({
+          bovine_id: bovine.id,
+          control_id: protocolId
+        });
+
+        sessionPropertyStore.setControlBovineId(relation.id);
+
+        console.log("ControlBovine creado:", relation.id);
       }
-    } catch (error) {
-      console.error('Error durante lectura serial:', error);
+    }
+    catch (error) {
+      console.error("Error RFID:", error);
       await disconnectReader();
     }
   }
+
 
   function handleUnload() {
     disconnectReader();
