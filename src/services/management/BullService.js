@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { Bull } from '@/model/management/Bull';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 
 const PREFIX = '/management/bull';

@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { Ultrasound } from '@/model/management/Ultrasound';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/ultrasound';
 

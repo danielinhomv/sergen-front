@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { ControlBovine } from '@/model/management/ControlBovine';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/control-bovine';
 

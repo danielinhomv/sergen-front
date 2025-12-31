@@ -1,7 +1,5 @@
 <template>
   <div class="d-flex" id="wrapper">
-
-    <!-- Sidebar (Menú Lateral) -->
     <div class="bg-brown-dark border-right d-flex flex-column" id="sidebar-wrapper">
       <div class="sidebar-heading text-center">
         <div class="logo-circle" style="background-color: #c0da63ff;">
@@ -9,6 +7,7 @@
         </div>
         <h2 class="text-white mt-3 mb-0">Sergen</h2>
       </div>
+      
       <div class="list-group list-group-flush flex-grow-1">
         <router-link :to="{ name: 'dashboard' }"
           class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2">
@@ -30,86 +29,68 @@
           class="list-group-item list-group-item-action bg-transparent text-white fw-bold p-3 mb-2 ">
           <i class="fas fa-file-alt me-3"></i>Reportes
         </router-link>
-
       </div>
-      <!-- Separador y opción de Cerrar Sesión -->
+
       <div class="mt-auto p-3">
-        <router-link :to="{ name: 'login' }"
-          class="list-group-item list-group-item-action bg-transparent text-white fw-bold ">
+        <button @click="handleLogout"
+          class="list-group-item list-group-item-action bg-transparent text-white fw-bold border-0 w-100 text-start">
           <i class="fas fa-sign-out-alt me-3"></i>Cerrar Sesión
-        </router-link>
+        </button>
       </div>
     </div>
-    <!-- /#sidebar-wrapper -->
 
-    <!-- Contenido Principal -->
     <div id="page-content-wrapper" class="bg-light-cream">
-      <!-- Botón para mostrar el menú en dispositivos móviles (Fijo en la esquina superior izquierda) -->
       <button class="btn btn-success d-lg-none menu-toggle-btn" id="menu-toggle">
         <i class="fas fa-bars"></i>
       </button>
-
       <div class="container-fluid p-4">
         <slot></slot>
       </div>
     </div>
-    <!-- /#page-content-wrapper -->
-
   </div>
 </template>
 
 <script setup>
-
 import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useSessionPropertyStore } from '@/store/SessionProperty';
 
+const router = useRouter();
+const sessionStore = useSessionPropertyStore();
 
+const handleLogout = async () => { 
+  try {
+    await sessionStore.logout();
+        router.push({ name: 'login' });
+  } catch (error) {
+    // Aunque falle la red, el store se limpia en el 'finally' del store, 
+    // así que igual redirigimos por seguridad.
+    router.push({ name: 'login' });
+  }
+};
 
 onMounted(() => {
-
   const toggleButton = document.getElementById('menu-toggle');
-
   const wrapper = document.getElementById('wrapper');
 
-
-
   if (toggleButton && wrapper) {
-
     toggleButton.addEventListener('click', (e) => {
-
       e.preventDefault();
-
       wrapper.classList.toggle('toggled');
-
-      // Oculta el botón al hacer clic en él
-
       toggleButton.style.display = 'none';
-
     });
-
-
-
-    // Muestra el botón cuando el menú lateral se oculta
 
     const sidebar = document.getElementById('sidebar-wrapper');
-
     sidebar.addEventListener('transitionend', () => {
-
       if (!wrapper.classList.contains('toggled')) {
-
         toggleButton.style.display = 'block';
-
       }
-
     });
-
   }
-
 });
-
 </script>
 
 <style>
-/* Reset de estilos para eliminar márgenes y paddings por defecto */
 html,
 body {
   margin: 0;
@@ -244,4 +225,12 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.border-0 {
+  border: none !important;
+}
+button.list-group-item-action {
+  outline: none;
+}
+
 </style>

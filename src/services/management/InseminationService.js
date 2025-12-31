@@ -1,6 +1,6 @@
 import { Insemination } from '@/model/management/Insemination';
 import { API_URL } from '@/environment/Api';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/insemination';
 

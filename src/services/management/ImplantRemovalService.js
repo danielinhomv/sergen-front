@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { ImplantRemoval } from '@/model/management/ImplantRemoval';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/implant-retrieval';
 

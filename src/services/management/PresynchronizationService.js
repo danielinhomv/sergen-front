@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { Presynchronization } from '@/model/management/Presynchronization';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/pre-sincronizacion';
 

@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { GeneralPalpation } from '@/model/management/GeneralPalpation';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/general-palpation';
 

@@ -1,6 +1,6 @@
 import { API_URL } from '@/environment/Api';
 import { ConfirmatoryUltrasound } from '@/model/management/ConfirmatoryUltrasound';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/confirmatory-ultrasound';
 

@@ -1,6 +1,6 @@
 import Property from '@/model/management/Property';
 import { API_URL } from '@/environment/Api';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 
 const PREFIX = '/management/property';

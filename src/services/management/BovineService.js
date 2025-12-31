@@ -1,6 +1,6 @@
 import { Bovine } from '@/model/management/Bovine';
 import { API_URL } from '@/environment/Api';
-import { HttpService } from './HttpService'; // Importamos la clase base
+import { HttpService } from '@/services/HttpService';
 
 const PREFIX = '/management/bovine';
 

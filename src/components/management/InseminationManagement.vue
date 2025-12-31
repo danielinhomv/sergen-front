@@ -193,7 +193,6 @@ import { useSessionPropertyStore } from '@/store/SessionProperty';
 const service = new InseminationService();
 const bullService = new BullService();
 const sessionPropertyStore = useSessionPropertyStore();
-
 /* ======================
    STATE
 ====================== */
@@ -268,7 +267,7 @@ async function saveInsemination() {
             showToast('success', 'Inseminación registrada.');
         }
 
-        bootstrap.Modal.getInstance(document.getElementById('inseminationModal')).hide();
+        Modal.getInstance(document.getElementById('inseminationModal')).hide();
     } catch (error) {
         showToast('error', 'Error al guardar.');
     } finally {
@@ -279,10 +278,6 @@ async function saveInsemination() {
 /* ======================
    HELPERS UI
 ====================== */
-function getBullName(bullId) {
-    const bull = bullsList.value.find(b => b.id == bullId);
-    return bull ? bull.name : (bullId || 'Semental no identificado');
-}
 
 function openModal(item = null) {
     if (item) {

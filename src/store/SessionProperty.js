@@ -42,7 +42,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const getControlBovineId = computed(() => controlBovineId.value);
 
 
-   async function fetchInitialWorkStatus(userId) {
+    async function fetchInitialWorkStatus(userId) {
         try {
             const response = await _sendRequestHttp('property/isWorked', userId, null);
 
@@ -78,7 +78,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
             if (data.error) throw new Error(data.error);
 
             token.value = data.token;
-            
+
             await fetchUserProfile();
 
             return { success: true };
@@ -100,7 +100,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
             });
 
             if (!response.ok) throw new Error("Sesión inválida");
-            
+
             const userData = await response.json();
             user.value = User.fromJson(userData);
         } catch (error) {
@@ -108,16 +108,37 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         }
     }
 
-    function logout() {
+   async function logout() {
+    try {
+        if (token.value) {
+            await fetch(`${userUrl}logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token.value}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error al invalidar token en servidor:", error);
+    } finally {
         token.value = null;
         user.value = null;
         isWorking.value = false;
         propertyId.value = null;
+        name.value = null;
+        place.value = null;
+        phone.value = null;
+        owner.value = null;
         protocolId.value = null;
+        isLoaded.value = false;
         chipSerie.value = null;
         bovine.value = null;
         controlBovineId.value = null;
+
     }
+}
 
     function setBovine(b) {
         bovine.value = b;
@@ -185,7 +206,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     }
 
 
-   async function _sendRequestHttp(endpoint, userId, selectedPropertyId) {
+    async function _sendRequestHttp(endpoint, userId, selectedPropertyId) {
         const headers = { 'Content-Type': 'application/json' };
         if (getToken.value) {
             headers['Authorization'] = `Bearer ${token.value}`;
@@ -242,7 +263,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         persist: {
             paths: [
                 'token',
-                'user', 
+                'user',
                 'isWorking',
                 'propertyId',
                 'protocolId',
