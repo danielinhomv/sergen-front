@@ -53,11 +53,11 @@ export class BirthService extends HttpService {
                 })
             });
 
-            const data = await this.handleResponse(response);
+            const responseJson = await this.handleResponse(response);
             
-            if (!data || Object.keys(data).length === 0) return null;
+            if (!responseJson || Object.keys(responseJson).length === 0) return null;
 
-            return Birth.fromJson(data);
+            return Birth.fromJson(responseJson.data);
         } catch (error) {
             console.error('BirthService Get Error:', error);
             throw error;

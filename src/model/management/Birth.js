@@ -6,7 +6,10 @@ export class Birth {
         birthWeight,
         rgd,
         typeOfBirth,
-        controlBovineId
+        bovineId, //id del bovino escaneado , es decir de la madre
+        propertyId,
+        controlBovineId,
+        bullFather
     }) {
         this.id = id;
         this.birthdate = birthdate;
@@ -14,7 +17,10 @@ export class Birth {
         this.birthWeight = birthWeight;
         this.rgd = rgd;
         this.typeOfBirth = typeOfBirth;
+        this.bovineId = bovineId;
+        this.propertyId = propertyId;
         this.controlBovineId = controlBovineId;
+        this.bullFather = bullFather;
     }
 
     static fromJson(data) {
@@ -25,7 +31,8 @@ export class Birth {
             birthWeight: data.birth_weight,
             rgd: data.rgd,
             typeOfBirth: data.type_of_birth,
-            controlBovineId: data.control_bovine_id
+            controlBovineId: data.control_bovine_id,
+            bullFather: data.bull_father
         });
     }
 
@@ -36,7 +43,9 @@ export class Birth {
             birth_weight: this.birthWeight,
             rgd: this.rgd,
             type_of_birth: this.typeOfBirth,
-            control_bovine_id: this.controlBovineId
+            control_bovine_id: this.controlBovineId,
+            bovine_id: this.bovineId,
+            property_id: this.propertyId
         };
     }
 }
