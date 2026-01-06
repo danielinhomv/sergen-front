@@ -65,7 +65,8 @@ const handleLogout = async () => {
   } catch (error) {
     // Aunque falle la red, el store se limpia en el 'finally' del store, 
     // así que igual redirigimos por seguridad.
-    router.push({ name: 'login' });
+    console.error('Error during logout:', error);
+    //router.push({ name: 'login' });
   }
 };
 

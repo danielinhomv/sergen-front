@@ -122,11 +122,11 @@
 </template>
 
 <script>
-import PropertyService from '../services/management/PropertyService';
 import { ref, onMounted, computed } from 'vue';
 import { Modal } from 'bootstrap';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { useNavigation } from '@/utils/navigation';
+import PropertyService from '@/services/management/PropertyService';
 
 export default {
   name: "SelectProperty",
@@ -136,12 +136,15 @@ export default {
     const sessionPropertyStore = useSessionPropertyStore();
     const { replaceTo } = useNavigation();
 
+    //instancia
+    const propertyService = new PropertyService();
+
     const newProperty = ref({
       name: '',
       place: '',
       owner_name: '',
       phone_number: '',
-      user_id: 2
+      user_id: sessionPropertyStore.getUser?.id,
     });
 
     const nameExists = ref(false);
@@ -151,7 +154,7 @@ export default {
 
     const loadProperties = async () => {
       try {
-        properties.value = await PropertyService.list();
+        properties.value = await propertyService.list();
       } catch (error) {
         console.error('Error cargando propiedades:', error);
       }
@@ -160,7 +163,7 @@ export default {
     const startWork = async (propertyId) => {
       loading.value = true;
       try {
-        await sessionPropertyStore.startWork(propertyId, 2);
+        await sessionPropertyStore.startWork(propertyId, sessionPropertyStore.getUser?.id);
         emit('start-work', propertyId);
         replaceTo('dashboard');
       } catch (error) {
@@ -190,7 +193,7 @@ export default {
     const saveProperty = async () => {
       if (!isFormValid.value) return;
       try {
-        const created = await PropertyService.create(newProperty.value);
+        const created = await propertyService.create(newProperty.value);
         properties.value.push(created);
         const modalEl = document.getElementById('createPropertyModal');
         const modal = Modal.getInstance(modalEl);
@@ -211,7 +214,7 @@ export default {
     const confirmDelete = async () => {
       if (!propertyToDelete.value) return;
       try {
-        await PropertyService.delete(propertyToDelete.value.id);
+        await propertyService.delete(propertyToDelete.value.id);
         properties.value = properties.value.filter(p => p.id !== propertyToDelete.value.id);
         deleteModalInstance.hide();
         propertyToDelete.value = null;

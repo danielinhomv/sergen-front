@@ -20,7 +20,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const place = ref(null);
     const phone = ref(null);
     const owner = ref(null);
-    const protocolId = ref(null);
+    const protocolId = ref(null);  // el id de la gestion en curso
     const isLoaded = ref(false);
 
     const bovine = ref(null);
@@ -171,10 +171,10 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         return data;
     }
 
-    async function startWork(selectedPropertyId, userId) {
+    async function startWork(selectedPropertyId, userId, protocolId) {
 
 
-        const response = await _sendRequestHttp('property/start-work', userId, selectedPropertyId);
+        const response = await _sendRequestHttp('property/start-work', userId, selectedPropertyId, protocolId);
         const dataProcesed = await _processResponse(response);
 
         const dataProcesedCurrentSession = dataProcesed.current_session;
@@ -189,24 +189,16 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
     }
 
-    async function finishWork(selectedPropertyId, userId) {
+    async function finishWork(selectedPropertyId, userId, protocolId) {
 
-        const response = await _sendRequestHttp('property/finish-work', userId, selectedPropertyId);
+        const response = await _sendRequestHttp('property/finish-work', userId, selectedPropertyId, protocolId);
         await _processResponse(response);
 
         isWorking.value = false;
 
     }
 
-    async function startNewProtocol() {
-        const response = await _sendRequestHttp('protocol/start', null, propertyId.value);
-        const dataProcesed = await _processResponse(response);
-        const protocol = dataProcesed.protocolo;
-        protocolId.value = protocol.id;
-    }
-
-
-    async function _sendRequestHttp(endpoint, userId, selectedPropertyId) {
+    async function _sendRequestHttp(endpoint, userId, selectedPropertyId, protocolId = null) {
         const headers = { 'Content-Type': 'application/json' };
         if (getToken.value) {
             headers['Authorization'] = `Bearer ${token.value}`;
@@ -217,7 +209,8 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
             headers: headers,
             body: JSON.stringify({
                 "user_id": userId,
-                "property_id": selectedPropertyId
+                "property_id": selectedPropertyId,
+                "control_id": protocolId
             })
         });
     }
