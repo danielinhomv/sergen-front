@@ -1,8 +1,8 @@
 import { API_URL } from '@/environment/Api';
-import { HttpService } from './HttpService';
+import { HttpService } from '@/services/HttpService';
 import { Control } from '@/model/management/Control';
 
-const PREFIX = '/protocol';
+const PREFIX = '/management/protocol';
 
 export class ControlService extends HttpService {
     constructor(baseUrl = `${API_URL}${PREFIX}`) {

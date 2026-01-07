@@ -25,9 +25,6 @@ async function handleLogin() {
         const result = await sessionStore.login(username.value, password.value);
 
         if (result.success) {
-            if (sessionStore.getUser?.id) {
-                await sessionStore.fetchInitialWorkStatus(sessionStore.getUser.id);
-            }
 
             if (sessionStore.isWorked) {
                 router.push({ name: 'dashboard' });

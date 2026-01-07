@@ -42,20 +42,21 @@ export class PropertyService extends HttpService {
         }
     }
 
-    async update(id, property) {
-        try {
-            const response = await fetch(`${this.baseUrl}/update`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify({ id, ...property })
-            });
-            const data = await this.handleResponse(response);
-            return new Property(data.property || data);
-        } catch (error) {
-            console.error('PropertyService update Error:', error);
-            throw error;
-        }
+async update(id, property) {
+    try {
+        const response = await fetch(`${this.baseUrl}/update/${id}`, {
+            method: 'PUT', 
+            headers: this.getHeaders(),
+            body: JSON.stringify(property)
+        });
+
+        const data = await this.handleResponse(response);
+        return new Property(data.property || data);
+    } catch (error) {
+        console.error('PropertyService update Error:', error);
+        throw error;
     }
+}
 
     async delete(id) {
         try {
@@ -67,22 +68,6 @@ export class PropertyService extends HttpService {
             return await this.handleResponse(response);
         } catch (error) {
             console.error('PropertyService delete Error:', error);
-            throw error;
-        }
-    }
-
-    async nameExists(name) {
-        try {
-            const sessionStore = useSessionPropertyStore();
-            const response = await fetch(`${this.baseUrl}/name-exists`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify({ name, user_id: sessionStore.getUser?.id })
-            });
-            const data = await this.handleResponse(response);
-            return data.exists;
-        } catch (error) {
-            console.error('PropertyService nameExists Error:', error);
             throw error;
         }
     }

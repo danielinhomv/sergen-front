@@ -21,16 +21,7 @@ async function prepareApp() {
     const currentRoute = router.currentRoute.value;
 
     if (sessionStore.isAuthenticated) {
-        try {
-            await sessionStore.fetchUserProfile();
-            
-            if (sessionStore.getUser?.id) {
-                await sessionStore.fetchInitialWorkStatus(sessionStore.getUser.id);
-            }
-        } catch (error) {
-            console.error("Error al restaurar sesión:", error);
-            sessionStore.logout();
-        }
+        await sessionStore.fetchUserProfile();
     }
 
     await router.isReady();

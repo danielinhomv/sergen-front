@@ -6,8 +6,6 @@ import { User } from '@/model/management/User';
 
 export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
-    const PREFIX = '/management/';
-    const baseUrl = `${API_URL}${PREFIX}`;
     const USER_PREFIX = '/user/';
     const userUrl = `${API_URL}${USER_PREFIX}`;
 
@@ -40,30 +38,6 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
 
     const getBovine = computed(() => bovine.value);
     const getControlBovineId = computed(() => controlBovineId.value);
-
-
-    async function fetchInitialWorkStatus(userId) {
-        try {
-            const response = await _sendRequestHttp('property/isWorked', userId, null);
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.active) {
-                    isWorking.value = true;
-                    propertyId.value = data.property_id;
-                    name.value = data.name;
-                    place.value = data.place;
-                    phone.value = data.phone_number;
-                    owner.value = data.owner_name;
-                    protocolId.value = data.protocol_id;
-                }
-            }
-        } catch (error) {
-            console.error("Error al cargar estado inicial:", error);
-        } finally {
-            isLoaded.value = true;
-        }
-    }
 
     async function login(username, password) {
         try {
@@ -125,18 +99,6 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     } finally {
         token.value = null;
         user.value = null;
-        isWorking.value = false;
-        propertyId.value = null;
-        name.value = null;
-        place.value = null;
-        phone.value = null;
-        owner.value = null;
-        protocolId.value = null;
-        isLoaded.value = false;
-        chipSerie.value = null;
-        bovine.value = null;
-        controlBovineId.value = null;
-
     }
 }
 
@@ -162,57 +124,33 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         return chipSerie.value !== null;
     }
 
-    async function _processResponse(response) {
-        if (!response.ok) {
-            const errorData = await response.json;
-            throw new Error(errorData)
-        }
-        const data = await response.json();
-        return data;
-    }
+    async function startWork(selectedPropertyId, protocoloId, nameValue, placeValue, phoneValue, ownerValue) {
 
-    async function startWork(selectedPropertyId, userId, protocolId) {
-
-
-        const response = await _sendRequestHttp('property/start-work', userId, selectedPropertyId, protocolId);
-        const dataProcesed = await _processResponse(response);
-
-        const dataProcesedCurrentSession = dataProcesed.current_session;
-        propertyId.value = dataProcesedCurrentSession.property_id;
-        name.value = dataProcesed.name;
-        place.value = dataProcesed.place;
-        phone.value = dataProcesed.phone_number;
-        owner.value = dataProcesed.owner_name;
-        protocolId.value = dataProcesed.protocol_id;
         isWorking.value = true;
-
-
+        propertyId.value = selectedPropertyId;
+        protocolId.value = protocoloId;
+        name.value = nameValue;
+        place.value = placeValue;
+        phone.value = phoneValue;
+        owner.value = ownerValue;
+        isLoaded.value = true;
     }
 
-    async function finishWork(selectedPropertyId, userId, protocolId) {
-
-        const response = await _sendRequestHttp('property/finish-work', userId, selectedPropertyId, protocolId);
-        await _processResponse(response);
+    async function finishWork() {
 
         isWorking.value = false;
+        propertyId.value = null;
+        name.value = null;
+        place.value = null;
+        phone.value = null;
+        owner.value = null;
+        protocolId.value = null;
+        isLoaded.value = false;
+        chipSerie.value = null;
+        bovine.value = null;
+        controlBovineId.value = null;
+        isLoaded.value = false;
 
-    }
-
-    async function _sendRequestHttp(endpoint, userId, selectedPropertyId, protocolId = null) {
-        const headers = { 'Content-Type': 'application/json' };
-        if (getToken.value) {
-            headers['Authorization'] = `Bearer ${token.value}`;
-        }
-
-        return await fetch(`${baseUrl}${endpoint}`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                "user_id": userId,
-                "property_id": selectedPropertyId,
-                "control_id": protocolId
-            })
-        });
     }
 
     return {
@@ -237,8 +175,6 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         isWorking,
         propertyId,
         isLoaded,
-        fetchInitialWorkStatus,
-        startNewProtocol,
         chipSerie,
         getChipSerie,
         setChipSerie,
