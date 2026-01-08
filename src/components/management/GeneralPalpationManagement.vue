@@ -1,86 +1,104 @@
 <template>
   <div class="palpation-container">
 
-    <div v-if="isLoading" class="loading-container">
-      <div class="spinner-container">
-        <div class="pulsing-circle"></div>
-      </div>
-      <p class="loading-text">Cargando datos de palpación...</p>
+    <div v-if="isLoading" class="loading-state-premium">
+      <div class="spinner-border text-success-premium mb-3" role="status"></div>
+      <p class="loading-text-premium">{{ loadingText }}</p>
     </div>
 
-    <div v-else class="result-container animate__animated animate__fadeIn">
+    <div v-else class="content-wrapper animate__animated animate__fadeIn">
 
-      <button v-if="!item && !showForm" class="btn btn-success mb-3 shadow-sm fw-bold px-4" @click="openAddForm">
-        <i class="fas fa-hand-holding-medical me-2"></i>Registrar Palpación
-      </button>
+      <div v-if="!item && !showForm" class="empty-state-container">
+        <div class="empty-icon-box">
+          <i class="fas fa-hand-holding-medical"></i>
+        </div>
+        <h4 class="fw-bold text-dark">Sin registros de Palpación</h4>
+        <p class="text-muted mb-4">Aún no se ha realizado el diagnóstico clínico para este ciclo.</p>
+        <button class="btn btn-success-premium shadow-sm px-5" @click="openAddForm">
+          <i class="fas fa-plus-circle me-2"></i>REGISTRAR PALPACIÓN
+        </button>
+      </div>
 
-      <div v-if="item && !showForm" class="detail-card border-start border-success border-4 shadow-sm">
-        <div class="detail-header mb-3">
-          <h4 class="text-success fw-bold m-0">Palpación General</h4>
-          <button class="btn btn-warning btn-sm text-white px-3" @click="openEditForm">
-            <i class="fas fa-edit me-1"></i> Editar
-          </button>
+      <div v-if="item && !showForm" class="detail-card-premium shadow-sm">
+        <div class="card-premium-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+              <div class="icon-badge-premium highlight">
+                <i class="fas fa-stethoscope"></i>
+              </div>
+              <div>
+                <span :class="['status-pill-base mb-1 d-inline-block', statusBadgeClass(item.status)]">
+                  {{ statusLabel(item.status) }}
+                </span>
+                <h5 class="fw-bold text-dark m-0">Diagnóstico de Palpación</h5>
+              </div>
+            </div>
+            <button class="btn-edit-round" @click="openEditForm">
+              <i class="fas fa-pen"></i>
+            </button>
+          </div>
         </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <strong><i class="fas fa-info-circle me-2 text-muted"></i>Estado:</strong>
-            <span :class="statusBadgeClass(item.status)" class="ms-2">
-              {{ statusLabel(item.status) }}
-            </span>
-          </div>
-          <div class="col-md-6 mb-2">
-            <strong><i class="fas fa-calendar-alt me-2 text-muted"></i>Fecha:</strong> {{ item.date }}
-          </div>
-          <div class="col-12 mt-2" v-if="item.observation">
-            <strong><i class="fas fa-comment-dots me-2 text-muted"></i>Observación:</strong>
-            <p class="mt-1 text-muted ms-4">{{ item.observation }}</p>
+        <div class="card-premium-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="label-premium">FECHA DEL EXAMEN</label>
+              <p class="value-premium"><i class="fas fa-calendar-alt me-2 text-success"></i>{{ item.date }}</p>
+            </div>
+
+            <div class="col-12" v-if="item.observation">
+              <div class="premium-divider"></div>
+              <label class="label-premium">OBSERVACIONES CLÍNICAS</label>
+              <div class="text-box-premium">
+                <i class="fas fa-comment-medical me-2 text-success"></i>
+                {{ item.observation }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-if="showForm" class="form-container mt-3 p-4 border rounded-4 bg-white shadow-sm">
-        <h4 class="text-success fw-bold mb-4">
-          <i class="fas fa-file-medical me-2"></i>{{ editing ? 'Editar Palpación' : 'Nueva Palpación' }}
-        </h4>
+      <div v-if="showForm" class="form-premium-card animate__animated animate__fadeInUp">
+        <div class="form-header-premium mb-4">
+          <h5 class="text-dark fw-bold m-0">
+            <i class="fas fa-file-medical text-success me-2"></i>
+            {{ editing ? 'Editar Diagnóstico' : 'Nuevo Diagnóstico de Palpación' }}
+          </h5>
+          <p class="text-muted small">Ingrese los resultados del tacto rectal</p>
+        </div>
 
         <form @submit.prevent="submitForm">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label fw-bold small text-uppercase">Estado *</label>
-              <select v-model="form.status" class="form-select border-success-subtle"
-                :class="{ 'is-invalid': errors.status }">
+              <label class="label-premium">ESTADO REPRODUCTIVO *</label>
+              <select v-model="form.status" class="form-control-premium" :class="{ 'is-invalid': errors.status }">
                 <option value="">Seleccione...</option>
                 <option value="pregnant">Preñada</option>
                 <option value="empty">Vacía</option>
                 <option value="discard">Descartada</option>
                 <option value="abort">Abortada</option>
               </select>
-              <div class="invalid-feedback">Debe seleccionar un estado</div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-bold small text-uppercase">Fecha *</label>
-              <input type="date" v-model="form.date" class="form-control border-success-subtle"
+              <label class="label-premium">FECHA DE EVALUACIÓN *</label>
+              <input type="date" v-model="form.date" class="form-control-premium"
                 :class="{ 'is-invalid': errors.date }" />
-              <div class="invalid-feedback">La fecha es obligatoria</div>
             </div>
 
             <div class="col-12">
-              <label class="form-label fw-bold small text-uppercase">Observación</label>
-              <textarea v-model="form.observation" class="form-control border-success-subtle" rows="3"
-                placeholder="Escriba detalles relevantes aquí..."></textarea>
+              <label class="label-premium">OBSERVACIÓN (OPCIONAL)</label>
+              <textarea v-model="form.observation" class="form-control-premium" rows="3"
+                placeholder="Detalles sobre ovarios, útero o hallazgos específicos..."></textarea>
             </div>
           </div>
 
-          <div class="d-flex gap-2 mt-4">
-            <button class="btn btn-success px-4 shadow-sm fw-bold" type="submit" :disabled="!isFormValid || isSaving">
-              <i class="fas fa-save me-2"></i>
-              {{ isSaving ? 'Guardando...' : (editing ? 'Actualizar' : 'Guardar Palpación') }}
+          <div class="d-flex gap-3 mt-5">
+            <button class="btn btn-success-premium px-5" type="submit" :disabled="!isFormValid || isSaving">
+              {{ isSaving ? 'GUARDANDO...' : (editing ? 'ACTUALIZAR DIAGNÓSTICO' : 'GUARDAR PALPACIÓN') }}
             </button>
-
-            <button class="btn btn-outline-secondary px-4 fw-bold" type="button" @click="cancelForm">
-              Cancelar
+            <button class="btn btn-light-premium px-4" type="button" @click="cancelForm">
+              CANCELAR
             </button>
           </div>
         </form>
@@ -100,11 +118,12 @@ const service = new GeneralPalpationService()
 const sessionPropertyStore = useSessionPropertyStore()
 
 /* ======================
-   STATE
+   ESTADO
 ====================== */
 const item = ref(null)
-const isLoading = ref(true)
+const isLoading = ref(false)
 const isSaving = ref(false)
+const loadingText = ref('Escanee un bovino para cargar los datos...')
 const showForm = ref(false)
 const editing = ref(false)
 
@@ -128,57 +147,28 @@ watch(() => form.value, () => {
 const isFormValid = computed(() => !!form.value.status && !!form.value.date)
 
 /* ======================
-   TOAST HELPER
-====================== */
-function showToast(type, message) {
-  const toastEl = document.getElementById('liveToast');
-  if (!toastEl) return;
-  const toastMessage = document.getElementById('toast-message');
-  const toastIcon = document.getElementById('toast-icon');
-
-  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
-
-  if (type === 'success') {
-    toastEl.classList.add('text-bg-success');
-    toastIcon.innerHTML = '<i class="fas fa-check-circle fs-5"></i>';
-  } else if (type === 'error') {
-    toastEl.classList.add('text-bg-danger');
-    toastIcon.innerHTML = '<i class="fas fa-times-circle fs-5"></i>';
-  }
-
-  toastMessage.textContent = message;
-  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
-  toast.show();
-}
-
-/* ======================
    CRUD
 ====================== */
 async function loadItem() {
   isLoading.value = true
+  loadingText.value = 'Cargando datos de palpación...'
   try {
-    const response = await service.get(sessionPropertyStore.controlBovineId)
-    if (response) {
-      item.value = response
-    } else {
-      item.value = null
-    }
+    const response = await service.get(sessionPropertyStore.getControlBovineId)
+    item.value = response || null
   } catch (error) {
-    showToast('error', 'Error al cargar los datos de palpación.')
-    console.error(error)
+    item.value = null
+    showToast('error', 'Error al cargar los datos.')
   } finally {
     isLoading.value = false
   }
 }
 
 function openAddForm() {
+  editing.value = false
   form.value = {
-    id: null,
-    status: '',
-    observation: '',
+    id: null, status: '', observation: '',
     date: new Date().toISOString().split('T')[0]
   }
-  editing.value = false
   showForm.value = true
 }
 
@@ -188,114 +178,277 @@ function openEditForm() {
   showForm.value = true
 }
 
-function cancelForm() {
-  showForm.value = false
-}
+function cancelForm() { showForm.value = false }
 
 async function submitForm() {
   if (!isFormValid.value) return
   isSaving.value = true
-
   try {
     if (editing.value) {
-      // Usando el servicio corregido con POST y sin ID en URL
       await service.update(form.value.id, form.value)
-      showToast('success', 'Palpación actualizada correctamente.')
+      showToast('success', '¡Palpación actualizada!')
     } else {
-      await service.create(form.value)
-      showToast('success', 'Palpación registrada con éxito.')
+      const dataToSave = {
+        ...form.value,
+        control_bovine_id: sessionPropertyStore.getControlBovineId,
+        property_id: sessionPropertyStore.getPropertyId
+      }
+      await service.create(dataToSave)
+      showToast('success', '¡Palpación registrada!')
     }
     await loadItem()
     showForm.value = false
   } catch (error) {
-    showToast('error', 'Hubo un error al guardar los datos.')
-    console.error(error)
+    showToast('error', 'Error al guardar los datos.')
   } finally {
     isSaving.value = false
   }
 }
 
 /* ======================
-   HELPERS
+   HELPERS UI
 ====================== */
 function statusLabel(value) {
-  const labels = {
-    'pregnant': 'Preñada',
-    'empty': 'Vacía',
-    'discard': 'Descartada',
-    'abort': 'Abortada'
-  }
+  const labels = { 'pregnant': 'Preñada', 'empty': 'Vacía', 'discard': 'Descartada', 'abort': 'Abortada' }
   return labels[value] || value
 }
 
 function statusBadgeClass(value) {
   const classes = {
-    'pregnant': 'badge bg-success',
-    'empty': 'badge bg-danger',
-    'discard': 'badge bg-secondary',
-    'abort': 'badge bg-warning text-dark'
+    'pregnant': 'bg-success-soft text-success',
+    'empty': 'bg-danger-soft text-danger',
+    'discard': 'bg-info-soft text-info',
+    'abort': 'bg-warning-soft text-warning'
   }
-  return classes[value] || 'badge bg-light text-dark'
+  return classes[value] || 'bg-light text-muted'
 }
 
-/* ======================
-   LIFECYCLE
-====================== */
+function showToast(type, message) {
+  const toastEl = document.getElementById('liveToast')
+  if (toastEl) {
+    const toastBody = toastEl.querySelector('.toast-body') || toastEl
+    toastBody.textContent = message
+    const bsToast = new Toast(toastEl)
+    bsToast.show()
+  }
+}
+
 onMounted(() => {
   if (sessionPropertyStore.onScanned()) {
     loadItem()
-  } else {
-    showToast('warning', 'Debe escanear un bovino primero');
   }
-});
+})
 </script>
 
 <style scoped>
-.result-container {
-  width: 100%;
-  max-width: 900px;
-  background: #fff;
-  padding: 2rem;
-  border-radius: 16px;
-}
-
-.detail-card {
-  background: #fdfdfd;
-  padding: 1.5rem;
-  border-radius: 12px;
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: #28a745;
-  box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.1);
-}
-
-.loading-container {
-  min-height: 40vh;
+/* --- ESTRUCTURA DE CARGA (IDÉNTICO A PARTO) --- */
+.loading-state-premium {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 300px;
+  width: 100%;
 }
 
-.pulsing-circle {
-  width: 80px;
-  height: 80px;
-  background-color: #28a745;
-  border-radius: 50%;
-  animation: pulse 1.5s infinite ease-out;
+.text-success-premium {
+  color: #2d4a22 !important;
 }
 
-@keyframes pulse {
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+.loading-text-premium {
+  color: #475569;
+  font-weight: 700;
+  font-size: 1.1rem;
+  animation: fadePulse 1.5s infinite;
+}
+
+@keyframes fadePulse {
   0% {
-    transform: scale(0.6);
-    opacity: 0.8;
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
   }
 
   100% {
-    transform: scale(1.2);
-    opacity: 0;
+    opacity: 0.6;
   }
+}
+
+/* --- EMPTY STATE --- */
+.empty-state-container {
+  text-align: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 24px;
+  border: 2px dashed #e2e8f0;
+}
+
+.empty-icon-box {
+  width: 80px;
+  height: 80px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 20px;
+}
+
+/* --- CARD DETALLE --- */
+.detail-card-premium {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #edf2f7;
+}
+
+.card-premium-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fcfdfc;
+}
+
+.card-premium-body {
+  padding: 2rem;
+}
+
+.icon-badge-premium {
+  width: 50px;
+  height: 50px;
+  background: #2d4a22;
+  color: #c0da63;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.icon-badge-premium.highlight {
+  background: #16a34a;
+  color: white;
+}
+
+/* --- BADGES Y LABELS --- */
+.status-pill-base {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bg-success-soft {
+  background-color: #dcfce7 !important;
+}
+
+.bg-danger-soft {
+  background-color: #fee2e2 !important;
+}
+
+.bg-info-soft {
+  background-color: #e0f2fe !important;
+}
+
+.bg-warning-soft {
+  background-color: #fef3c7 !important;
+}
+
+.label-premium {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.value-premium {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.text-box-premium {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 14px;
+  color: #475569;
+  border: 1px solid #f1f5f9;
+  line-height: 1.5;
+}
+
+.premium-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 20px 0;
+}
+
+/* --- FORMULARIO --- */
+.form-premium-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+.form-control-premium {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #f1f5f9;
+  border-radius: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: 0.3s;
+}
+
+.form-control-premium:focus {
+  border-color: #10b981;
+  outline: none;
+  background: #fcfdfc;
+}
+
+/* --- BOTONES --- */
+.btn-success-premium {
+  background: #2d4a22;
+  color: #c0da63;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  transition: 0.3s;
+}
+
+.btn-success-premium:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(45, 74, 34, 0.2);
+}
+
+.btn-light-premium {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.btn-edit-round {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  transition: 0.3s;
 }
 </style>

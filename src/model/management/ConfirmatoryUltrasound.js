@@ -4,12 +4,14 @@ export class ConfirmatoryUltrasound {
         id,
         status,
         observation,
+        refugo,
         date,
         controlBovineId
     }) {
         this.id = id;
         this.status = status;
         this.observation = observation;
+        this.refugo = refugo;
         this.date = date;
         this.controlBovineId = controlBovineId;
     }
@@ -19,6 +21,7 @@ export class ConfirmatoryUltrasound {
             id: data.id,
             status: data.status,
             observation: data.observation,
+            refugo: data.refugo,
             date: data.date,
             controlBovineId: data.control_bovine_id
         });
@@ -28,6 +31,7 @@ export class ConfirmatoryUltrasound {
         return {
             status: this.status,
             observation: this.observation,
+            refugo: this.refugo,
             date: this.date,
             control_bovine_id: this.controlBovineId
         };

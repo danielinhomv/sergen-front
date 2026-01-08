@@ -8,7 +8,8 @@ export class Ultrasound {
         usedProductsSummary,
         workTeam,
         date,
-        controlBovineId
+        controlBovineId,
+        refugo
     }) {
         this.id = id;
         this.vitaminsAndMinerals = vitaminsAndMinerals;
@@ -18,6 +19,7 @@ export class Ultrasound {
         this.workTeam = workTeam;
         this.date = date;
         this.controlBovineId = controlBovineId;
+        this.refugo = refugo;
     }
 
     static fromJson(data) {
@@ -29,7 +31,8 @@ export class Ultrasound {
             usedProductsSummary: data.used_products_summary,
             workTeam: data.work_team,
             date: data.date,
-            controlBovineId: data.control_bovine_id
+            controlBovineId: data.control_bovine_id,
+            refugo: data.refugo
         });
     }
 
@@ -41,7 +44,8 @@ export class Ultrasound {
             used_product_summary: this.usedProductsSummary,
             work_team: this.workTeam,
             date: this.date,
-            control_bovine_id: this.controlBovineId
+            control_bovine_id: this.controlBovineId,
+            refugo: this.refugo
         };
     }
 }

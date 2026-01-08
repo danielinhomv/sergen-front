@@ -1,110 +1,148 @@
 <template>
   <div class="birth-container">
 
-    <div v-if="isLoading" class="loading-container">
-      <div class="spinner-container">
-        <div class="pulsing-circle"></div>
-      </div>
-      <p class="loading-text">{{ loadingText }}</p>
+    <div v-if="isLoading" class="loading-state-premium">
+      <div class="spinner-border text-success-premium mb-3" role="status"></div>
+      <p class="loading-text-premium">{{ loadingText }}</p>
     </div>
 
-    <div v-else class="result-container animate__animated animate__fadeIn">
+    <div v-else class="content-wrapper animate__animated animate__fadeIn">
 
-      <button v-if="!item && !showForm" class="btn btn-success mb-3 shadow-sm fw-bold" @click="openAddForm">
-        <i class="fas fa-plus me-2"></i>Registrar Parto
-      </button>
+      <div v-if="!item && !showForm" class="empty-state-container">
+        <div class="empty-icon-box">
+          <i class="fas fa-baby-carriage"></i>
+        </div>
+        <h4 class="fw-bold text-dark">Sin registros de Parto</h4>
+        <p class="text-muted mb-4">Aún no se ha reportado el nacimiento para esta madre.</p>
+        <button class="btn btn-success-premium shadow-sm px-5" @click="openAddForm">
+          <i class="fas fa-plus-circle me-2"></i>REGISTRAR PARTO
+        </button>
+      </div>
 
-      <div v-if="item && !showForm" class="detail-card border-start border-success border-4 shadow-sm">
-        <div class="detail-header mb-3">
-          <h4 class="text-success fw-bold m-0">Información del Parto</h4>
-          <button class="btn btn-warning btn-sm text-white" @click="openEditForm">
-            <i class="fas fa-edit me-1"></i> Editar
-          </button>
+      <div v-if="item && !showForm" class="detail-card-premium shadow-sm">
+        <div class="card-premium-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+              <div class="icon-badge-premium">
+                <i class="fas fa-cow"></i>
+              </div>
+              <div>
+                <span :class="['status-pill-base mb-1 d-inline-block', statusClass(item.typeOfBirth)]">
+                  {{ typeOfBirthLabel(item.typeOfBirth) }}
+                </span>
+                <h5 class="fw-bold text-dark m-0">Información del Nacimiento</h5>
+              </div>
+            </div>
+            <button class="btn-edit-round" @click="openEditForm">
+              <i class="fas fa-pen"></i>
+            </button>
+          </div>
         </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-2">
-            <strong><i class="fas fa-calendar-alt me-2 text-muted"></i>Fecha:</strong> {{ item.birthdate }}
-          </div>
-          <div class="col-md-6 mb-2">
-            <strong><i class="fas fa-venus-mars me-2 text-muted"></i>Sexo:</strong>
-            <span class="badge bg-info ms-2">{{ sexLabel(item.sex) }}</span>
-          </div>
-          <div class="col-md-6 mb-2">
-            <strong><i class="fas fa-weight me-2 text-muted"></i>Peso:</strong> {{ item.birthWeight }} kg
-          </div>
-          <div class="col-md-6 mb-2">
-            <strong><i class="fas fa-baby me-2 text-muted"></i>Tipo:</strong>
-            <span class="badge bg-secondary ms-2">{{ typeOfBirthLabel(item.typeOfBirth) }}</span>
-          </div>
-          <div v-if="item.bullFather" class="col-md-12 mb-2">
-            <strong><i class="fas fa-dna me-2 text-muted"></i>Toro Padre:</strong> {{ item.bullFather }}
+        <div class="card-premium-body">
+          <div class="row g-4">
+            <div class="col-md-3">
+              <label class="label-premium">FECHA DE PARTO</label>
+              <p class="value-premium"><i class="fas fa-calendar-alt me-2 text-success"></i>{{ item.birthdate }}</p>
+            </div>
+            <div class="col-md-3">
+              <label class="label-premium">SEXO DE LA CRÍA</label>
+              <p class="value-premium">
+                <i :class="item.sex === 'male' ? 'fas fa-mars text-primary' : 'fas fa-venus text-danger'"
+                  class="me-2"></i>
+                {{ sexLabel(item.sex) }}
+              </p>
+            </div>
+            <div class="col-md-3">
+              <label class="label-premium">PESO AL NACER</label>
+              <p class="value-premium"><i class="fas fa-weight-hanging me-2 text-success"></i>{{ item.birthWeight }} kg
+              </p>
+            </div>
+            <div class="col-md-3" v-if="item.rgd">
+              <label class="label-premium">RGD / REGISTRO</label>
+              <p class="value-premium"><i class="fas fa-tag me-2 text-success"></i>{{ item.rgd }}</p>
+            </div>
+
+            <div class="col-12" v-if="item.bullFather">
+              <div class="premium-divider"></div>
+              <label class="label-premium">TORO PADRE (GENÉTICA)</label>
+              <div class="text-box-premium highlight">
+                <i class="fas fa-dna me-2 text-success"></i><strong>{{ item.bullFather }}</strong>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-if="showForm" class="form-container mt-3 p-4 border rounded-4 bg-white shadow">
-        <h4 class="text-success fw-bold mb-4">
-          <i class="fas fa-clipboard-list me-2"></i>{{ editing ? 'Editar Parto' : 'Registrar Parto' }}
-        </h4>
+      <div v-if="showForm" class="form-premium-card animate__animated animate__fadeInUp">
+        <div class="form-header-premium mb-4">
+          <h5 class="text-dark fw-bold m-0">
+            <i class="fas fa-clipboard-check text-success me-2"></i>
+            {{ editing ? 'Editar Datos del Parto' : 'Registrar Nuevo Parto' }}
+          </h5>
+          <p class="text-muted small">Ingrese los detalles técnicos del nacimiento</p>
+        </div>
 
         <form @submit.prevent="submitForm">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Fecha de parto *</label>
-              <input type="date" v-model="form.birthdate" class="form-control"
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="label-premium">FECHA DE PARTO *</label>
+              <input type="date" v-model="form.birthdate" class="form-control-premium"
                 :class="{ 'is-invalid': errors.birthdate }" />
-              <div class="invalid-feedback">Campo obligatorio</div>
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Sexo *</label>
-              <select v-model="form.sex" class="form-select" :class="{ 'is-invalid': errors.sex }">
+            <div class="col-md-6">
+              <label class="label-premium">SEXO DE LA CRÍA *</label>
+              <select v-model="form.sex" class="form-control-premium" :class="{ 'is-invalid': errors.sex }">
                 <option value="">Seleccione...</option>
                 <option value="male">Macho</option>
                 <option value="female">Hembra</option>
               </select>
-              <div class="invalid-feedback">Campo obligatorio</div>
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Peso al nacer (kg) *</label>
-              <input type="number" min="0.1" step="0.1" v-model="form.birthWeight" class="form-control"
+            <div class="col-md-6">
+              <label class="label-premium">PESO AL NACER (KG) *</label>
+              <input type="number" min="0.1" step="0.1" v-model="form.birthWeight" class="form-control-premium"
                 :class="{ 'is-invalid': errors.birthWeight }" />
-              <div class="invalid-feedback">Campo obligatorio y debe ser > 0</div>
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Tipo de parto *</label>
-              <select v-model="form.typeOfBirth" class="form-select" :class="{ 'is-invalid': errors.typeOfBirth }">
+            <div class="col-md-6">
+              <label class="label-premium">TIPO DE PARTO *</label>
+              <select v-model="form.typeOfBirth" class="form-control-premium"
+                :class="{ 'is-invalid': errors.typeOfBirth }">
                 <option value="">Seleccione...</option>
                 <option value="normal">Normal / A término</option>
                 <option value="premeture">Prematuro</option>
                 <option value="abort">Aborto</option>
                 <option value="stillbirth">Muerte al nacer</option>
               </select>
-              <div class="invalid-feedback">Campo obligatorio</div>
             </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">RGD (Opcional)</label>
-              <input type="text" v-model="form.rgd" class="form-control" placeholder="Ej: RGD12345" />
+            <div class="col-12">
+              <label class="label-premium">RGD / REGISTRO (OPCIONAL)</label>
+              <input type="text" v-model="form.rgd" class="form-control-premium" placeholder="Ej: RGD12345" />
             </div>
           </div>
 
-          <div class="d-flex gap-2 mt-3">
-            <button type="submit" class="btn btn-success px-4" :disabled="!isFormValid || isSaving">
-              <i class="fas fa-save me-2"></i> {{ isSaving ? 'Guardando...' : (editing ? 'Actualizar' : 'Guardar') }}
+          <div class="d-flex gap-3 mt-5">
+            <button class="btn btn-success-premium px-5" type="submit" :disabled="!isFormValid || isSaving">
+              {{ isSaving ? 'GUARDANDO...' : (editing ? 'ACTUALIZAR DATOS' : 'GUARDAR PARTO') }}
             </button>
-            <button type="button" class="btn btn-outline-secondary px-4" @click="cancelForm">
-              Cancelar
+            <button class="btn btn-light-premium px-4" type="button" @click="cancelForm">
+              CANCELAR
             </button>
           </div>
         </form>
       </div>
 
-      <hr class="my-5" />
-      <BullManagement />
+      <div v-if="!showForm" class="mt-5 animate__animated animate__fadeIn">
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <div class="premium-line"></div>
+          <h6 class="m-0 fw-bold text-muted text-uppercase small">Gestión de Padres</h6>
+          <div class="premium-line"></div>
+        </div>
+        <BullManagement />
+      </div>
 
     </div>
   </div>
@@ -121,38 +159,21 @@ import { useSessionPropertyStore } from '@/store/SessionProperty'
 const birthService = new BirthService()
 const sessionPropertyStore = useSessionPropertyStore()
 
-/* ======================
-   ESTADO
-====================== */
 const item = ref(null)
 const isLoading = ref(true)
 const isSaving = ref(false)
-const loadingText = ref('Cargando datos del parto...')
+const loadingText = ref('Escanee un bovino para cargar los datos...')
 const showForm = ref(false)
 const editing = ref(false)
 
 const form = ref({
-  id: null,
-  birthdate: '',
-  sex: '',
-  birthWeight: '',
-  typeOfBirth: '',
-  rgd: '',
-  controlBovineId: null,
-  bovineId: null, // ID de la madre
-  propertyId: null
+  id: null, birthdate: '', sex: '', birthWeight: '',
+  typeOfBirth: '', rgd: '', controlBovineId: null,
+  bovineId: null, propertyId: null
 })
 
-const errors = ref({
-  birthdate: false,
-  sex: false,
-  birthWeight: false,
-  typeOfBirth: false
-})
+const errors = ref({ birthdate: false, sex: false, birthWeight: false, typeOfBirth: false })
 
-/* ======================
-   VALIDACIÓN
-====================== */
 watch(() => form.value, () => {
   errors.value = {
     birthdate: !form.value.birthdate,
@@ -164,27 +185,21 @@ watch(() => form.value, () => {
 
 const isFormValid = computed(() => {
   return (
-    form.value.birthdate &&
-    form.value.sex &&
-    form.value.birthWeight > 0 &&
-    form.value.typeOfBirth &&
-    form.value.propertyId &&
-    form.value.controlBovineId
+    form.value.birthdate && form.value.sex &&
+    form.value.birthWeight > 0 && form.value.typeOfBirth &&
+    form.value.propertyId && form.value.controlBovineId
   )
 })
 
-/* ======================
-   CRUD
-====================== */
 async function loadItem() {
   isLoading.value = true
+  loadingText.value = 'Cargando datos de parto...'
   try {
-    // Usamos el ID del control escaneado desde el store
     const response = await birthService.get(sessionPropertyStore.getControlBovineId)
-    item.value = response // El servicio ya devuelve la instancia de Birth mediante fromJson
+    item.value = response
   } catch (error) {
-    console.error("Load error:", error)
     item.value = null
+    showToast('error', error.message || 'Error al cargar los datos de parto')
   } finally {
     isLoading.value = false
   }
@@ -193,33 +208,27 @@ async function loadItem() {
 function openAddForm() {
   editing.value = false
   form.value = {
-    id: null,
-    birthdate: new Date().toISOString().split('T')[0],
-    sex: '',
-    birthWeight: '',
-    typeOfBirth: 'normal',
-    rgd: '',
+    id: null, birthdate: new Date().toISOString().split('T')[0],
+    sex: '', birthWeight: '', typeOfBirth: 'normal', rgd: '',
     controlBovineId: sessionPropertyStore.getControlBovineId,
-    bovineId: sessionPropertyStore.getBovineId, // Madre
-    propertyId: sessionPropertyStore.getPropertyId // Muy importante para el repo de Laravel
+    bovineId: sessionPropertyStore.getBovineId,
+    propertyId: sessionPropertyStore.getPropertyId
   }
   showForm.value = true
 }
 
 function openEditForm() {
   editing.value = true
-  // Clonamos el item actual al formulario
-  form.value = { 
-    ...item.value, 
+  form.value = {
+    ...item.value,
     bovineId: sessionPropertyStore.getBovineId,
-    propertyId: sessionPropertyStore.getPropertyId 
+    propertyId: sessionPropertyStore.getPropertyId
   }
   showForm.value = true
 }
 
 async function submitForm() {
   if (!isFormValid.value) return
-
   isSaving.value = true
   try {
     const birthData = new Birth(form.value)
@@ -239,84 +248,251 @@ async function submitForm() {
   }
 }
 
-function cancelForm() {
-  showForm.value = false
-}
+function cancelForm() { showForm.value = false }
 
-/* ======================
-   HELPERS UI
-====================== */
-function sexLabel(value) {
-  return value === 'male' ? 'Macho' : 'Hembra'
-}
+function sexLabel(value) { return value === 'male' ? 'Macho' : 'Hembra' }
 
 function typeOfBirthLabel(value) {
-  const types = {
-    'normal': 'Normal / A término',
-    'premeture': 'Prematuro',
-    'abort': 'Aborto',
-    'stillbirth': 'Muerte al nacer'
-  }
+  const types = { 'normal': 'Normal', 'premeture': 'Prematuro', 'abort': 'Aborto', 'stillbirth': 'Muerte al nacer' }
   return types[value] || value
 }
 
+function statusClass(value) {
+  if (value === 'normal') return 'bg-success-soft text-success'
+  if (value === 'abort' || value === 'stillbirth') return 'bg-danger-soft text-danger'
+  return 'bg-info-soft text-info'
+}
+
 function showToast(type, message) {
-  // Asegúrate de tener este elemento en tu App.vue o layout principal
   const toastEl = document.getElementById('liveToast')
   if (toastEl) {
     const toastBody = toastEl.querySelector('.toast-body') || toastEl
     toastBody.textContent = message
     const bsToast = new Toast(toastEl)
     bsToast.show()
-  } else {
-    alert(message) // Fallback si no hay Toast configurado
   }
 }
 
-/* ======================
-   LIFECYCLE
-====================== */
 onMounted(() => {
-  // Verificamos que haya datos de escaneo
-  if (sessionPropertyStore.getControlBovineId) {
+  if (sessionPropertyStore.onScanned()) {
     loadItem()
-  } else {
-    isLoading.value = false
-    showToast('warning', 'No hay un bovino seleccionado.')
   }
 })
 </script>
 
 <style scoped>
-/* (Se mantienen tus estilos originales que están muy bien) */
-.result-container {
-  width: 100%;
-  max-width: 900px;
-  background: #fff;
-  padding: 2rem;
-  border-radius: 16px;
-}
-.detail-card {
-  background: #fdfdfd;
-  padding: 1.5rem;
-  border-radius: 12px;
-}
-.loading-container {
-  min-height: 40vh;
+/* --- ESTRUCTURA DE CARGA (VISIBILIDAD CORREGIDA) --- */
+.loading-state-premium {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 300px;
+  width: 100%;
 }
-.pulsing-circle {
-  width: 60px;
-  height: 60px;
-  background-color: #28a745;
+
+.text-success-premium {
+  color: #2d4a22 !important;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+.loading-text-premium {
+  color: #475569;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  animation: fadePulse 1.5s infinite;
+}
+
+@keyframes fadePulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* --- EMPTY STATE --- */
+.empty-state-container {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 24px;
+  border: 2px dashed #e2e8f0;
+}
+
+.empty-icon-box {
+  width: 80px;
+  height: 80px;
+  background: #fff1f2;
+  color: #e11d48;
   border-radius: 50%;
-  animation: pulse 1.5s infinite ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 20px;
 }
-@keyframes pulse {
-  0% { transform: scale(0.6); opacity: 0.8; }
-  100% { transform: scale(1.2); opacity: 0; }
+
+/* --- CARD DETALLE --- */
+.detail-card-premium {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid #edf2f7;
+}
+
+.card-premium-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fcfdfc;
+}
+
+.card-premium-body {
+  padding: 2rem;
+}
+
+.icon-badge-premium {
+  width: 50px;
+  height: 50px;
+  background: #2d4a22;
+  color: #c0da63;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+/* --- BADGES --- */
+.status-pill-base {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bg-success-soft {
+  background-color: #dcfce7 !important;
+}
+
+.bg-danger-soft {
+  background-color: #fee2e2 !important;
+}
+
+.bg-info-soft {
+  background-color: #e0f2fe !important;
+}
+
+/* --- ELEMENTOS FORM --- */
+.label-premium {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.value-premium {
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.text-box-premium {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #475569;
+  border: 1px solid #f1f5f9;
+}
+
+.text-box-premium.highlight {
+  background: #f0fdf4;
+  border-color: #dcfce7;
+}
+
+.premium-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 15px 0;
+}
+
+.form-premium-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+.form-control-premium {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #f1f5f9;
+  border-radius: 14px;
+  font-weight: 600;
+  transition: 0.3s;
+  color: #1e293b;
+}
+
+.form-control-premium:focus {
+  border-color: #10b981;
+  outline: none;
+  background: #fcfdfc;
+}
+
+/* --- BOTONES --- */
+.btn-success-premium {
+  background: #2d4a22;
+  color: #c0da63;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  transition: 0.3s;
+}
+
+.btn-success-premium:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(45, 74, 34, 0.2);
+}
+
+.btn-light-premium {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.btn-edit-round {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  transition: 0.3s;
+}
+
+.premium-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
 }
 </style>

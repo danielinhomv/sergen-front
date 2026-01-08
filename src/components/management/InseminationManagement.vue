@@ -1,60 +1,60 @@
 <template>
     <div class="insemination-container">
-        <div v-if="isLoading" class="loading-container">
-            <div class="spinner-container">
-                <div class="pulsing-circle"></div>
-            </div>
-            <p class="loading-text">{{ loadingText }}</p>
+
+        <div v-if="isLoading" class="loading-state-premium">
+            <div class="spinner-border text-success-premium mb-3" role="status"></div>
+            <p class="loading-text-premium">{{ loadingText }}</p>
         </div>
 
-        <div v-else class="content-container animate__animated animate__fadeIn">
+        <div v-else class="content-wrapper animate__animated animate__fadeIn">
 
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="text-success fw-bold m-0">
-                    <i class="fas fa-history me-2"></i>Historial de Inseminaciones
-                </h4>
-                <button class="btn btn-success shadow-sm fw-bold px-4" @click="openModal()">
-                    <i class="fas fa-plus-circle me-2"></i>Nuevo Registro
+                <div>
+                    <h4 class="fw-bold text-dark m-0">Historial de Inseminaciones</h4>
+                    <p class="text-muted small m-0">Registros de servicios para este ciclo</p>
+                </div>
+                <button class="btn btn-success-premium shadow-sm px-4" @click="openModal()">
+                    <i class="fas fa-plus-circle me-2"></i>NUEVA INSEMINACIÓN
                 </button>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-premium-table shadow-sm">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light-success">
+                    <table class="table align-middle mb-0">
+                        <thead>
                             <tr>
-                                <th class="ps-4">Fecha</th>
-                                <th>Toro</th>
+                                <th class="ps-4">FECHA</th>
+                                <th>TORO / SEMENTAL</th>
                                 <th>CC</th>
-                                <th>Celo</th>
-                                <th>Notas (Obs / Otros)</th>
-                                <th class="text-end pe-4">Acciones</th>
+                                <th>CELO</th>
+                                <th>NOTAS</th>
+                                <th class="text-end pe-4">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in inseminations" :key="item.id">
-                                <td class="ps-4 fw-medium text-dark">{{ item.date }}</td>
+                            <tr v-for="item in inseminations" :key="item.id" class="premium-row">
+                                <td class="ps-4 fw-bold text-dark">{{ item.date }}</td>
                                 <td>
-                                    <span class="badge bg-light text-success border border-success-subtle px-3 py-2">
-                                        <i class="fas fa-bull me-1"></i> {{ item.bull_name || item.bull }}
-                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="mini-icon-bull"><i class="fas fa-bull"></i></div>
+                                        <span class="fw-bold text-dark">{{ item.bull_name || item.bull }}</span>
+                                    </div>
                                 </td>
-                                <td><span class="fw-bold text-muted">{{ item.bodyConditionScore }}</span></td>
+                                <td><span class="cc-badge">{{ item.bodyConditionScore }}</span></td>
                                 <td>
-                                    <span :class="heatBadgeClass(item.heatQuality)">
+                                    <span :class="['status-pill-base', heatBadgeClass(item.heatQuality)]">
                                         {{ heatLabel(item.heatQuality) }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <button v-if="item.observation"
-                                            class="btn btn-sm btn-light-primary rounded-pill px-3"
+                                        <button v-if="item.observation" class="btn-note btn-obs"
                                             @click="viewFullText('Observaciones', item.observation)">
-                                            <i class="fas fa-comment-alt me-1"></i> Obs.
+                                            <i class="fas fa-comment-dots"></i>
                                         </button>
-                                        <button v-if="item.others" class="btn btn-sm btn-light-info rounded-pill px-3"
+                                        <button v-if="item.others" class="btn-note btn-others"
                                             @click="viewFullText('Otros Detalles', item.others)">
-                                            <i class="fas fa-ellipsis-h me-1"></i> Otros
+                                            <i class="fas fa-info-circle"></i>
                                         </button>
                                         <span v-if="!item.observation && !item.others"
                                             class="text-muted small italic">Sin notas</span>
@@ -62,124 +62,120 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-warning border-0"
-                                            @click="openModal(item)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger border-0"
-                                            @click="confirmDelete(item.id)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <button class="btn-action-edit" @click="openModal(item)"><i
+                                                class="fas fa-pen"></i></button>
+                                        <button class="btn-action-delete" @click="confirmDelete(item.id)"><i
+                                                class="fas fa-trash"></i></button>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="inseminations.length === 0">
-                                <td colspan="6" class="text-center py-5 text-muted">No hay registros aún.</td>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-table-state d-flex flex-column align-items-center justify-content-center">
+                                        <i class="fas fa-syringe mb-3 opacity-50 fs-2"></i>
+                                        <p class="text-muted fw-bold m-0">No se han registrado inseminaciones</p>
+                                        <p class="text-muted small">Haga clic en "Nueva Inseminación" para añadir un registro.</p>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <div class="modal fade" id="inseminationModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-0 pb-0 ps-4 pt-4">
-                        <h5 class="modal-title fw-bold text-success">
-                            <i class="fas fa-syringe me-2"></i>{{ editing ? 'Editar Inseminación' : 'Nueva Inseminación'
-                            }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <form @submit.prevent="saveInsemination">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Toro / Semental
-                                        *</label>
-                                    <select v-model="form.bull" class="form-select border-success-subtle shadow-none"
-                                        required>
-                                        <option value="" disabled>Seleccione un toro...</option>
-                                        <option v-for="bull in bullsList" :key="bull.id" :value="bull.id">
-                                            {{ bull.name }} {{ bull.rgd ? `(${bull.rgd})` : '' }}
-                                        </option>
-                                    </select>
+            <div class="modal fade" id="inseminationModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0 shadow-lg rounded-4">
+                        <div class="modal-header border-0 p-4 pb-0">
+                            <h5 class="modal-title fw-bold text-dark">
+                                <i class="fas fa-syringe text-success me-2"></i>
+                                {{ editing ? 'Editar Inseminación' : 'Nueva Inseminación' }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <form @submit.prevent="saveInsemination">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="label-premium">TORO / SEMENTAL *</label>
+                                        <select v-model="form.bull" class="form-control-premium" required>
+                                            <option value="" disabled>Seleccione un toro...</option>
+                                            <option v-for="bull in bullsList" :key="bull.id" :value="bull.id">
+                                                {{ bull.name }} {{ bull.rgd ? `(${bull.rgd})` : '' }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="label-premium">CC (1-5) *</label>
+                                        <input type="number" v-model="form.bodyConditionScore" step="0.5" min="1"
+                                            max="5" class="form-control-premium" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="label-premium">CALIDAD CELO *</label>
+                                        <select v-model="form.heatQuality" class="form-control-premium" required>
+                                            <option value="well">Bueno</option>
+                                            <option value="regular">Regular</option>
+                                            <option value="bad">Malo</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-premium">OBSERVACIONES</label>
+                                        <textarea v-model="form.observation" class="form-control-premium" rows="3"
+                                            placeholder="Notas del procedimiento..."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-premium">OTROS DETALLES</label>
+                                        <textarea v-model="form.others" class="form-control-premium" rows="3"
+                                            placeholder="Información adicional..."></textarea>
+                                    </div>
                                 </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">CC (1-5) *</label>
-                                    <input type="number" v-model="form.bodyConditionScore" step="0.5" min="1" max="5"
-                                        class="form-control border-success-subtle shadow-none" required>
+                                <div class="d-flex gap-3 mt-4">
+                                    <button type="submit" class="btn btn-success-premium flex-grow-1"
+                                        :disabled="!isFormValid || isSaving">
+                                        {{ isSaving ? 'GUARDANDO...' : 'GUARDAR REGISTRO' }}
+                                    </button>
+                                    <button type="button" class="btn btn-light-premium px-4"
+                                        data-bs-dismiss="modal">CANCELAR</button>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Celo *</label>
-                                    <select v-model="form.heatQuality"
-                                        class="form-select border-success-subtle shadow-none" required>
-                                        <option value="well">Bueno</option>
-                                        <option value="regular">Regular</option>
-                                        <option value="bad">Malo</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label
-                                        class="form-label small fw-bold text-muted text-uppercase">Observaciones</label>
-                                    <textarea v-model="form.observation"
-                                        class="form-control border-success-subtle shadow-none" rows="4"
-                                        placeholder="Notas sobre el procedimiento..."></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Otros
-                                        Detalles</label>
-                                    <textarea v-model="form.others"
-                                        class="form-control border-success-subtle shadow-none" rows="4"
-                                        placeholder="Información adicional..."></textarea>
-                                </div>
-                            </div>
-
-                            <div class="d-flex gap-2 mt-4">
-                                <button type="submit" class="btn btn-success flex-grow-1 fw-bold py-2 shadow-sm"
-                                    :disabled="!isFormValid || isSaving">
-                                    <i class="fas fa-save me-2"></i> {{ isSaving ? 'Guardando...' : 'Guardar Registro'
-                                    }}
-                                </button>
-                                <button type="button" class="btn btn-light px-4 fw-bold"
-                                    data-bs-dismiss="modal">Cancelar</button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
         <div class="modal fade" id="textViewModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg rounded-4">
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h6 class="modal-title fw-bold text-success text-uppercase small">{{ textModalTitle }}</h6>
+                    <div class="modal-header border-0 pb-0">
+                        <h6 class="fw-bold text-success text-uppercase small m-0">{{ textModalTitle }}</h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-dark bg-light p-3 rounded-3 mb-0" style="white-space: pre-wrap;">{{
-                            textModalContent }}</p>
+                        <p class="text-dark bg-light p-3 rounded-3 mb-0">{{ textModalContent }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div v-if="confirmationDeleteModal" class="confirmation-overlay">
-            <div class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center">
-                <div class="icon-circle bg-light-danger text-danger mb-3"><i class="fas fa-trash-alt fs-4"></i></div>
-                <h5 class="fw-bold">¿Eliminar registro?</h5>
+            <div
+                class="confirmation-box bg-white rounded-4 shadow-lg p-4 text-center animate__animated animate__zoomIn">
+                <div class="icon-circle-delete mb-3"><i class="fas fa-trash-alt"></i></div>
+                <h5 class="fw-bold text-dark">¿Eliminar registro?</h5>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
                 <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button class="btn btn-danger px-4 fw-bold" @click="deleteInsemination">Eliminar</button>
-                    <button class="btn btn-light px-4 fw-bold"
-                        @click="confirmationDeleteModal = false">Cancelar</button>
+                    <button class="btn btn-danger-premium px-4" @click="deleteInsemination">ELIMINAR</button>
+                    <button class="btn btn-light-premium px-4"
+                        @click="confirmationDeleteModal = false">CANCELAR</button>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
@@ -189,74 +185,64 @@ import { Insemination } from '@/model/management/Insemination';
 import { Modal, Toast } from 'bootstrap';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 
-/* --- SERVICIOS --- */
 const service = new InseminationService();
 const bullService = new BullService();
 const sessionPropertyStore = useSessionPropertyStore();
+
 /* ======================
-   STATE
+   ESTADO (ESTRUCTURA UNIFICADA)
 ====================== */
 const inseminations = ref([]);
 const bullsList = ref([]);
-const controlBovineId = ref(null); // Guardará el ID dinámico de la relación
-const editing = ref(false);
+const isLoading = ref(false);
 const isSaving = ref(false);
+const editing = ref(false);
+const loadingText = ref('Sincronizando historial...');
 const confirmationDeleteModal = ref(false);
 const selectedId = ref(null);
-const loadingText = ref('Sincronizando protocolo...');
 
 const textModalTitle = ref('');
 const textModalContent = ref('');
 
-const isLoading = computed(() => !sessionPropertyStore.onScanned());
-
 const form = ref({
-    id: null,
-    bull: '',
-    bodyConditionScore: null,
-    heatQuality: 'well',
-    observation: '',
-    others: '',
+    id: null, bull: '', bodyConditionScore: null,
+    heatQuality: 'well', observation: '', others: '',
     date: new Date().toISOString().split('T')[0]
 });
 
 /* ======================
    VALIDACIONES
 ====================== */
-const isFormValid = computed(() => form.value.bull && form.value.bodyConditionScore >= 1);
+const isFormValid = computed(() => !!form.value.bull && form.value.bodyConditionScore >= 1);
 
 /* ======================
-   CRUD & DATA LOAD
+   CRUD
 ====================== */
-
-/**
- * Proceso Secuencial:
- * 1. Crea/Obtiene el vínculo (ControlBovine)
- * 2. Carga en paralelo: Toros e Inseminaciones usando el ID obtenido
- */
 async function loadInitialData() {
+    isLoading.value = true;
+    loadingText.value = 'Cargando historial de inseminaciones...';
     try {
-        let controlBovineId = sessionPropertyStore.getControlBovineId;
-
+        const controlBovineId = sessionPropertyStore.getControlBovineId;
         const [inseminationData, bullsData] = await Promise.all([
-            service.listInseminations(controlBovineId.value),
+            service.listInseminations(controlBovineId),
             bullService.listBulls()
         ]);
-
         inseminations.value = inseminationData;
         bullsList.value = bullsData;
     } catch (error) {
-        console.error(error);
-        showToast('error', 'Error al sincronizar protocolo: ' + error.message);
+        showToast('error', 'Error al cargar los datos.');
+    } finally {
+        isLoading.value = false;
     }
 }
 
 async function saveInsemination() {
+    if (!isFormValid.value) return;
     isSaving.value = true;
     try {
         const data = new Insemination({
             ...form.value,
-            control_bovine_id: controlBovineId.value
+            control_bovine_id: sessionPropertyStore.getControlBovineId
         });
 
         if (editing.value) {
@@ -264,9 +250,8 @@ async function saveInsemination() {
             showToast('success', 'Historial actualizado.');
         } else {
             inseminations.value = await service.createInsemination(data);
-            showToast('success', 'Inseminación registrada.');
+            showToast('success', 'Inseminación registrada con éxito.');
         }
-
         Modal.getInstance(document.getElementById('inseminationModal')).hide();
     } catch (error) {
         showToast('error', 'Error al guardar.');
@@ -275,37 +260,33 @@ async function saveInsemination() {
     }
 }
 
-/* ======================
-   HELPERS UI
-====================== */
-
-function openModal(item = null) {
-    if (item) {
-        editing.value = true;
-        form.value = {
-            id: item.id,
-            bull: item.bull,
-            bodyConditionScore: item.bodyConditionScore,
-            heatQuality: item.heatQuality,
-            observation: item.observation,
-            others: item.others,
-            date: item.date
-        };
-    } else {
-        editing.value = false;
-        resetForm();
-    }
-    new Modal(document.getElementById('inseminationModal')).show();
-}
-
 async function deleteInsemination() {
     try {
         inseminations.value = await service.deleteInsemination(selectedId.value);
-        showToast('success', 'Eliminado correctamente.');
+        showToast('success', 'Registro eliminado.');
         confirmationDeleteModal.value = false;
     } catch (error) {
         showToast('error', 'Error al eliminar.');
     }
+}
+
+/* ======================
+   HELPERS UI
+====================== */
+function openModal(item = null) {
+    if (item) {
+        editing.value = true;
+        form.value = { ...item };
+    } else {
+        editing.value = false;
+        form.value = { id: null, bull: '', bodyConditionScore: null, heatQuality: 'well', observation: '', others: '', date: new Date().toISOString().split('T')[0] };
+    }
+    new Modal(document.getElementById('inseminationModal')).show();
+}
+
+function confirmDelete(id) {
+    selectedId.value = id;
+    confirmationDeleteModal.value = true;
 }
 
 function viewFullText(title, content) {
@@ -314,77 +295,248 @@ function viewFullText(title, content) {
     new Modal(document.getElementById('textViewModal')).show();
 }
 
-function confirmDelete(id) {
-    selectedId.value = id;
-    confirmationDeleteModal.value = true;
-}
-
 function heatLabel(val) {
     const map = { well: 'Bueno', regular: 'Regular', bad: 'Malo' };
     return map[val] || val;
 }
 
 function heatBadgeClass(val) {
-    const map = { well: 'bg-light-success text-success', regular: 'bg-light-warning text-warning', bad: 'bg-light-danger text-danger' };
-    return `badge px-3 py-2 ${map[val] || 'bg-light'}`;
-}
-
-function resetForm() {
-    form.value = { id: null, bull: '', bodyConditionScore: null, heatQuality: 'well', observation: '', others: '', date: new Date().toISOString().split('T')[0] };
+    const map = { well: 'bg-success-soft text-success', regular: 'bg-warning-soft text-warning', bad: 'bg-danger-soft text-danger' };
+    return map[val] || 'bg-light';
 }
 
 function showToast(type, message) {
-    const toastEl = document.getElementById('liveToast');
-    if (!toastEl) return;
-    toastEl.className = `toast align-items-center w-100 text-white border-0 ${type === 'success' ? 'bg-success' : 'bg-danger'}`;
-    document.getElementById('toast-message').textContent = message;
-    Toast.getOrCreateInstance(toastEl).show();
+    const toastEl = document.getElementById('liveToast')
+    if (toastEl) {
+        const toastBody = toastEl.querySelector('.toast-body') || toastEl
+        toastBody.textContent = message
+        const bsToast = new Toast(toastEl)
+        bsToast.show()
+    }
 }
 
 onMounted(() => {
     if (sessionPropertyStore.onScanned()) {
         loadInitialData();
-    } else {
-        showToast('warning', 'Debe escanear un bovino primero');
     }
 });
-
 </script>
 
 <style scoped>
-/* (Estilos idénticos al anterior para mantener la estética profesional) */
-.insemination-container {
-    padding: 1.5rem;
+/* --- CARGA --- */
+.loading-state-premium {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    width: 100%;
 }
 
-.bg-light-success {
-    background-color: #f0fdf4 !important;
+.text-success-premium {
+    color: #2d4a22 !important;
 }
 
-.bg-light-warning {
-    background-color: #fffbeb !important;
+.loading-text-premium {
+    color: #475569;
+    font-weight: 700;
+    font-size: 1.1rem;
+    animation: fadePulse 1.5s infinite;
 }
 
-.bg-light-danger {
-    background-color: #fef2f2 !important;
+@keyframes fadePulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
 }
 
-.btn-light-primary {
-    background-color: #e0f2fe;
+/* --- TABLA PREMIUM --- */
+.card-premium-table {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #edf2f7;
+}
+
+.table thead {
+    background: #fcfdfc;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.table thead th {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    padding: 1.2rem 1rem;
+    border: none;
+}
+
+.premium-row {
+    transition: 0.2s;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.premium-row:hover {
+    background-color: #fcfdfc;
+}
+
+.empty-table-state {
+  color: #94a3b8;
+}
+
+/* --- BADGES & ICONS --- */
+.mini-icon-bull {
+    width: 32px;
+    height: 32px;
+    background: #f0fdf4;
+    color: #16a34a;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.cc-badge {
+    font-weight: 800;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.status-pill-base {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.bg-success-soft {
+    background-color: #dcfce7 !important;
+}
+
+.bg-warning-soft {
+    background-color: #fef3c7 !important;
+}
+
+.bg-danger-soft {
+    background-color: #fee2e2 !important;
+}
+
+/* --- BOTONES DE ACCIÓN --- */
+.btn-note {
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.btn-obs {
+    background: #e0f2fe;
     color: #0369a1;
-    border: none;
-    font-size: 0.75rem;
-    font-weight: 600;
 }
 
-.btn-light-info {
-    background-color: #f0f9ff;
-    color: #0891b2;
-    border: none;
-    font-size: 0.75rem;
-    font-weight: 600;
+.btn-others {
+    background: #f1f5f9;
+    color: #64748b;
 }
 
+.btn-note:hover {
+    transform: scale(1.1);
+}
+
+.btn-action-edit {
+    border: none;
+    background: none;
+    color: #f59e0b;
+    padding: 8px;
+    transition: 0.2s;
+}
+
+.btn-action-delete {
+    border: none;
+    background: none;
+    color: #ef4444;
+    padding: 8px;
+    transition: 0.2s;
+}
+
+.btn-action-edit:hover,
+.btn-action-delete:hover {
+    transform: scale(1.2);
+}
+
+/* --- FORMULARIOS --- */
+.label-premium {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control-premium {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #f1f5f9;
+    border-radius: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.form-control-premium:focus {
+    border-color: #10b981;
+    outline: none;
+}
+
+/* --- BOTONES --- */
+.btn-success-premium {
+    background: #2d4a22;
+    color: #c0da63;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-light-premium {
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.btn-danger-premium {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+/* --- OVERLAY ELIMINAR --- */
 .confirmation-overlay {
     position: fixed;
     top: 0;
@@ -399,35 +551,16 @@ onMounted(() => {
     z-index: 2000;
 }
 
-.confirmation-box {
-    width: 350px;
-}
-
-.loading-container {
-    min-height: 60vh;
+.icon-circle-delete {
+    width: 60px;
+    height: 60px;
+    background: #fee2e2;
+    color: #ef4444;
+    border-radius: 50%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.pulsing-circle {
-    width: 80px;
-    height: 80px;
-    background-color: #28a745;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(0.6);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(1.2);
-        opacity: 0;
-    }
+    font-size: 1.5rem;
+    margin: 0 auto;
 }
 </style>
