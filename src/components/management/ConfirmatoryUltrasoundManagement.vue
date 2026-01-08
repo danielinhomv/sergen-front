@@ -96,20 +96,21 @@
                   </div>
 
                   <div class="col-12">
-                    <label class="label-premium">OBSERVACIONES DEL ESPECIALISTA</label>
-                    <textarea v-model="form.observation" class="form-control-premium" rows="3"
-                      placeholder="Describa hallazgos (ej. días de gestación, sexo fetal, etc.)"></textarea>
+                    <label class="label-premium">OBSERVACIÓN (OPCIONAL)</label>
+                    <textarea v-model="form.observation" class="form-control-premium" rows="3"></textarea>
                   </div>
 
-                  <div class="col-12">
-                    <label class="label-premium">REFUGO / RESUMEN CLÍNICO</label>
+                  <div class="col-12" v-if="form.status === 'empty' || form.status === 'discart'">
+                    <label class="label-premium">REFUGO</label>
                     <textarea v-model="form.refugo" class="form-control-premium" rows="2"
-                      placeholder="Ingrese detalles del refugo si aplica..."></textarea>
+                      placeholder="Indique el motivo clínico o productivo del fracaso"></textarea>
                   </div>
+
                 </div>
 
                 <div class="d-flex gap-3 mt-4">
-                  <button class="btn btn-success-premium flex-grow-1" type="submit" :disabled="!isFormValid || isSaving">
+                  <button class="btn btn-success-premium flex-grow-1" type="submit"
+                    :disabled="!isFormValid || isSaving">
                     {{ isSaving ? 'GUARDANDO...' : (editing ? 'ACTUALIZAR DATOS' : 'GUARDAR REGISTRO') }}
                   </button>
                   <button class="btn btn-light-premium px-4" type="button" data-bs-dismiss="modal" @click="cancelForm">
@@ -161,9 +162,17 @@
 }
 
 @keyframes fadePulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
 }
 
 .card-premium-table {
@@ -204,18 +213,47 @@
   text-transform: uppercase;
 }
 
-.bg-success-soft { background-color: #dcfce7 !important; }
-.bg-danger-soft { background-color: #fee2e2 !important; }
-.bg-info-soft { background-color: #e0f2fe !important; }
+.bg-success-soft {
+  background-color: #dcfce7 !important;
+}
 
-.btn-action-edit { border: none; background: none; color: #f59e0b; padding: 8px; transition: 0.2s; }
-.btn-action-delete { border: none; background: none; color: #ef4444; padding: 8px; transition: 0.2s; }
-.btn-action-edit:hover, .btn-action-delete:hover { transform: scale(1.2); }
+.bg-danger-soft {
+  background-color: #fee2e2 !important;
+}
 
-.empty-table-state { color: #94a3b8; }
+.bg-info-soft {
+  background-color: #e0f2fe !important;
+}
+
+.btn-action-edit {
+  border: none;
+  background: none;
+  color: #f59e0b;
+  padding: 8px;
+  transition: 0.2s;
+}
+
+.btn-action-delete {
+  border: none;
+  background: none;
+  color: #ef4444;
+  padding: 8px;
+  transition: 0.2s;
+}
+
+.btn-action-edit:hover,
+.btn-action-delete:hover {
+  transform: scale(1.2);
+}
+
+.empty-table-state {
+  color: #94a3b8;
+}
 
 /* Ajustes Modal */
-.modal-content { border-radius: 20px; }
+.modal-content {
+  border-radius: 20px;
+}
 
 .label-premium {
   font-size: 0.7rem;
@@ -269,7 +307,10 @@
 
 .confirmation-overlay {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
@@ -279,11 +320,16 @@
 }
 
 .icon-circle-delete {
-  width: 60px; height: 60px;
-  background: #fee2e2; color: #ef4444;
+  width: 60px;
+  height: 60px;
+  background: #fee2e2;
+  color: #ef4444;
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto;
 }
 </style>
 
@@ -325,8 +371,12 @@ watch(() => form.value, (val) => {
   errors.value.date = !val.date
 }, { deep: true })
 
-const isFormValid = computed(() => !!form.value.status && !!form.value.date)
-
+const isFormValid = computed(() => {
+  const statusFilled = !!form.value.status
+  const dateFilled = !!form.value.date
+  const refugoValid = !(form.value.status === 'empty' || form.value.status === 'discart') || !!form.value.refugo
+  return statusFilled && dateFilled && refugoValid
+})
 /* =========================
    CRUD
 ========================= */
@@ -379,9 +429,9 @@ async function submitForm() {
       await service.create(dataToSave)
       showToast('success', 'Nuevo diagnóstico registrado.')
     }
-    
+
     await listUltrasounds()
-    
+
     const modalElement = document.getElementById('ultrasoundModal')
     const modalInstance = Modal.getInstance(modalElement)
     if (modalInstance) modalInstance.hide()
@@ -432,10 +482,10 @@ function showToast(type, message) {
     // Seteamos el mensaje dinámico para evitar el error de ESLint
     const toastBody = toastEl.querySelector('.toast-body') || toastEl
     toastBody.textContent = message
-    
+
     // Aplicamos una clase según el tipo (opcional, mejora la UX)
     toastEl.className = `toast align-items-center text-white border-0 ${type === 'error' ? 'bg-danger' : 'bg-success'}`
-    
+
     const bsToast = new Toast(toastEl)
     bsToast.show()
   }

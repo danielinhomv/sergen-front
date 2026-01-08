@@ -118,7 +118,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="label-premium">RESUMEN DE PRODUCTOS</label>
+              <label class="label-premium">RESUMEN DE PRODUCTOS USADOS</label>
               <textarea v-model="form.used_products_summary" class="form-control-premium" rows="3"
                 placeholder="Productos utilizados..."></textarea>
             </div>
@@ -126,8 +126,7 @@
             <div class="col-md-6">
               <label class="label-premium">REFUGO</label>
               <textarea v-model="form.refugo" class="form-control-premium" rows="2"
-                placeholder="resumen clínico...">
-  </textarea>
+                placeholder="Resumen clínico de la ecografía"></textarea>
             </div>
 
 
@@ -186,7 +185,7 @@ watch(() => form.value, () => {
   errors.value.date = !form.value.date
 }, { deep: true })
 
-const isFormValid = computed(() => !!form.value.status && !!form.value.date)
+const isFormValid = computed(() => !!form.value.status && !!form.value.date && !!form.value.used_products_summary && !!form.value.work_team)
 
 function showToast(type, message) {
   const toastEl = document.getElementById('liveToast');

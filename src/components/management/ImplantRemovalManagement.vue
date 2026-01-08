@@ -150,7 +150,7 @@ watch(() => form.value, () => {
   errors.value.date = !form.value.date
 }, { deep: true })
 
-const isFormValid = computed(() => !!form.value.status && !!form.value.date)
+const isFormValid = computed(() => !!form.value.status && !!form.value.date && !! form.value.used_products_summary && !! form.value.work_team)
 
 /* ======================
    CRUD (ESTRUCTURA UNIFICADA)

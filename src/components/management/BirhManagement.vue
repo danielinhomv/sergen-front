@@ -111,7 +111,7 @@
               <select v-model="form.typeOfBirth" class="form-control-premium"
                 :class="{ 'is-invalid': errors.typeOfBirth }">
                 <option value="">Seleccione...</option>
-                <option value="normal">Normal / A término</option>
+                <option value="normal">Normal</option>
                 <option value="premeture">Prematuro</option>
                 <option value="abort">Aborto</option>
                 <option value="stillbirth">Muerte al nacer</option>
@@ -119,7 +119,7 @@
             </div>
 
             <div class="col-12">
-              <label class="label-premium">RGD / REGISTRO (OPCIONAL)</label>
+              <label class="label-premium">RGD</label>
               <input type="text" v-model="form.rgd" class="form-control-premium" placeholder="Ej: RGD12345" />
             </div>
           </div>

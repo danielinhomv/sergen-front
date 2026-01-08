@@ -119,12 +119,12 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="label-premium">OBSERVACIONES</label>
+                                        <label class="label-premium">OBSERVACION (OPCIONAL)</label>
                                         <textarea v-model="form.observation" class="form-control-premium" rows="3"
                                             placeholder="Notas del procedimiento..."></textarea>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="label-premium">OTROS DETALLES</label>
+                                        <label class="label-premium">OTROS DETALLES (OPCIONAL)</label>
                                         <textarea v-model="form.others" class="form-control-premium" rows="3"
                                             placeholder="Información adicional..."></textarea>
                                     </div>
@@ -213,7 +213,7 @@ const form = ref({
 /* ======================
    VALIDACIONES
 ====================== */
-const isFormValid = computed(() => !!form.value.bull && form.value.bodyConditionScore >= 1);
+const isFormValid = computed(() => !!form.value.bull && form.value.bodyConditionScore >= 1 && form.value.bodyConditionScore <= 5 && !!form.value.heatQuality && !!form.value.date);
 
 /* ======================
    CRUD
