@@ -22,7 +22,8 @@ import PresynchronizationManagement from '../components/management/Presynchroniz
 import UltraSoundManagement from '../components/management/UltraSoundManagement.vue';
 import HistorialBovineReport from '@/components/report/HistorialBovineReport.vue';
 import LayoutReport from '../components/report/LayoutReport.vue';
-import LayoutManagement from '../components/management/LayoutManagement.vue'; 
+import LayoutManagement from '../components/management/LayoutManagement.vue';
+import BullManagement from '@/components/management/BullManagement.vue';
 
 const routes = [
   // --- RUTAS DE ACCESO ---
@@ -58,6 +59,15 @@ const routes = [
     component: PropertyManagement, 
     meta: { requiresAuth: true, requiresWorkSession: true } 
   },
+
+
+  {
+    path: '/management/bull',
+    name: 'bull-management',
+    component: BullManagement,
+    meta: { requiresAuth: true, requiresWorkSession: true }
+  },
+  
   { 
     path: '/reports/historial-bovine', 
     name: 'historial-bovine-report', 

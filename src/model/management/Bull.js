@@ -1,9 +1,10 @@
 // BirthToro.ts
 export class Bull {
 
-    constructor({ id, name }) {
+    constructor({ id, name, userId = null }) {
         this.id = id;
         this.name = name;
+        this.userId = userId;
     }
 
     static fromJson(data) {
@@ -15,7 +16,8 @@ export class Bull {
 
     toJson() {
         return {
-            name: this.name
+            name: this.name,
+            user_id: this.userId
         };
     }
 }

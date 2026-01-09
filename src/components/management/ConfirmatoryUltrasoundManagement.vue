@@ -380,14 +380,11 @@ const isFormValid = computed(() => {
    CRUD
 ========================= */
 async function listUltrasounds() {
-  isLoading.value = true
   loadingText.value = 'Cargando registros ecográficos...'
   try {
     ultrasounds.value = await service.list(sessionPropertyStore.getControlBovineId)
   } catch (error) {
     showToast('error', 'Error al cargar la lista de ecografías.')
-  } finally {
-    isLoading.value = false
   }
 }
 

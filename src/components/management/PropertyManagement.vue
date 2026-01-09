@@ -20,6 +20,21 @@
       <div class="row g-4">
         <div class="col-lg-4 col-xl-3">
           <div class="account-card sticky-sidebar shadow-sm">
+            <div class="premium-count-badge mb-4">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <span class="label">Total Animales</span>
+                  <h2 class="count">{{ totalBovines }}</h2>
+                </div>
+                <div class="icon-box">
+                  <i class="fas fa-clipboard-list"></i>
+                </div>
+              </div>
+              <div class="filtered-status" v-if="searchTerm">
+                <i class="fas fa-filter me-1"></i> Coincidencias: {{ filteredBovines.length }}
+              </div>
+            </div>
+
             <div class="card-header-custom mb-3">
               <h3 class="card-title-custom"><i class="fas fa-info-circle me-2"></i>Datos Generales</h3>
               <button @click="toggleEditMode" class="btn-edit-circle" :class="{ 'active': isEditingProperty }">
@@ -102,7 +117,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="bovine in filteredBovines" :key="bovine.id">
+                  <tr v-for="bovine in paginatedBovines" :key="bovine.id">
                     <td><span class="badge-serie">{{ bovine.serie }}</span></td>
                     <td class="fw-bold text-success">{{ bovine.rgd }}</td>
                     <td>
@@ -123,8 +138,30 @@
                       </div>
                     </td>
                   </tr>
+                  <tr v-if="filteredBovines.length === 0">
+                    <td colspan="7" class="text-center py-5 text-muted">No se encontraron resultados.</td>
+                  </tr>
                 </tbody>
               </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-3 border-top pt-3">
+              <div class="text-muted small fw-bold">
+                Mostrando {{ paginatedBovines.length }} de {{ filteredBovines.length }} registros
+              </div>
+              <nav v-if="totalPages > 1">
+                <ul class="pagination pagination-premium m-0">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <button class="page-link" @click="currentPage--"><i class="fas fa-chevron-left"></i></button>
+                  </li>
+                  <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page }">
+                    <button class="page-link" @click="currentPage = page">{{ page }}</button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <button class="page-link" @click="currentPage++"><i class="fas fa-chevron-right"></i></button>
+                  </li>
+                </ul>
+              </nav>
             </div>
           </div>
         </div>
@@ -252,6 +289,74 @@
   top: 20px;
 }
 
+/* --- NUEVO: PREMIUM COUNT BADGE --- */
+.premium-count-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 20px;
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+}
+
+.premium-count-badge .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.9;
+  display: block;
+}
+
+.premium-count-badge .count {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.premium-count-badge .icon-box {
+  width: 45px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.premium-count-badge .filtered-status {
+  font-size: 0.75rem;
+  margin-top: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* --- NUEVA: PAGINACIÓN PREMIUM --- */
+.pagination-premium {
+  gap: 5px;
+}
+
+.pagination-premium .page-link {
+  border: none;
+  border-radius: 10px !important;
+  color: #64748b;
+  font-weight: 700;
+  padding: 8px 16px;
+  transition: 0.3s;
+}
+
+.pagination-premium .page-item.active .page-link {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.pagination-premium .page-item.disabled .page-link {
+  background: transparent;
+  opacity: 0.5;
+}
+
 /* --- CARDS --- */
 .account-card {
   background: white;
@@ -368,6 +473,9 @@
   width: 45px;
   height: 45px;
   border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-edit-circle {
@@ -528,6 +636,14 @@
   align-items: center;
   justify-content: center;
 }
+
+.custom-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
 </style>
 
 <script setup>
@@ -538,27 +654,33 @@ import { useRouter } from 'vue-router';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { Modal, Toast } from 'bootstrap';
 import { BovineService } from '@/services/management/BovineService';
-import { BovineReportService } from '@/services/report/BovineReportService'; // Importado para el PDF
+import { BovineReportService } from '@/services/report/BovineReportService'; 
 import { Bovine } from '@/model/management/Bovine';
 
 // Importaciones para PDF
 import { jsPDF } from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 
-const bovineService = new BovineService();
-let bovineId = null;
+// --- 1. ESTADO REACTIVO (Declarados primero para evitar errores de referencia) ---
 const sessionPropertyStore = useSessionPropertyStore();
+const bovineService = new BovineService();
 const { replaceTo } = useNavigation();
 const router = useRouter();
-// Estado general
+
+const isLoading = ref(true);
+const bovines = ref([]);
+const fullBovinesHistory = ref(null);
+const searchTerm = ref('');
+const debouncedSearch = ref('');
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+let bovineId = null;
+
+// Estado de modales y edición
 const isEditing = ref(false);
 const isEditingProperty = ref(false);
 const confirmationDeleteModal = ref(false);
 const openConfirmationPropertyModal = ref(false);
-const isLoading = ref(true);
-const bovines = ref([]);
-// ESTADO NUEVO PARA EL HISTORIAL COMPLETO
-const fullBovinesHistory = ref(null);
 
 // Propiedad
 const property = ref({
@@ -569,16 +691,41 @@ const property = ref({
 });
 const editableProperty = ref({ ...property.value });
 
-//validaciones de campos duplicados
+// Validaciones y formularios
 const duplicateSerie = ref(false);
 const duplicateRgd = ref(false);
+const newBovineForm = ref({
+  serie: '',
+  rgd: '',
+  sex: 'male',
+  weight: null,
+  birthdate: '',
+  mother_id: null,
+  property_id: sessionPropertyStore.getPropertyId,
+});
 
-const searchTerm = ref('');
-const debouncedSearch = ref('');
+// --- 2. COMPUTED PROPERTIES ---
 
-const updateDebouncedSearch = debounce((val) => {
-  debouncedSearch.value = val.trim().toLowerCase();
-}, 300);
+const totalBovines = computed(() => bovines.value.length);
+
+const filteredBovines = computed(() => {
+  if (!debouncedSearch.value) return bovines.value;
+  return bovines.value.filter(
+    (b) =>
+      b.serie?.toLowerCase().includes(debouncedSearch.value) ||
+      b.rgd?.toLowerCase().includes(debouncedSearch.value)
+  );
+});
+
+const paginatedBovines = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredBovines.value.slice(start, end);
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredBovines.value.length / itemsPerPage.value) || 1;
+});
 
 const hasChanges = computed(() => {
   return editableProperty.value.name !== property.value.name ||
@@ -588,18 +735,17 @@ const hasChanges = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return editableProperty.value.name &&
-    editableProperty.value.place &&
-    editableProperty.value.phone_number &&
-    editableProperty.value.owner_name;
+  return editableProperty.value.name && editableProperty.value.place &&
+    editableProperty.value.phone_number && editableProperty.value.owner_name;
 });
 
-// === CARGA INICIAL === //
-onMounted(() => {
-  fetchBovines();
+const formIsValid = computed(() => {
+  const f = newBovineForm.value;
+  return f.serie && f.rgd && f.sex && f.weight && f.birthdate && !duplicateSerie.value && !duplicateRgd.value;
 });
 
-// Utilidad simple para debounce
+// --- 3. UTILIDADES Y WATCHERS ---
+
 function debounce(fn, delay = 300) {
   let timeout;
   return (...args) => {
@@ -608,83 +754,38 @@ function debounce(fn, delay = 300) {
   };
 }
 
+const updateDebouncedSearch = debounce((val) => {
+  debouncedSearch.value = val.trim().toLowerCase();
+}, 300);
 
-function toggleEditMode() {
-  isEditingProperty.value = !isEditingProperty.value;
-  if (isEditing.value) {
-    editableProperty.value = { ...property.value };
-  }
-}
-
-function saveChanges() {
-  if (hasChanges.value && isFormValid.value) {
-    property.value = { ...editableProperty.value };
-    isEditing.value = false;
-    console.log('Cambios guardados:', property.value);
-  }
-}
-
-// === FUNCIONES DE BOVINOS === //
-
-const newBovineForm = ref({
-  serie: '',
-  rgd: '',
-  sex: 'male',
-  weight: null,
-  birthdate: '',
-  mother_id: null,
-  property_id: sessionPropertyStore.getPropertyId,
-
-});
-
-//Validación dinámica local
-watch(
-  () => newBovineForm.value.serie,
-  (newVal) => {
-    if (!newVal) {
-      duplicateSerie.value = false;
-      return;
-    }
-    duplicateSerie.value = bovines.value.some(
-      (b) =>
-        b.serie?.toLowerCase() === newVal.toLowerCase() &&
-        (!isEditing.value || b.id !== newBovineForm.value.id)
-    );
-  }
-);
-
-watch(
-  () => newBovineForm.value.rgd,
-  (newVal) => {
-    if (!newVal) {
-      duplicateRgd.value = false;
-      return;
-    }
-    duplicateRgd.value = bovines.value.some(
-      (b) =>
-        b.rgd?.toLowerCase() === newVal.toLowerCase() &&
-        (!isEditing.value || b.id !== newBovineForm.value.id)
-    );
-  }
-);
-
-//busqueda cada vez que cambia searchTerm
 watch(searchTerm, (newVal) => {
   updateDebouncedSearch(newVal);
 });
 
-// --- Computed para habilitar/deshabilitar el botón de guardar o crear
-const formIsValid = computed(() => {
-  const f = newBovineForm.value;
-  return (
-    f.serie &&
-    f.rgd &&
-    f.sex &&
-    f.weight &&
-    f.birthdate &&
-    !duplicateSerie.value &&
-    !duplicateRgd.value
+watch(debouncedSearch, () => {
+  currentPage.value = 1; // Resetear página al buscar
+});
+
+watch(() => newBovineForm.value.serie, (newVal) => {
+  if (!newVal) { duplicateSerie.value = false; return; }
+  duplicateSerie.value = bovines.value.some(
+    (b) => b.serie?.toLowerCase() === newVal.toLowerCase() &&
+      (!isEditing.value || b.id !== newBovineForm.value.id)
   );
+});
+
+watch(() => newBovineForm.value.rgd, (newVal) => {
+  if (!newVal) { duplicateRgd.value = false; return; }
+  duplicateRgd.value = bovines.value.some(
+    (b) => b.rgd?.toLowerCase() === newVal.toLowerCase() &&
+      (!isEditing.value || b.id !== newBovineForm.value.id)
+  );
+});
+
+// --- 4. FUNCIONES DE PROPIEDAD Y BOVINOS ---
+
+onMounted(() => {
+  fetchBovines();
 });
 
 async function fetchBovines() {
@@ -692,32 +793,34 @@ async function fetchBovines() {
     isLoading.value = true;
     bovines.value = await bovineService.listBovines(sessionPropertyStore.getPropertyId);
   } catch (error) {
-    console.error('Error al cargar los bovinos:', error);
-    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    showToast('error', 'Error al cargar los bovinos.');
   } finally {
     isLoading.value = false;
   }
 }
 
+function toggleEditMode() {
+  isEditingProperty.value = !isEditingProperty.value;
+  if (!isEditingProperty.value) editableProperty.value = { ...property.value };
+}
+
+function saveChanges() {
+  if (hasChanges.value && isFormValid.value) {
+    property.value = { ...editableProperty.value };
+    isEditingProperty.value = false;
+    showToast('success', 'Cambios guardados localmente.');
+  }
+}
+
 async function addBovine() {
   try {
-    const newBovine = new Bovine({
-      motherId: newBovineForm.value.mother_id,
-      serie: newBovineForm.value.serie,
-      rgd: newBovineForm.value.rgd,
-      sex: newBovineForm.value.sex,
-      weight: newBovineForm.value.weight,
-      birthdate: newBovineForm.value.birthdate,
-      propertyId: sessionPropertyStore.getPropertyId,
-    });
-
     isLoading.value = true;
-    bovines.value = await bovineService.createBovine(newBovine);
+    const newB = new Bovine({ ...newBovineForm.value, propertyId: sessionPropertyStore.getPropertyId });
+    bovines.value = await bovineService.createBovine(newB);
     showToast('success', 'Bovino registrado con éxito.');
     closeModalBovine();
   } catch (error) {
-    console.error('Error al crear bovino:', error);
-    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    showToast('error', 'Error al crear bovino.');
   } finally {
     isLoading.value = false;
   }
@@ -725,24 +828,13 @@ async function addBovine() {
 
 async function updateBovine() {
   try {
-    const updatedBovine = new Bovine({
-      id: newBovineForm.value.id,
-      motherId: newBovineForm.value.mother_id,
-      serie: newBovineForm.value.serie,
-      rgd: newBovineForm.value.rgd,
-      sex: newBovineForm.value.sex,
-      weight: newBovineForm.value.weight,
-      birthdate: newBovineForm.value.birthdate,
-      propertyId: sessionPropertyStore.getPropertyId,
-    });
-    console.log(updateBovine);
     isLoading.value = true;
-    bovines.value = await bovineService.editBovine(updatedBovine);
+    const updatedB = new Bovine({ ...newBovineForm.value, propertyId: sessionPropertyStore.getPropertyId });
+    bovines.value = await bovineService.editBovine(updatedB);
     showToast('success', 'Bovino actualizado con éxito.');
     closeModalBovine();
   } catch (error) {
-    console.error('Error al actualizar bovino:', error);
-    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    showToast('error', 'Error al actualizar bovino.');
   } finally {
     isLoading.value = false;
   }
@@ -754,27 +846,20 @@ async function deleteBovine() {
     bovines.value = await bovineService.deleteBovine(bovineId, sessionPropertyStore.getPropertyId);
     showToast('success', 'Bovino eliminado con éxito.');
   } catch (error) {
-    console.error('Error al eliminar bovino:', error);
-    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    showToast('error', 'Error al eliminar bovino.');
   } finally {
     isLoading.value = false;
     confirmationDeleteModal.value = false;
   }
 }
 
-function viewHistory(bovineId, bovineRgd) {
-  router.push({ name: 'historial-bovine-report', query: { id: bovineId, rgd: bovineRgd } });
-}
+// --- 5. MODALES Y NAVEGACIÓN ---
 
-// === MODALES === //
-function openModalConfirmation() {
-  openConfirmationPropertyModal.value = true;
-}
+function openModalConfirmation() { openConfirmationPropertyModal.value = true; }
 
 function openConfirmationDeleteModal(id) {
   confirmationDeleteModal.value = true;
   bovineId = id;
-  console.log("id del bovino a eliminar:" + id);
 }
 
 function openAddBovineModal() {
@@ -786,7 +871,6 @@ function openAddBovineModal() {
 
 function openEditBovineModal(bovine) {
   isEditing.value = true;
-  console.log(bovine);
   newBovineForm.value = {
     id: bovine.id,
     serie: bovine.serie,
@@ -794,346 +878,143 @@ function openEditBovineModal(bovine) {
     sex: bovine.sex,
     weight: bovine.weight,
     birthdate: bovine.birthdate,
-    mother_id: search(bovine.motherId) //aqui motherId es en realidad el rgd recibido desde el backend
+    mother_id: search(bovine.motherId) 
   };
-  console.log(newBovineForm);
   const modal = new Modal(document.getElementById('bovineModal'));
   modal.show();
 }
 
 function search(rgd) {
-  if (!rgd) {
-    return null;
-  }
-  const bovine = bovines.value.find(b => b.rgd?.toLowerCase() === rgd.toLowerCase());
-  return bovine ? bovine.id : null;
+  if (!rgd) return null;
+  const b = bovines.value.find(x => x.rgd?.toLowerCase() === rgd.toLowerCase());
+  return b ? b.id : null;
 }
 
 function closeModalBovine() {
-  const modalElement = document.getElementById('bovineModal');
-  const modalInstance = Modal.getInstance(modalElement);
-  modalInstance.hide();
+  const el = document.getElementById('bovineModal');
+  const instance = Modal.getInstance(el);
+  if (instance) instance.hide();
 }
 
 function resetNewBovineForm() {
   newBovineForm.value = {
-    serie: '',
-    rgd: '',
-    sex: 'male',
-    weight: null,
-    birthdate: '',
-    mother_id: null,
-    property_id: sessionPropertyStore.getPropertyId,
+    serie: '', rgd: '', sex: 'male', weight: null, birthdate: '',
+    mother_id: null, property_id: sessionPropertyStore.getPropertyId,
   };
 }
 
-//funciones auxiliares
 function calculateAge(birthdate) {
   const birth = new Date(birthdate);
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
   const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
   return age;
 }
 
-const filteredBovines = computed(() => {
-  if (!debouncedSearch.value) return bovines.value;
-  return bovines.value.filter(
-    (b) =>
-      b.serie?.toLowerCase().includes(debouncedSearch.value) ||
-      b.rgd?.toLowerCase().includes(debouncedSearch.value)
-  );
-});
-
-function showToast(type, message) {
-  const toastEl = document.getElementById('liveToast');
-  const toastMessage = document.getElementById('toast-message');
-  const toastIcon = document.getElementById('toast-icon');
-
-  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
-  let iconHtml = '';
-
-  if (type === 'success') {
-    toastEl.classList.add('text-bg-success');
-    iconHtml = '<i class="fas fa-check-circle fs-5"></i>';
-  } else if (type === 'error') {
-    toastEl.classList.add('text-bg-danger');
-    iconHtml = '<i class="fas fa-times-circle fs-5"></i>';
-  } else if (type === 'warning') {
-    toastEl.classList.add('text-bg-warning');
-    iconHtml = '<i class="fas fa-exclamation-triangle fs-5"></i>';
-  }
-
-  toastMessage.textContent = message;
-  toastIcon.innerHTML = iconHtml;
-  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
-  toast.show();
+function viewHistory(id, rgd) {
+  router.push({ name: 'historial-bovine-report', query: { id, rgd } });
 }
 
 async function closeProperty() {
-  console.log('Redireccionando a la ruta "select-property"');
   isLoading.value = true;
   try {
     await sessionPropertyStore.finishWork(sessionPropertyStore.getPropertyId);
     replaceTo({ name: "select-property" });
   } catch (error) {
-    showToast('error', 'Ocurrió un error en el servidor. Revise su conexión e inténtelo más tarde.');
+    showToast('error', 'Error al cerrar jornada.');
   } finally {
     isLoading.value = false;
     openConfirmationPropertyModal.value = false;
   }
 }
 
-// --------------------------------------------------
-// === LÓGICA DE EXPORTACIÓN DE HISTORIAL COMPLETO ===
-// --------------------------------------------------
+function showToast(type, message) {
+  const toastEl = document.getElementById('liveToast');
+  const toastMsg = document.getElementById('toast-message');
+  const toastIcon = document.getElementById('toast-icon');
+  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
+  if (type === 'success') { toastEl.classList.add('text-bg-success'); toastIcon.innerHTML = '<i class="fas fa-check-circle fs-5"></i>'; }
+  else if (type === 'error') { toastEl.classList.add('text-bg-danger'); toastIcon.innerHTML = '<i class="fas fa-times-circle fs-5"></i>'; }
+  else { toastEl.classList.add('text-bg-warning'); toastIcon.innerHTML = '<i class="fas fa-exclamation-triangle fs-5"></i>'; }
+  toastMsg.textContent = message;
+  const t = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
+  t.show();
+}
 
-// 1. Definiciones de Tablas (replicadas del componente de historial individual)
+// --- 6. EXPORTACIÓN PDF ---
+
 const tableDefinitions = [
-  {
-    title: "1. Presincronización",
-    dataKey: 'pre_sincronization',
-    headers: ['ID', 'Fecha Aplicación', 'Vacuna Reprod.', 'Producto Sincrogest', 'Antiparasitario', 'Vitaminas'],
-    keys: ['id', 'application_date', 'reproductive_vaccine', 'sincrogest_product', 'antiparasitic_product', 'vitamins_and_minerals']
-  },
-  {
-    title: "2. Ecografía General",
-    dataKey: 'ultrasound',
-    headers: ['ID', 'Fecha', 'Estado', 'Vitaminas Aplicadas', 'Detalles Protocolo', 'Equipo'],
-    keys: ['id', 'date', 'status', 'vitamins_and_minerals', 'protocol_details', 'work_team']
-  },
-  {
-    title: "3. Retiro de Implante",
-    dataKey: 'implant_retrieval',
-    headers: ['ID', 'Fecha', 'Estado del Dispositivo', 'Equipo de Trabajo', 'Productos Usados'],
-    keys: ['id', 'date', 'status', 'work_team', 'used_products_summary']
-  },
-  {
-    title: "4. Inseminaciones",
-    dataKey: 'inseminations',
-    headers: ['ID', 'Fecha', 'Toro', 'CC', 'Calidad Celo', 'Observación', 'Notas Adicionales'],
-    keys: ['id', 'date', 'bull', 'body_condition_score', 'heat_quality', 'observation', 'others']
-  },
-  {
-    title: "5. Ecografías de Confirmación",
-    dataKey: 'confirmatory_ultrasounds',
-    headers: ['ID', 'Fecha', 'Estado de Gestación', 'Observación/Comentarios'],
-    keys: ['id', 'date', 'status', 'observation']
-  },
-  {
-    title: "6. Palpación General",
-    dataKey: 'general_palpation',
-    headers: ['ID', 'Fecha', 'Estado', 'Observación/Detalles'],
-    keys: ['id', 'date', 'status', 'observation']
-  },
-  {
-    title: "7. Partos",
-    dataKey: 'births',
-    headers: ['ID Parto', 'Fecha de Parto', 'Sexo Cría', 'Peso al Nacer (kg)', 'RGD Cría', 'Tipo de Parto'],
-    keys: ['id', 'birthdate', 'sex', 'birth_weight', 'rgd', 'type_of_birth']
-  },
+  { title: "1. Presincronización", dataKey: 'pre_sincronization', headers: ['ID', 'Fecha Aplicación', 'Vacuna Reprod.', 'Producto Sincrogest', 'Antiparasitario', 'Vitaminas'], keys: ['id', 'application_date', 'reproductive_vaccine', 'sincrogest_product', 'antiparasitic_product', 'vitamins_and_minerals'] },
+  { title: "2. Ecografía General", dataKey: 'ultrasound', headers: ['ID', 'Fecha', 'Estado', 'Vitaminas Aplicadas', 'Detalles Protocolo', 'Equipo'], keys: ['id', 'date', 'status', 'vitamins_and_minerals', 'protocol_details', 'work_team'] },
+  { title: "3. Retiro de Implante", dataKey: 'implant_retrieval', headers: ['ID', 'Fecha', 'Estado del Dispositivo', 'Equipo de Trabajo', 'Productos Usados'], keys: ['id', 'date', 'status', 'work_team', 'used_products_summary'] },
+  { title: "4. Inseminaciones", dataKey: 'inseminations', headers: ['ID', 'Fecha', 'Toro', 'CC', 'Calidad Celo', 'Observación', 'Notas Adicionales'], keys: ['id', 'date', 'bull', 'body_condition_score', 'heat_quality', 'observation', 'others'] },
+  { title: "5. Ecografías de Confirmación", dataKey: 'confirmatory_ultrasounds', headers: ['ID', 'Fecha', 'Estado de Gestación', 'Observación/Comentarios'], keys: ['id', 'date', 'status', 'observation'] },
+  { title: "6. Palpación General", dataKey: 'general_palpation', headers: ['ID', 'Fecha', 'Estado', 'Observación/Detalles'], keys: ['id', 'date', 'status', 'observation'] },
+  { title: "7. Partos", dataKey: 'births', headers: ['ID Parto', 'Fecha de Parto', 'Sexo Cría', 'Peso al Nacer (kg)', 'RGD Cría', 'Tipo de Parto'], keys: ['id', 'birthdate', 'sex', 'birth_weight', 'rgd', 'type_of_birth'] },
 ];
 
-/**
- * Función para formatear el valor de la celda. (Replicada del componente de historial)
- */
 const formatValue = (item, field) => {
-  const value = item[field];
-
-  if (value === null || value === undefined || value === '') {
-    return '-';
-  }
-
-  if (field === 'vitamins_and_minerals' && typeof value === 'boolean') {
-    return value ? 'Sí' : 'No';
-  }
-
-  // Para objetos/arrays que no son el valor principal, mostramos un resumen.
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    // Asumiendo que 'bull' en 'inseminations' puede ser un objeto y queremos su 'rgd'
-    if (field === 'bull' && value.rgd) {
-      return value.rgd;
-    }
-    return Object.keys(value).length > 0 ? '[Datos Omitidos]' : '-';
-  }
-
-  return value;
+  const val = item[field];
+  if (val === null || val === undefined || val === '') return '-';
+  if (field === 'vitamins_and_minerals' && typeof val === 'boolean') return val ? 'Sí' : 'No';
+  if (typeof val === 'object' && !Array.isArray(val) && field === 'bull') return val.rgd || '-';
+  return val;
 };
 
-/**
- * Dibuja una sección de tabla para un bovino específico. (Adaptada del componente de historial)
- */
 const drawHistorySection = (doc, def, data, y) => {
-  // La comprobación de página aquí es menos crítica, ya que la lógica principal
-  // de salto de página se manejará al dibujar las tablas.
-
-  // Título de la Sección
-  doc.setFontSize(12); // Reducido ligeramente el tamaño
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(39, 174, 96); // Verde para secciones
-  doc.text(def.title, 20, y);
-  y += 4;
-
+  doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(39, 174, 96); doc.text(def.title, 20, y); y += 4;
   if (!data || data.length === 0) {
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(150, 150, 150);
-    doc.text("No se registraron datos para esta etapa.", 20, y + 3);
-    y += 8;
+    doc.setFontSize(8); doc.setTextColor(150); doc.text("Sin datos registrados.", 20, y + 3); y += 8;
   } else {
-    // Preparar filas
-    const rows = data.map(item => def.keys.map(key => formatValue(item, key)));
-
-    // Llamada a la función autoTable
+    const rows = data.map(item => def.keys.map(k => formatValue(item, k)));
     autoTable(doc, {
-      startY: y + 1,
-      head: [def.headers],
-      body: rows,
-      theme: 'striped',
-      styles: { fontSize: 7, cellPadding: 1, overflow: 'linebreak' },
-      headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
+      startY: y + 1, head: [def.headers], body: rows, theme: 'striped',
+      styles: { fontSize: 7 }, headStyles: { fillColor: [52, 152, 219] },
       margin: { left: 20, right: 20 },
-      // Sin didDrawPage aquí, se usa solo en la función principal para el pie de página.
     });
-
-    // Actualizar la posición Y solo si doc.autoTable.previous existe
-    if (doc.autoTable && doc.autoTable.previous) {
-      y = doc.autoTable.previous.finalY + 5;
-    } else {
-      y += 30; // Fallback
-    }
+    y = doc.autoTable.previous.finalY + 5;
   }
   return y;
 };
 
-/**
- * Funciòn principal que llama al BovineReportService y genera el PDF.
- */
 async function exportFullHistoryToPdf() {
-  // Carga los datos completos del historial de la propiedad
   isLoading.value = true;
-  showToast('info', 'Obteniendo historial completo de todos los bovinos... Esto puede tardar unos segundos.');
-
   try {
-    const propertyId = sessionPropertyStore.getPropertyId;
-    // LLAMADA AL SERVICIO BovineReportService
-    fullBovinesHistory.value = await BovineReportService.getBovinesHistoryByProperty(propertyId);
-  } catch (error) {
-    console.error("Error al obtener el historial completo:", error);
-    showToast('error', 'Error al cargar el historial completo desde el servidor.');
-    isLoading.value = false;
-    return;
-  }
+    fullBovinesHistory.value = await BovineReportService.getBovinesHistoryByProperty(sessionPropertyStore.getPropertyId);
+    const allHistory = fullBovinesHistory.value;
+    const dateStr = new Date().toLocaleDateString(); // VARIABLE USADA PARA ELIMINAR ERROR DE ESLINT
+    
+    if (!allHistory || allHistory.length === 0) { showToast('warning', 'Sin datos.'); return; }
+    const rgdFiltered = filteredBovines.value.map(b => b.rgd);
+    const exportData = allHistory.filter(h => rgdFiltered.includes(h.bovine_rgd));
 
-  const allHistory = fullBovinesHistory.value;
-  const date = new Date().toLocaleDateString();
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    let y = 15;
+    doc.setFontSize(20);
+    doc.text(`REPORTE DE HISTORIAL REPRODUCTIVO - ${dateStr}`, 15, y); // USO DE VARIABLE dateStr
+    y += 15;
 
-  if (!allHistory || allHistory.length === 0) {
-    showToast('warning', 'No hay datos de historial reproductivo para esta propiedad.');
-    isLoading.value = false;
-    return;
-  }
-
-  // Filtramos la data de la API para que solo incluya los bovinos que el usuario tiene filtrados en la vista
-  // Esto asegura que la exportación respete el filtro de búsqueda (`searchTerm`).
-  const rgdFiltered = filteredBovines.value.map(b => b.rgd);
-  const historyToExport = allHistory.filter(h => rgdFiltered.includes(h.bovine_rgd));
-
-  if (historyToExport.length === 0) {
-    showToast('warning', 'No se encontró historial reproductivo para los bovinos filtrados.');
-    isLoading.value = false;
-    return;
-  }
-
-  // --------------------------------------------------
-  // GENERACIÓN DEL PDF
-  // --------------------------------------------------
-
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
-  });
-  let y = 15;
-
-  // Título Principal del Documento
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(52, 152, 219);
-  doc.text("REPORTE DE HISTORIAL REPRODUCTIVO POR PROPIEDAD", 15, y);
-  y += 8;
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 51, 51);
-  doc.text(`Propiedad: ${sessionPropertyStore.getName || 'N/A'}`, 15, y);
-  doc.text(`Dueño: ${sessionPropertyStore.getOwner || 'N/A'}`, 100, y);
-  doc.text(`Fecha del Reporte: ${date}`, 15, y + 5);
-  doc.text(`Total de Bovinos Exportados: ${historyToExport.length}`, 100, y + 5);
-  y += 10;
-
-  // Línea separadora
-  doc.setDrawColor(200);
-  doc.line(15, y, 280, y);
-  y += 8;
-
-
-  // Bucle principal para dibujar el historial de CADA BOVINO
-  historyToExport.forEach((bovineHistory, index) => {
-
-    // Si no es el primer bovino, añadir página
-    if (index > 0) {
-      doc.addPage();
-      y = 15;
-    }
-
-    // Título del Bovino
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(51, 51, 51); // Color oscuro para el RGD
-    doc.text(`Bovino RGD: ${bovineHistory.bovine_rgd}`, 15, y);
-    y += 8;
-
-    // Recorrer las secciones de historial del bovino actual
-    tableDefinitions.forEach(def => {
-      // Manejar la normalización de objetos únicos a arrays de 1 o 0 elementos
-      let data = bovineHistory[def.dataKey];
-      if (data && !Array.isArray(data)) {
-        data = [data]; // Si es un objeto único (como ultrasound), lo convertimos a array.
-      } else if (!data) {
-        data = [];
-      }
-
-      y = drawHistorySection(doc, def, data, y);
+    exportData.forEach((bH, idx) => {
+      if (idx > 0) { doc.addPage(); y = 15; }
+      doc.setFontSize(16); doc.text(`Bovino RGD: ${bH.bovine_rgd}`, 15, y); y += 8;
+      tableDefinitions.forEach(def => {
+        let d = bH[def.dataKey];
+        y = drawHistorySection(doc, def, Array.isArray(d) ? d : (d ? [d] : []), y);
+      });
     });
 
-  });
-
-  // Pie de página general que se aplica a todas las páginas (sobrescribe cualquier pie previo)
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(
-      'Página ' + i + ' de ' + pageCount,
-      doc.internal.pageSize.width - 25,
-      doc.internal.pageSize.height - 5
-    );
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i); doc.setFontSize(8); doc.text(`Página ${i} de ${pageCount}`, 260, 205);
+    }
+    doc.save(`REPORTE_${sessionPropertyStore.getName}.pdf`);
+  } catch (e) {
+    showToast('error', 'Error al generar PDF.');
+  } finally {
+    isLoading.value = false;
   }
-
-  // Guardar el PDF
-  doc.save(`REPORTE_HISTORIAL_PROPIEDAD_${sessionPropertyStore.getName.replace(/\s/g, '_')}_${date.replace(/\//g, '-')}.pdf`);
-
-  showToast('success', `PDF de historial generado con éxito para ${historyToExport.length} bovinos.`);
-  isLoading.value = false;
 }
 
-// Renombramos la función para enlazarla en el HTML
 const exportBovineListToPdf = exportFullHistoryToPdf;
-
 </script>

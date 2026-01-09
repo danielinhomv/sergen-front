@@ -63,6 +63,21 @@ export class BullService extends HttpService {
             throw error;
         }
     }
+
+    async deleteBull(id) {
+        try {
+            const response = await fetch(`${this.baseUrl}/delete`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({ id: id }),
+            });
+
+            return await this.handleResponse(response);
+        } catch (error) {
+            console.error('BullService deleteBull Error:', error);
+            throw error;
+        }
+    }
 }
 
 export default BullService;

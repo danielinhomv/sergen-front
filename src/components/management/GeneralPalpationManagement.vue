@@ -149,7 +149,6 @@ const isFormValid = computed(() => !!form.value.status && !!form.value.date)
    CRUD
 ====================== */
 async function loadItem() {
-  isLoading.value = true
   loadingText.value = 'Cargando datos de palpación...'
   try {
     const response = await service.get(sessionPropertyStore.getControlBovineId)
@@ -157,8 +156,6 @@ async function loadItem() {
   } catch (error) {
     item.value = null
     showToast('error', 'Error al cargar los datos.')
-  } finally {
-    isLoading.value = false
   }
 }
 

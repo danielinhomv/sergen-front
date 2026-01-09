@@ -45,7 +45,8 @@
               <label class="label-premium">FECHA DE PARTO</label>
               <p class="value-premium"><i class="fas fa-calendar-alt me-2 text-success"></i>{{ item.birthdate }}</p>
             </div>
-            <div class="col-md-3">
+            
+            <div class="col-md-3" v-if="isNormalOrPremature(item.typeOfBirth)">
               <label class="label-premium">SEXO DE LA CRÍA</label>
               <p class="value-premium">
                 <i :class="item.sex === 'male' ? 'fas fa-mars text-primary' : 'fas fa-venus text-danger'"
@@ -53,12 +54,14 @@
                 {{ sexLabel(item.sex) }}
               </p>
             </div>
-            <div class="col-md-3">
+            
+            <div class="col-md-3" v-if="isNormalOrPremature(item.typeOfBirth)">
               <label class="label-premium">PESO AL NACER</label>
               <p class="value-premium"><i class="fas fa-weight-hanging me-2 text-success"></i>{{ item.birthWeight }} kg
               </p>
             </div>
-            <div class="col-md-3" v-if="item.rgd">
+            
+            <div class="col-md-3" v-if="isNormalOrPremature(item.typeOfBirth) && item.rgd">
               <label class="label-premium">RGD / REGISTRO</label>
               <p class="value-premium"><i class="fas fa-tag me-2 text-success"></i>{{ item.rgd }}</p>
             </div>
@@ -92,21 +95,6 @@
             </div>
 
             <div class="col-md-6">
-              <label class="label-premium">SEXO DE LA CRÍA *</label>
-              <select v-model="form.sex" class="form-control-premium" :class="{ 'is-invalid': errors.sex }">
-                <option value="">Seleccione...</option>
-                <option value="male">Macho</option>
-                <option value="female">Hembra</option>
-              </select>
-            </div>
-
-            <div class="col-md-6">
-              <label class="label-premium">PESO AL NACER (KG) *</label>
-              <input type="number" min="0.1" step="0.1" v-model="form.birthWeight" class="form-control-premium"
-                :class="{ 'is-invalid': errors.birthWeight }" />
-            </div>
-
-            <div class="col-md-6">
               <label class="label-premium">TIPO DE PARTO *</label>
               <select v-model="form.typeOfBirth" class="form-control-premium"
                 :class="{ 'is-invalid': errors.typeOfBirth }">
@@ -118,7 +106,22 @@
               </select>
             </div>
 
-            <div class="col-12">
+            <div class="col-md-6" v-if="isNormalOrPremature(form.typeOfBirth)">
+              <label class="label-premium">SEXO DE LA CRÍA *</label>
+              <select v-model="form.sex" class="form-control-premium" :class="{ 'is-invalid': errors.sex }">
+                <option value="">Seleccione...</option>
+                <option value="male">Macho</option>
+                <option value="female">Hembra</option>
+              </select>
+            </div>
+
+            <div class="col-md-6" v-if="isNormalOrPremature(form.typeOfBirth)">
+              <label class="label-premium">PESO AL NACER (KG) *</label>
+              <input type="number" min="0.1" step="0.1" v-model="form.birthWeight" class="form-control-premium"
+                :class="{ 'is-invalid': errors.birthWeight }" />
+            </div>
+
+            <div class="col-12" v-if="isNormalOrPremature(form.typeOfBirth)">
               <label class="label-premium">RGD</label>
               <input type="text" v-model="form.rgd" class="form-control-premium" placeholder="Ej: RGD12345" />
             </div>
@@ -134,16 +137,6 @@
           </div>
         </form>
       </div>
-
-      <div v-if="!showForm" class="mt-5 animate__animated animate__fadeIn">
-        <div class="d-flex align-items-center gap-2 mb-4">
-          <div class="premium-line"></div>
-          <h6 class="m-0 fw-bold text-muted text-uppercase small">Gestión de Padres</h6>
-          <div class="premium-line"></div>
-        </div>
-        <BullManagement />
-      </div>
-
     </div>
   </div>
 </template>
@@ -153,7 +146,6 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { BirthService } from '@/services/management/BirthService'
 import { Birth } from '@/model/management/Birth'
-import BullManagement from '@/components/management/BullManagement.vue'
 import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const birthService = new BirthService()
@@ -173,21 +165,34 @@ const form = ref({
 
 const errors = ref({ birthdate: false, sex: false, birthWeight: false, typeOfBirth: false })
 
+// Helper para centralizar la condición de visibilidad
+function isNormalOrPremature(type) {
+  return type === 'normal' || type === 'premeture'
+}
+
 watch(() => form.value, () => {
+  const viable = isNormalOrPremature(form.value.typeOfBirth);
   errors.value = {
     birthdate: !form.value.birthdate,
-    sex: !form.value.sex,
-    birthWeight: !form.value.birthWeight || parseFloat(form.value.birthWeight) <= 0,
-    typeOfBirth: !form.value.typeOfBirth
+    typeOfBirth: !form.value.typeOfBirth,
+    // El sexo y el peso solo dan error si el parto es Normal o Prematuro
+    sex: viable ? !form.value.sex : false,
+    birthWeight: viable ? (!form.value.birthWeight || parseFloat(form.value.birthWeight) <= 0) : false
   }
 }, { deep: true })
 
 const isFormValid = computed(() => {
-  return (
-    form.value.birthdate && form.value.sex &&
-    form.value.birthWeight > 0 && form.value.typeOfBirth &&
-    form.value.propertyId && form.value.controlBovineId
-  )
+  const basicValid = form.value.birthdate && form.value.typeOfBirth && 
+                     form.value.propertyId && form.value.controlBovineId;
+  
+  const viable = isNormalOrPremature(form.value.typeOfBirth);
+  
+  // Si es viable, debe tener sexo y peso > 0. Si no es viable, ignoramos esos campos.
+  const fieldsForViableValid = viable 
+    ? (form.value.sex && form.value.birthWeight > 0) 
+    : true;
+  
+  return basicValid && fieldsForViableValid;
 })
 
 async function loadItem() {
@@ -226,6 +231,14 @@ function openEditForm() {
 async function submitForm() {
   if (!isFormValid.value) return
   isSaving.value = true
+  
+  // Limpiar campos que no aplican a abortos/muertes antes de enviar a la API
+  if (!isNormalOrPremature(form.value.typeOfBirth)) {
+    form.value.birthWeight = 0;
+    form.value.rgd = '';
+    form.value.sex = 'unknown'; // Opcional: enviar un valor neutro si la API lo requiere
+  }
+
   try {
     const birthData = new Birth(form.value)
     if (editing.value) {
@@ -246,7 +259,11 @@ async function submitForm() {
 
 function cancelForm() { showForm.value = false }
 
-function sexLabel(value) { return value === 'male' ? 'Macho' : 'Hembra' }
+function sexLabel(value) { 
+  if(value === 'male') return 'Macho';
+  if(value === 'female') return 'Hembra';
+  return 'No registrado';
+}
 
 function typeOfBirthLabel(value) {
   const types = { 'normal': 'Normal', 'premeture': 'Prematuro', 'abort': 'Aborto', 'stillbirth': 'Muerte al nacer' }

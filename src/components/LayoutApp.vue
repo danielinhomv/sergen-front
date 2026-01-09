@@ -22,15 +22,23 @@
           <router-link :to="{ name: 'dashboard' }" class="nav-link-premium mb-2">
             <i class="fas fa-chart-pie me-3"></i><span>Panel Principal</span>
           </router-link>
-          <router-link :to="{ name: 'account-management' }" class="nav-link-premium mb-2">
-            <i class="fas fa-user-shield me-3"></i><span>Mi Cuenta</span>
+
+          <router-link :to="{ name: 'bull-management' }" class="nav-link-premium mb-2">
+            <i class="fas fa-dna me-3"></i><span>Sementales</span>
           </router-link>
+
+          <router-link :to="{ name: 'insemination-management' }" class="nav-link-premium mb-2">
+            <i class="fas fa-layer-group me-3"></i><span>Etapas</span>
+          </router-link>
+
           <router-link :to="{ name: 'property-management' }" class="nav-link-premium mb-2">
             <i class="fas fa-map-marked-alt me-3"></i><span>Propiedad Actual</span>
           </router-link>
-          <router-link :to="{ name: 'insemination-management' }" class="nav-link-premium mb-2">
-            <i class="fas fa-dna me-3"></i><span>Etapas</span>
+
+          <router-link :to="{ name: 'account-management' }" class="nav-link-premium mb-2">
+            <i class="fas fa-user-shield me-3"></i><span>Mi Cuenta</span>
           </router-link>
+
           <router-link :to="{ name: 'insemination-report' }" class="nav-link-premium mb-2">
             <i class="fas fa-file-invoice me-3"></i><span>Reportes</span>
           </router-link>
@@ -260,7 +268,8 @@ onMounted(() => {
 
 @media (max-width: 991.98px) {
   .content-padding {
-    padding: 4.5rem 0.75rem 1rem; /* El primer valor es alto por el botón toggle móvil */
+    padding: 4.5rem 0.75rem 1rem;
+    /* El primer valor es alto por el botón toggle móvil */
   }
 }
 

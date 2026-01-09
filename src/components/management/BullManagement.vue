@@ -1,451 +1,528 @@
 <template>
-  <div class="bull-management-container animate__animated animate__fadeIn">
-    
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-      <div>
-        <h3 class="brand-title m-0">
-          <i class="fas fa-dna text-success-gradient me-2"></i>Catálogo de Sementales
-        </h3>
-        <p class="text-muted small mb-0">Gestión de razas y genética para inseminación</p>
+  <LayoutApp>
+    <div class="account-container animate__animated animate__fadeIn">
+
+      <div v-if="isLoading || isSaving" class="loading-overlay">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-3 text-success fw-bold">Procesando catálogo...</p>
       </div>
-      
-      <div class="d-flex gap-2">
-        <div v-if="!showForm && bulls.length > 0" class="search-box d-none d-lg-flex">
-          <i class="fas fa-search"></i>
-          <input v-model="searchQuery" type="text" placeholder="Buscar raza...">
+
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+          <h1 class="main-title">Catálogo de Sementales</h1>
+          <p class="text-muted mb-0">Gestión de razas y linajes genéticos</p>
         </div>
-        
-        <button v-if="!showForm" class="btn-premium btn-add" @click="openAddForm">
-          <i class="fas fa-plus-circle me-2"></i>Nueva Raza
-        </button>
       </div>
-    </div>
 
-    <div v-if="isLoading" class="loader-container shadow-sm border rounded-4">
-      <div class="premium-spinner"></div>
-      <p class="text-muted mt-3 fw-bold">Sincronizando catálogo...</p>
-    </div>
+      <div class="row g-4">
+        <div class="col-lg-4 col-xl-3">
+          <div class="account-card sticky-sidebar shadow-sm">
+            <div class="card-header-custom mb-3">
+              <h3 class="card-title-custom"><i class="fas fa-chart-pie me-2"></i>Estadísticas</h3>
+            </div>
 
-    <div v-else-if="!showForm" class="content-card shadow-sm border rounded-4 overflow-hidden">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle m-0">
-          <thead class="premium-thead">
-            <tr>
-              <th class="ps-4 py-3">ID</th>
-              <th class="py-3">RAZA / LINAJE</th>
-              <th class="py-3 text-center">ESTADO</th>
-              <th class="text-end pe-4 py-3">ACCIONES</th>
-            </tr>
-          </thead>
-          <tbody class="border-0">
-            <tr v-for="bull in filteredBulls" :key="bull.id" class="premium-row">
-              <td class="ps-4">
-                <span class="id-badge">#{{ bull.id }}</span>
-              </td>
-              <td>
-                <div class="d-flex align-items-center">
-                  <div class="breed-avatar me-3">
-                    {{ bull.name.charAt(0) }}
-                  </div>
-                  <span class="fw-bold text-dark">{{ bull.name }}</span>
+            <div class="info-display">
+              <div class="info-item">
+                <label>Razas Registradas</label>
+                <p>{{ bulls.length }}</p>
+              </div>
+              <div class="info-item">
+                <label>Filtro Activo</label>
+                <p>{{ searchQuery ? filteredBulls.length : 'Ninguno' }}</p>
+              </div>
+              <div class="premium-divider my-3"></div>
+              <div class="info-item">
+                <i class="fas fa-info-circle text-success me-2"></i>
+                <small class="text-muted">Las razas aquí listadas estarán disponibles en los registros de
+                  inseminación.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-8 col-xl-9">
+          <div class="account-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+              <h3 class="card-title-custom m-0"><i class="fas fa-dna me-2"></i>Listado de Razas</h3>
+
+              <div class="d-flex align-items-center gap-2">
+                <div class="search-box-custom">
+                  <i class="fas fa-search"></i>
+                  <input v-model="searchQuery" type="text" placeholder="Buscar raza..." />
                 </div>
-              </td>
-              <td class="text-center">
-                <span class="status-pill">Activo</span>
-              </td>
-              <td class="text-end pe-4">
-                <button class="btn-action edit" v-tooltip="'Editar'" @click="openEditForm(bull)">
-                  <i class="fas fa-pen"></i>
+                <button @click="openAddModal" class="btn btn-add-custom">
+                  <i class="fas fa-plus me-2"></i>Nueva Raza
                 </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+
+            <div class="table-responsive custom-scroll">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Raza / Linaje</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-end">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="bull in filteredBulls" :key="bull.id">
+                    <td><span class="badge-serie">#{{ bull.id }}</span></td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="breed-avatar-circle me-3">{{ bull.name.charAt(0).toUpperCase() }}</div>
+                        <span class="fw-bold text-dark">{{ bull.name }}</span>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <span
+                        class="badge bg-light text-success border border-success-subtle rounded-pill px-3">Activo</span>
+                    </td>
+                    <td class="text-end">
+                      <div class="d-flex justify-content-end gap-2">
+                        <button @click="openEditModal(bull)" class="btn-action edit" title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button @click="confirmDelete(bull)" class="btn-action delete" title="Eliminar">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="filteredBulls.length === 0">
+                    <td colspan="4" class="text-center py-5 text-muted">No se encontraron razas.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div v-if="filteredBulls.length === 0" class="empty-state py-5">
-        <div class="empty-icon">
-          <i class="fas fa-search"></i>
+      <div class="modal fade" id="bullFormModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-light border-0 py-3">
+              <h5 class="fw-bold m-0 text-dark">{{ editing ? 'Editar Raza' : 'Nueva Raza Genética' }}</h5>
+              <button type="button" class="btn-close" @click="closeFormModal"></button>
+            </div>
+            <form @submit.prevent="submitForm">
+              <div class="modal-body p-4">
+                <div class="mb-3">
+                  <label class="form-label-custom small">Nombre de la Raza</label>
+                  <input v-model="form.name" type="text" class="form-control-custom"
+                    :class="{ 'is-invalid': isDuplicate }" placeholder="Ej. Angus Colorado" required ref="nameInput" />
+                  <div v-if="isDuplicate" class="invalid-feedback fw-bold">
+                    Esta raza ya existe en el sistema.
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer border-0 p-4 pt-0">
+                <button type="submit" class="btn btn-success-premium w-100 py-3 fw-bold" :disabled="!isFormValid">
+                  <i class="fas fa-save me-2"></i>
+                  {{ editing ? 'GUARDAR CAMBIOS' : 'REGISTRAR RAZA' }}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        <h5>No encontramos resultados</h5>
-        <p class="text-muted">Intenta con otro nombre o registra una nueva raza.</p>
-        <button v-if="bulls.length === 0" class="btn btn-success rounded-pill px-4" @click="openAddForm">
-          Registrar mi primera raza
-        </button>
       </div>
+
+      <div v-if="showDeleteModal" class="confirmation-overlay">
+        <div class="elegant-modal animate__animated animate__zoomIn">
+          <div class="elegant-modal-header bg-danger-gradient">
+            <div class="elegant-icon-circle text-danger"><i class="fas fa-trash-alt"></i></div>
+          </div>
+          <div class="elegant-modal-body">
+            <h4 class="fw-bold text-dark">¿Eliminar Raza?</h4>
+            <p class="text-muted">Estás por eliminar <strong>{{ bullToDelete?.name }}</strong>. Las pajillas e hijos
+              asociados a esta raza podrían verse afectados.</p>
+          </div>
+          <div class="elegant-modal-footer">
+            <button class="btn-elegant btn-danger-action" @click="executeDelete">ELIMINAR PERMANENTEMENTE</button>
+            <button class="btn-elegant btn-cancel" @click="showDeleteModal = false">CANCELAR</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+        <div id="liveToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert"
+          aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div id="toast-message" class="toast-body flex-grow-1 p-3 fw-bold"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+          </div>
+        </div>
+      </div>
+
     </div>
-
-    <div v-if="showForm" class="form-card-premium shadow-lg border-0 rounded-4 animate__animated animate__slideInUp">
-      <div class="form-header">
-        <div class="icon-circle shadow-sm">
-          <i class="fas" :class="editing ? 'fa-edit' : 'fa-plus'"></i>
-        </div>
-        <div class="ms-3">
-          <h5 class="fw-bold m-0">{{ editing ? 'Editar Raza' : 'Nueva Raza de Semental' }}</h5>
-          <p class="text-muted small m-0">Complete los datos para el catálogo genético</p>
-        </div>
-        <button class="btn-close-custom ms-auto" @click="cancelForm">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <form @submit.prevent="submitForm" class="p-4">
-        <div class="mb-4">
-          <label class="form-label-premium">Nombre de la Raza / Identificador del Toro</label>
-          <div class="input-group-premium" :class="{ 'error': isDuplicate, 'valid': form.name.length > 2 && !isDuplicate }">
-            <i class="fas fa-certificate input-icon"></i>
-            <input 
-              v-model="form.name" 
-              type="text" 
-              placeholder="Ej: Brahman Gris, Nelore Mocho..."
-              required
-            >
-            <i v-if="isDuplicate" class="fas fa-exclamation-triangle warning-icon text-danger"></i>
-            <i v-else-if="form.name.length > 2" class="fas fa-check-circle warning-icon text-success"></i>
-          </div>
-          
-          <div v-if="isDuplicate" class="error-msg animate__animated animate__headShake">
-            <i class="fas fa-info-circle me-1"></i> Esta raza ya existe en el sistema.
-          </div>
-          <div v-else class="form-text-premium">
-            Escriba el nombre técnico o común de la raza.
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-end gap-3 pt-3">
-          <button type="button" class="btn-cancel" @click="cancelForm">
-            Cancelar
-          </button>
-          <button type="submit" class="btn-submit-premium" :disabled="!isFormValid || isSaving">
-            <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span>
-            <i v-else class="fas fa-save me-2"></i>
-            {{ editing ? 'Actualizar Registro' : 'Guardar en Catálogo' }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+  </LayoutApp>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { BullService } from '@/services/management/BullService';
 import { Bull } from '@/model/management/Bull';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
+import { Modal, Toast } from 'bootstrap';
+import LayoutApp from '../LayoutApp.vue';
 
 const bullService = new BullService();
 const sessionStore = useSessionPropertyStore();
 
-/* --- STATE --- */
 const bulls = ref([]);
 const isLoading = ref(true);
 const isSaving = ref(false);
-const showForm = ref(false);
 const editing = ref(false);
 const searchQuery = ref('');
+const showDeleteModal = ref(false);
+const bullToDelete = ref(null);
+const nameInput = ref(null);
+const form = ref({ id: null, name: '' });
 
-const form = ref({
-  id: null,
-  name: ''
-});
+let bsModal = null;
 
-/* --- LOGIC --- */
+function showToast(message, type = 'success') {
+  const toastEl = document.getElementById('liveToast');
+  if (toastEl) {
+    toastEl.className = `toast align-items-center border-0 shadow-lg text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+    document.getElementById('toast-message').textContent = message;
+    new Toast(toastEl).show();
+  }
+}
+
 const filteredBulls = computed(() => {
-  return bulls.value.filter(bull => 
-    bull.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  return bulls.value.filter(b => b.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 
 const isDuplicate = computed(() => {
   if (!form.value.name) return false;
-  return bulls.value.some(bull => {
-    if (editing.value && bull.id === form.value.id) return false;
-    return bull.name.trim().toLowerCase() === form.value.name.trim().toLowerCase();
-  });
+  return bulls.value.some(b => (editing.value && b.id === form.value.id ? false : b.name.trim().toLowerCase() === form.value.name.trim().toLowerCase()));
 });
 
-const isFormValid = computed(() => {
-  return form.value.name && form.value.name.trim().length > 2 && !isDuplicate.value;
-});
+const isFormValid = computed(() => form.value.name.trim().length > 2 && !isDuplicate.value);
 
 async function loadBulls() {
   isLoading.value = true;
-  try {
-    // Usamos el propertyId del store persistente
-    bulls.value = await bullService.listBulls(sessionStore.getPropertyId);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    isLoading.value = false;
-  }
+  try { bulls.value = await bullService.listBulls(); }
+  catch (e) { showToast('Error al cargar datos', 'danger'); }
+  finally { isLoading.value = false; }
 }
 
-function openAddForm() {
+function openAddModal() {
   editing.value = false;
   form.value = { id: null, name: '' };
-  showForm.value = true;
+  bsModal.show();
+  nextTick(() => nameInput.value?.focus());
 }
 
-function openEditForm(bull) {
+function openEditModal(bull) {
   editing.value = true;
   form.value = { id: bull.id, name: bull.name };
-  showForm.value = true;
+  bsModal.show();
 }
 
-function cancelForm() {
-  showForm.value = false;
+function closeFormModal() { bsModal.hide(); }
+
+function confirmDelete(bull) {
+  bullToDelete.value = bull;
+  showDeleteModal.value = true;
+}
+
+async function executeDelete() {
+  isSaving.value = true;
+  try {
+    await bullService.deleteBull(bullToDelete.value.id);
+    showToast('Raza eliminada');
+    await loadBulls();
+    showDeleteModal.value = false;
+  } catch (e) { showToast('No se pudo eliminar', 'danger'); }
+  finally { isSaving.value = false; }
 }
 
 async function submitForm() {
-  if (!isFormValid.value) return;
   isSaving.value = true;
   try {
     const bullData = new Bull({
       id: form.value.id,
       name: form.value.name.trim(),
-      breed: form.value.name.trim(),
-      origin: 'Catálogo'
+      userId: sessionStore.getUser?.id
     });
 
     if (editing.value) {
       await bullService.updateBull(form.value.id, bullData);
+      showToast('Actualizado con éxito');
     } else {
       await bullService.createBull(bullData);
+      showToast('Registrado con éxito');
     }
     await loadBulls();
-    showForm.value = false;
-  } catch (error) {
-    console.error(error);
-  } finally {
-    isSaving.value = false;
-  }
+    closeFormModal();
+  } catch (e) { showToast('Error al procesar', 'danger'); }
+  finally { isSaving.value = false; }
 }
 
-onMounted(loadBulls);
+onMounted(() => {
+  loadBulls();
+  bsModal = new Modal(document.getElementById('bullFormModal'));
+});
 </script>
 
 <style scoped>
-/* --- TYPOGRAPHY & COLORS --- */
-.brand-title {
+/* COPIANDO EXACTAMENTE TUS ESTILOS DE "PROPIEDAD" */
+.account-container {
+  padding: 30px;
+  background: #f8fafb;
+  min-height: 100vh;
+}
+
+.main-title {
   font-weight: 800;
   color: #1e293b;
+  font-size: 1.8rem;
   letter-spacing: -0.5px;
 }
 
-.text-success-gradient {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.sticky-sidebar {
+  position: sticky;
+  top: 20px;
 }
 
-/* --- BUTTONS --- */
-.btn-premium {
-  padding: 10px 24px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-}
-
-.btn-add {
-  background: #2d4a22;
-  color: white;
-  box-shadow: 0 4px 12px rgba(45, 74, 34, 0.25);
-}
-
-.btn-add:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(45, 74, 34, 0.35);
-}
-
-/* --- SEARCH BOX --- */
-.search-box {
-  background: #f1f5f9;
-  border-radius: 12px;
-  padding: 0 15px;
-  align-items: center;
-  border: 1px solid #e2e8f0;
-}
-
-.search-box i { color: #94a3b8; }
-.search-box input {
-  border: none;
-  background: transparent;
-  padding: 10px;
-  font-size: 0.9rem;
-  outline: none;
-  width: 200px;
-}
-
-/* --- TABLE STYLING --- */
-.premium-thead {
-  background: #f8fafc;
-}
-
-.premium-thead th {
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #64748b;
-  letter-spacing: 1px;
-}
-
-.premium-row {
-  transition: all 0.2s;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.premium-row:hover {
-  background-color: #f0fdf4 !important;
-}
-
-.id-badge {
-  background: #f1f5f9;
-  color: #475569;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-family: 'Courier New', Courier, monospace;
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
-.breed-avatar {
-  width: 36px;
-  height: 36px;
-  background: #c0da63;
-  color: #1b3014;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  font-weight: 800;
-}
-
-.status-pill {
-  background: #dcfce7;
-  color: #166534;
-  font-size: 0.7rem;
-  font-weight: 800;
-  padding: 4px 12px;
-  border-radius: 20px;
-  text-transform: uppercase;
-}
-
-/* --- FORM CARD PREMIUM --- */
-.form-card-premium {
+.account-card {
   background: white;
-  max-width: 600px;
-  margin: 2rem auto;
+  border-radius: 20px;
+  border: none;
+  padding: 25px;
 }
 
-.form-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
+.card-header-custom {
   display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.icon-circle {
-  width: 48px;
-  height: 48px;
-  background: #f0fdf4;
-  color: #10b981;
+.card-title-custom {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.info-item {
+  margin-bottom: 18px;
+}
+
+.info-item label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.info-item p {
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 600;
+  margin: 0;
+}
+
+.form-label-custom {
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.form-control-custom {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #f1f5f9;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-}
-
-.input-group-premium {
-  display: flex;
-  align-items: center;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 5px 15px;
   transition: 0.3s;
 }
 
-.input-group-premium.valid { border-color: #10b981; background: #fff; }
-.input-group-premium.error { border-color: #ef4444; background: #fff; }
-
-.input-group-premium input {
-  border: none;
-  background: transparent;
-  width: 100%;
-  padding: 12px;
+.form-control-custom:focus {
+  border-color: #10b981;
   outline: none;
-  font-weight: 600;
+  background: #fff;
 }
 
-.input-icon { color: #94a3b8; }
+/* BUSCADOR */
+.search-box-custom {
+  position: relative;
+}
 
-.btn-submit-premium {
+.search-box-custom i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.search-box-custom input {
+  padding: 10px 15px 10px 40px;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  width: 240px;
+}
+
+/* BOTONES */
+.btn-add-custom {
   background: #10b981;
   color: white;
   border: none;
-  padding: 12px 25px;
+  padding: 10px 22px;
   border-radius: 12px;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  transition: 0.3s;
 }
 
-.btn-cancel {
-  background: #f1f5f9;
-  color: #64748b;
+.btn-success-premium {
+  background: #10b981;
+  color: white;
   border: none;
-  padding: 12px 25px;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-/* --- LOADER --- */
-.loader-container {
-  height: 300px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: white;
-}
-
-.premium-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #10b981;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 1rem;
-}
-
-.empty-icon {
-  font-size: 3rem;
-  color: #e2e8f0;
-  margin-bottom: 1rem;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .btn-action {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
+  background: #f8fafc;
+  color: #64748b;
   transition: 0.2s;
+}
+
+.btn-action.edit:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.btn-action.delete:hover {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+/* ELEMENTOS BULL ESPECÍFICOS */
+.badge-serie {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.breed-avatar-circle {
+  width: 36px;
+  height: 36px;
+  background: #ecfdf5;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 800;
+  border: 1px solid #d1fae5;
+}
+
+.premium-divider {
+  height: 1px;
+  background: #f1f5f9;
+}
+
+/* MODALES ELEGANTES (CONFIRMACIÓN) */
+.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.elegant-modal {
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+}
+
+.elegant-modal-header {
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bg-danger-gradient {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
+
+.elegant-icon-circle {
+  width: 66px;
+  height: 66px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  bottom: -33px;
+}
+
+.elegant-modal-body {
+  padding: 50px 30px 20px;
+  text-align: center;
+}
+
+.elegant-modal-footer {
+  padding: 0 30px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-elegant {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 700;
+  transition: 0.3s;
+}
+
+.btn-danger-action {
+  background: #e11d48;
+  color: white;
+}
+
+.btn-cancel {
   background: #f1f5f9;
   color: #64748b;
 }
 
-.btn-action.edit:hover {
-  background: #fef3c7;
-  color: #d97706;
+/* LOADING */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 </style>

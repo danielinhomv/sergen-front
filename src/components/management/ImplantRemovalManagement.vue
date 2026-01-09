@@ -155,7 +155,6 @@ const isFormValid = computed(() => !!form.value.status && !!form.value.date && !
    CRUD (ESTRUCTURA UNIFICADA)
 ====================== */
 async function loadItem() {
-  isLoading.value = true
   loadingText.value = 'Cargando datos de retiro...'
   try {
     const response = await service.get(sessionPropertyStore.getControlBovineId)
@@ -163,8 +162,6 @@ async function loadItem() {
   } catch (error) {
     item.value = null
     showToast('error', error.message || 'Error al cargar los datos.')
-  } finally {
-    isLoading.value = false
   }
 }
 

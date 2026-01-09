@@ -208,15 +208,12 @@ function showToast(type, message) {
 }
 
 async function loadItem() {
-  isLoading.value = true
   loadingText.value = 'Cargando datos de ecografía...'
   try {
     const response = await service.get(sessionPropertyStore.controlBovineId)
     item.value = response || null
   } catch (error) {
     showToast('error', error.message || 'Error al cargar los datos de ecografía')
-  } finally {
-    isLoading.value = false
   }
 }
 

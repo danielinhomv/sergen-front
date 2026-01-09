@@ -1,7 +1,7 @@
 <template>
     <div class="insemination-container">
 
-        <div v-if="isLoading" class="loading-state-premium">
+        <div v-if="!sessionPropertyStore.onScanned" class="loading-state-premium">
             <div class="spinner-border text-success-premium mb-3" role="status"></div>
             <p class="loading-text-premium">{{ loadingText }}</p>
         </div>
@@ -194,7 +194,6 @@ const sessionPropertyStore = useSessionPropertyStore();
 ====================== */
 const inseminations = ref([]);
 const bullsList = ref([]);
-const isLoading = ref(false);
 const isSaving = ref(false);
 const editing = ref(false);
 const loadingText = ref('Sincronizando historial...');
@@ -219,7 +218,6 @@ const isFormValid = computed(() => !!form.value.bull && form.value.bodyCondition
    CRUD
 ====================== */
 async function loadInitialData() {
-    isLoading.value = true;
     loadingText.value = 'Cargando historial de inseminaciones...';
     try {
         const controlBovineId = sessionPropertyStore.getControlBovineId;
@@ -231,9 +229,7 @@ async function loadInitialData() {
         bullsList.value = bullsData;
     } catch (error) {
         showToast('error', 'Error al cargar los datos.');
-    } finally {
-        isLoading.value = false;
-    }
+    } 
 }
 
 async function saveInsemination() {
