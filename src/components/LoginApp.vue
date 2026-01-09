@@ -85,7 +85,7 @@ async function handleLogin() {
             </form>
             
             <div class="login-footer">
-                <p>&copy; 2025 Sergen App</p>
+                <p>&copy; 2026 Sergen App</p>
             </div>
         </div>
     </div>

@@ -202,6 +202,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { BovineService } from '@/services/management/BovineService';
 import { ControlBovineService } from '@/services/management/ControlBovineService';
+import { ControlBovine } from '@/model/management/ControlBovine';
 
 export function useSerialReader() {
   const port = ref(null);
@@ -222,7 +223,7 @@ export function useSerialReader() {
   // --- CONFIGURACIÓN DE PRUEBAS (HARDCODE) ---
   const MOCK_MODE = true; // Cambiar a false cuando tengas el lector
   const TEST_SERIE = 'B-0015';
-  const TEST_CONTROL_ID = 21; 
+  const TEST_CONTROL_ID = 21;
 
   const connectionStatus = computed(() => {
     if (connectionState.value === 'connected') return 'MODO PRUEBA: Lector Simulado.';
@@ -258,10 +259,10 @@ export function useSerialReader() {
       isConnecting.value = true;
       connectionState.value = 'connecting';
       await sleep(1000); // Simular delay de conexión
-      
+
       connectionState.value = 'connected';
       isConnecting.value = false;
-      
+
       console.log("🚀 MODO PRUEBA ACTIVO: Ejecutando lógica estática...");
       executeLogic(TEST_SERIE); // Dispara la lógica directamente con la serie fija
       return;
@@ -299,7 +300,7 @@ export function useSerialReader() {
       console.log("🔍 Procesando Serie:", buffer);
 
       // 1️⃣ Buscar bovino
-      const bovine = await bovineService.getBySerie(buffer);
+      const bovine = await bovineService.getBySerie(buffer, propertyId);
 
       if (!bovine) {
         console.warn("❌ No existe bovino con serie:", buffer);
@@ -309,16 +310,16 @@ export function useSerialReader() {
 
       // 2️⃣ Guardar en sesión
       sessionPropertyStore.setBovine(bovine);
-      console.log("🐮 Bovino encontrado:", bovine.name);
+      console.log("🐮 Bovino encontrado:", bovine.rgd);
 
       // 3️⃣ Crear vínculo Control-Bovine (Usando el Control ID hardcodeado)
       const protocolId = MOCK_MODE ? TEST_CONTROL_ID : sessionPropertyStore.getProtocolId;
-      
-      const relation = await controlBovineService.createControlBovine({
+      const controlData = new ControlBovine({
         bovine_id: bovine.id,
         control_id: protocolId,
         property_id: propertyId
       });
+      const relation = await controlBovineService.createControlBovine(controlData);
 
       if (relation && relation.id) {
         sessionPropertyStore.setControlBovineId(relation.id);
@@ -346,9 +347,9 @@ export function useSerialReader() {
 
   // ... (Lifecycle hooks iguales)
   onMounted(() => { window.addEventListener('beforeunload', disconnectReader); });
-  onBeforeUnmount(() => { 
+  onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', disconnectReader);
-    disconnectReader(); 
+    disconnectReader();
   });
 
   return {

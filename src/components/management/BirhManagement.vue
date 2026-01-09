@@ -1,7 +1,7 @@
 <template>
   <div class="birth-container">
 
-    <div v-if="isLoading" class="loading-state-premium">
+    <div v-if="!sessionPropertyStore.onScanned" class="loading-state-premium">
       <div class="spinner-border text-success-premium mb-3" role="status"></div>
       <p class="loading-text-premium">{{ loadingText }}</p>
     </div>
@@ -160,7 +160,6 @@ const birthService = new BirthService()
 const sessionPropertyStore = useSessionPropertyStore()
 
 const item = ref(null)
-const isLoading = ref(true)
 const isSaving = ref(false)
 const loadingText = ref('Escanee un bovino para cargar los datos...')
 const showForm = ref(false)
@@ -192,7 +191,6 @@ const isFormValid = computed(() => {
 })
 
 async function loadItem() {
-  isLoading.value = true
   loadingText.value = 'Cargando datos de parto...'
   try {
     const response = await birthService.get(sessionPropertyStore.getControlBovineId)
@@ -200,9 +198,7 @@ async function loadItem() {
   } catch (error) {
     item.value = null
     showToast('error', error.message || 'Error al cargar los datos de parto')
-  } finally {
-    isLoading.value = false
-  }
+  } 
 }
 
 function openAddForm() {
@@ -274,7 +270,7 @@ function showToast(type, message) {
 }
 
 onMounted(() => {
-  if (sessionPropertyStore.onScanned()) {
+  if (sessionPropertyStore.onScanned) {
     loadItem()
   }
 })

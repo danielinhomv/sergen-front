@@ -562,10 +562,10 @@ const fullBovinesHistory = ref(null);
 
 // Propiedad
 const property = ref({
-  name: 'Finca El Paraíso',
-  place: 'Santa Cruz, Bolivia',
-  phone_number: '591-77889900',
-  owner_name: 'Juan Pérez',
+  name: sessionPropertyStore.getName,
+  place: sessionPropertyStore.getPlace,
+  phone_number: sessionPropertyStore.getPhone,
+  owner_name: sessionPropertyStore.getOwner,
 });
 const editableProperty = ref({ ...property.value });
 
@@ -751,7 +751,7 @@ async function updateBovine() {
 async function deleteBovine() {
   try {
     isLoading.value = true;
-    bovines.value = await bovineService.deleteBovine(bovineId);
+    bovines.value = await bovineService.deleteBovine(bovineId, sessionPropertyStore.getPropertyId);
     showToast('success', 'Bovino eliminado con éxito.');
   } catch (error) {
     console.error('Error al eliminar bovino:', error);

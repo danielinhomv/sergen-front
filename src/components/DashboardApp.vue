@@ -14,7 +14,10 @@ const sessionPropertyStore = useSessionPropertyStore();
 console.log("se inicio un trabajo correctamente !!")
 console.log("en la propiedad con el id:"+sessionPropertyStore.getPropertyId);
 console.log("en la propiedad con el protocoloId:"+sessionPropertyStore.getProtocolId);
-  
+console.log("en la propiedad con el name:"+sessionPropertyStore.getName);
+console.log("en la propiedad con el place:"+sessionPropertyStore.getPlace);
+console.log("en la propiedad con el phone:"+sessionPropertyStore.getPhone);
+console.log("en la propiedad con el owner:"+sessionPropertyStore.getOwner);
 console.log("isWorked:"+sessionPropertyStore.isWorked);
 
 

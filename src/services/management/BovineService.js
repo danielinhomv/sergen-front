@@ -10,12 +10,12 @@ export class BovineService extends HttpService {
         this.baseUrl = baseUrl;
     }
 
-    async getBySerie(serie) {
+    async getBySerie(serie, $propertyId) {
         try {
             const response = await fetch(`${this.baseUrl}/get-by-serie`, {
                 method: 'POST',
                 headers: this.getHeaders(), 
-                body: JSON.stringify({ serie })
+                body: JSON.stringify({ serie: serie, property_id: $propertyId })
             });
 
             const data = await this.handleResponse(response);
@@ -80,12 +80,12 @@ export class BovineService extends HttpService {
         }
     }
 
-    async deleteBovine(id) {
+    async deleteBovine(id, propertyId) {
         try {
             const response = await fetch(`${this.baseUrl}/delete`, {
                 method: 'POST',
                 headers: this.getHeaders(),
-                body: JSON.stringify({ "id": id }),
+                body: JSON.stringify({ "id": id, "property_id": propertyId }),
             });
             
             const data = await this.handleResponse(response);

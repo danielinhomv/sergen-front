@@ -1,79 +1,89 @@
 <template>
-  <div class="d-flex" id="wrapper">
-    
+  <div class="app-layout" id="wrapper">
+
     <div v-if="isLoading" class="loading-overlay">
       <div class="spinner-border text-success-custom" role="status"></div>
       <p class="mt-3 text-success-custom fw-bold">{{ loadingText }}</p>
     </div>
 
-    <div class="sidebar-premium d-flex flex-column" id="sidebar-wrapper">
-      <div class="sidebar-heading-custom">
-        <div class="logo-box animate__animated animate__fadeIn">
-          <div class="logo-circle-premium">
-            <i class="fas fa-cow"></i>
+    <aside class="sidebar-premium" id="sidebar-wrapper">
+      <div class="sidebar-content d-flex flex-column h-100">
+        <div class="sidebar-heading-custom">
+          <div class="logo-box animate__animated animate__fadeIn">
+            <div class="logo-circle-premium">
+              <i class="fas fa-cow"></i>
+            </div>
+            <h2 class="brand-name">Sergen</h2>
+            <span class="brand-subtitle">Gestión Bovina</span>
           </div>
-          <h2 class="brand-name">Sergen</h2>
-          <span class="brand-subtitle">Gestión Bovina</span>
+        </div>
+
+        <nav class="list-group list-group-flush flex-grow-1 px-3 mt-2">
+          <router-link :to="{ name: 'dashboard' }" class="nav-link-premium mb-2">
+            <i class="fas fa-chart-pie me-3"></i><span>Panel Principal</span>
+          </router-link>
+          <router-link :to="{ name: 'account-management' }" class="nav-link-premium mb-2">
+            <i class="fas fa-user-shield me-3"></i><span>Mi Cuenta</span>
+          </router-link>
+          <router-link :to="{ name: 'property-management' }" class="nav-link-premium mb-2">
+            <i class="fas fa-map-marked-alt me-3"></i><span>Propiedad Actual</span>
+          </router-link>
+          <router-link :to="{ name: 'insemination-management' }" class="nav-link-premium mb-2">
+            <i class="fas fa-dna me-3"></i><span>Etapas</span>
+          </router-link>
+          <router-link :to="{ name: 'insemination-report' }" class="nav-link-premium mb-2">
+            <i class="fas fa-file-invoice me-3"></i><span>Reportes</span>
+          </router-link>
+        </nav>
+
+        <div class="p-4 mt-auto">
+          <button @click="openLogoutModal" class="btn-logout-sidebar">
+            <i class="fas fa-power-off me-3"></i>Cerrar Sesión
+          </button>
         </div>
       </div>
+    </aside>
 
-      <div class="list-group list-group-flush flex-grow-1 px-3 mt-4">
-        <router-link :to="{ name: 'dashboard' }" class="nav-link-premium mb-2">
-          <i class="fas fa-chart-pie me-3"></i><span>Panel Principal</span>
-        </router-link>
-        
-        <router-link :to="{ name: 'account-management' }" class="nav-link-premium mb-2">
-          <i class="fas fa-user-shield me-3"></i><span>Mi Cuenta</span>
-        </router-link>
-        
-        <router-link :to="{ name: 'property-management' }" class="nav-link-premium mb-2">
-          <i class="fas fa-map-marked-alt me-3"></i><span>Propiedad Actual</span>
-        </router-link>
-        
-        <router-link :to="{ name: 'insemination-management' }" class="nav-link-premium mb-2">
-          <i class="fas fa-dna me-3"></i><span>Etapas</span>
-        </router-link>
-        
-        <router-link :to="{ name: 'insemination-report' }" class="nav-link-premium mb-2">
-          <i class="fas fa-file-invoice me-3"></i><span>Reportes</span>
-        </router-link>
-      </div>
-
-      <div class="mt-auto p-4">
-        <button @click="openLogoutModal" class="btn-logout-sidebar">
-          <i class="fas fa-power-off me-3"></i>Cerrar Sesión
-        </button>
-      </div>
-    </div>
-
-    <div id="page-content-wrapper" class="bg-main-light">
+    <main id="page-content-wrapper">
       <button class="btn-toggle-custom d-lg-none shadow" id="menu-toggle">
         <i class="fas fa-bars"></i>
       </button>
-      
-      <div class="container-fluid p-0">
-        <div class="content-scroll custom-scroll">
-          <slot></slot>
+
+      <div class="d-flex flex-column h-100">
+
+        <div class="main-scroll-area custom-scroll flex-grow-1">
+          <div class="content-padding">
+            <slot></slot>
+          </div>
         </div>
+
+        <footer class="static-footer bg-white border-top">
+          <div class="container-fluid py-3 text-center">
+            <p class="m-0 copyright-text">
+              &copy; 2026 <strong>Sergen App</strong>
+            </p>
+          </div>
+        </footer>
       </div>
-    </div>
+    </main>
 
     <div class="modal fade" id="logoutSidebarModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg rounded-custom-28 overflow-hidden">
+
           <div class="elegant-modal-header bg-dark-gradient">
             <div class="elegant-icon-circle-dark">
               <i class="fas fa-sign-out-alt"></i>
             </div>
           </div>
-          
+
           <div class="elegant-modal-body p-4 pt-5 text-center">
             <h4 class="fw-bold text-dark mt-2">¿Cerrar Sesión?</h4>
             <p class="text-muted small px-2">
               Estás por salir de la plataforma. Asegúrate de haber guardado todos tus cambios.
             </p>
           </div>
-          
+
           <div class="elegant-modal-footer p-4 pt-0 d-flex flex-column gap-2">
             <button class="btn-elegant-dark" @click="executeLogout">
               SALIR AHORA
@@ -127,20 +137,29 @@ const executeLogout = async () => {
 onMounted(() => {
   const toggleButton = document.getElementById('menu-toggle');
   const wrapper = document.getElementById('wrapper');
-  if (toggleButton && wrapper) {
-    toggleButton.addEventListener('click', (e) => {
+  if (toggleButton) {
+    toggleButton.onclick = (e) => {
       e.preventDefault();
       wrapper.classList.toggle('toggled');
-    });
+    };
   }
 });
 </script>
 
 <style scoped>
-/* --- SIDEBAR PREMIUM --- */
+/* --- ESTRUCTURA PRINCIPAL --- */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+/* --- SIDEBAR --- */
 #sidebar-wrapper {
   width: 280px;
-  min-height: 100vh;
+  flex-shrink: 0;
   background: linear-gradient(180deg, #2d4a22 0%, #1b3014 100%);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
@@ -152,15 +171,15 @@ onMounted(() => {
 }
 
 .logo-circle-premium {
-  width: 60px;
-  height: 60px;
+  width: 55px;
+  height: 55px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-radius: 18px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
   color: #c0da63;
   margin: 0 auto 15px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -171,32 +190,25 @@ onMounted(() => {
   font-weight: 800;
   letter-spacing: -1px;
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
 }
 
 .brand-subtitle {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 2px;
   font-weight: 700;
 }
 
-/* --- NAV LINKS --- */
 .nav-link-premium {
   display: flex;
   align-items: center;
-  padding: 14px 20px;
+  padding: 13px 18px;
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  border-radius: 16px;
+  border-radius: 14px;
   font-weight: 600;
-  transition: 0.3s;
-}
-
-.nav-link-premium i {
-  font-size: 1.2rem;
-  width: 25px;
   transition: 0.3s;
 }
 
@@ -208,15 +220,15 @@ onMounted(() => {
 .nav-link-premium.router-link-exact-active {
   background: #c0da63;
   color: #1b3014;
-  box-shadow: 0 10px 20px -5px rgba(192, 218, 99, 0.3);
+  box-shadow: 0 8px 15px rgba(192, 218, 99, 0.2);
 }
 
 .btn-logout-sidebar {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 14px;
   color: #ff8e8e;
   font-weight: 700;
   text-align: left;
@@ -226,36 +238,48 @@ onMounted(() => {
 .btn-logout-sidebar:hover {
   background: #e11d48;
   color: white;
+  border-color: transparent;
 }
 
-/* --- PAGE CONTENT --- */
+/* --- CONTENIDO --- */
 #page-content-wrapper {
   flex-grow: 1;
-  height: 100vh;
-  overflow: hidden;
-  background: #f8fafc;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
-.content-scroll {
-  height: 100vh;
+.main-scroll-area {
   overflow-y: auto;
-  padding: 20px;
 }
 
-.btn-toggle-custom {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  z-index: 1100;
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  background: white;
-  border: none;
+.content-padding {
+  padding: 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .content-padding {
+    padding: 4.5rem 0.75rem 1rem; /* El primer valor es alto por el botón toggle móvil */
+  }
+}
+
+/* --- FOOTER --- */
+.static-footer {
+  width: 100%;
+  z-index: 5;
+}
+
+.copyright-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.copyright-text strong {
   color: #2d4a22;
 }
 
-/* --- MODAL ELEGANTE (CERRAR SESIÓN) --- */
+/* --- MODAL ESTILO PREMIUM RECUPERADO --- */
 .bg-dark-gradient {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   height: 90px;
@@ -277,10 +301,12 @@ onMounted(() => {
   color: #1e293b;
   position: absolute;
   bottom: -33px;
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
 }
 
-.rounded-custom-28 { border-radius: 28px !important; }
+.rounded-custom-28 {
+  border-radius: 28px !important;
+}
 
 .btn-elegant-dark {
   background: #1e293b;
@@ -292,7 +318,10 @@ onMounted(() => {
   transition: 0.3s;
 }
 
-.btn-elegant-dark:hover { background: #000; transform: translateY(-2px); }
+.btn-elegant-dark:hover {
+  background: #000;
+  transform: translateY(-2px);
+}
 
 .btn-elegant-light {
   background: #f1f5f9;
@@ -304,25 +333,59 @@ onMounted(() => {
   transition: 0.3s;
 }
 
-/* --- LOADING OVERLAY --- */
-.loading-overlay {
-  position: fixed; inset: 0; background: rgba(255, 255, 255, 0.85);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 9999; backdrop-filter: blur(4px);
-}
-.text-success-custom { color: #2d4a22; }
-
 /* --- RESPONSIVE --- */
+.btn-toggle-custom {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 1100;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: white;
+  color: #2d4a22;
+  border: none;
+}
+
 @media (max-width: 991.98px) {
   #sidebar-wrapper {
-    position: fixed;
-    margin-left: -280px;
+    position: absolute;
+    left: -280px;
+    height: 100%;
   }
+
   #wrapper.toggled #sidebar-wrapper {
-    margin-left: 0;
+    left: 0;
+  }
+
+  .content-padding {
+    padding: 5rem 1.2rem 1.5rem;
   }
 }
 
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* --- LOADING OVERLAY --- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(5px);
+}
+
+.text-success-custom {
+  color: #2d4a22;
+}
 </style>
