@@ -1,28 +1,37 @@
-// import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+// import { ref, computed } from 'vue';
 // import { useSessionPropertyStore } from '@/store/SessionProperty';
 // import { BovineService } from '@/services/management/BovineService';
 // import { ControlBovineService } from '@/services/management/ControlBovineService';
+// import { ControlBovine } from '@/model/management/ControlBovine';
+
+// let lastReadTime = 0;
+// let lastChip = '';
 
 // export function useSerialReader() {
 //   const port = ref(null);
 //   const reader = ref(null);
-//   const connectionState = ref('disconnected');
 //   const isConnecting = ref(false);
 //   const chipId = ref(null);
+  
 //   const sessionPropertyStore = useSessionPropertyStore();
-
 //   const bovineService = new BovineService();
 //   const controlBovineService = new ControlBovineService();
 
-//   const propertyId = sessionPropertyStore.getPropertyId;
-
 //   const BAUD_RATE = 9600;
 //   const TEXT_DECODER = new TextDecoder();
+//   const MOCK_MODE = false; 
+
+//   const connectionState = computed({
+//     get: () => sessionPropertyStore.connectionState,
+//     set: (val) => sessionPropertyStore.setConnectionState(val)
+//   });
+
+//   const propertyId = sessionPropertyStore.getPropertyId;
 
 //   const connectionStatus = computed(() => {
 //     if (connectionState.value === 'connected') return 'Lector Conectado y Listo.';
 //     if (connectionState.value === 'connecting') return 'Esperando selección de puerto...';
-//     if (!('serial' in navigator)) return 'ERROR: Web Serial API no soportada. Use Chrome/Edge.';
+//     if (!('serial' in navigator) && !MOCK_MODE) return 'ERROR: Web Serial API no soportada.';
 //     return 'Lector Desconectado. Haga clic para conectar.';
 //   });
 
@@ -46,50 +55,30 @@
 
 //   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-//   async function attemptOpenPort(portInstance, attempts = 2) {
-//     for (let i = 0; i < attempts; i++) {
-//       try {
-//         await portInstance.open({ baudRate: BAUD_RATE });
-//         return;
-//       } catch (error) {
-//         if (i < attempts - 1 && (error.name === 'NetworkError' || error.name === 'InvalidStateError')) {
-//           console.warn(`Intento ${i + 1} fallido. Esperando 1.5s...`);
-//           await sleep(1500);
-//         } else {
-//           throw error;
-//         }
-//       }
-//     }
-//   }
-
 //   async function connectReader() {
-//     if (!('serial' in navigator)) {
-//       connectionState.value = 'disconnected';
-//       console.error('Web Serial API no soportada.');
+//     if (MOCK_MODE) {
+//       isConnecting.value = true;
+//       connectionState.value = 'connecting';
+//       await sleep(1000); 
+//       connectionState.value = 'connected';
+//       isConnecting.value = false;
 //       return;
 //     }
 
-//     await disconnectReader(); // Limpieza previa
+//     if (!('serial' in navigator)) return;
+    
+//     await disconnectReader();
 
 //     isConnecting.value = true;
 //     connectionState.value = 'connecting';
 
 //     try {
-//       const ports = await navigator.serial.getPorts();
-//       if (ports.length > 0) {
-//         console.warn("Puerto ya abierto. Evitando reconexión automática.");
-//         return;
-//       }
-
 //       port.value = await navigator.serial.requestPort();
-//       await attemptOpenPort(port.value);
-
+//       await port.value.open({ baudRate: BAUD_RATE });
 //       connectionState.value = 'connected';
 //       readSerialData();
-
 //     } catch (error) {
 //       connectionState.value = 'disconnected';
-//       console.error('Error al conectar:', error);
 //       port.value = null;
 //     } finally {
 //       isConnecting.value = false;
@@ -98,90 +87,87 @@
 
 //   async function disconnectReader() {
 //     if (reader.value) {
-//       try { await reader.value.cancel(); } catch (e) { console.warn("Error cancelando reader:", e); }
-//       try { reader.value.releaseLock(); } catch (e) { console.warn("Error liberando reader:", e); }
-//       reader.value = null;
+//         try {
+//             await reader.value.cancel();
+//             reader.value.releaseLock();
+//         } catch (e) {}
+//         reader.value = null;
 //     }
-
 //     if (port.value) {
-//       try {
-//         await port.value.close();
-//         await sleep(1500);
-//       } catch (e) {
-//         console.warn("Error al cerrar el puerto:", e);
-//       }
-//       port.value = null;
+//         try {
+//             await port.value.close();
+//         } catch (e) {}
+//         port.value = null;
 //     }
-
 //     connectionState.value = 'disconnected';
-//     sessionPropertyStore.setChipSerie(null);
+//   }
+
+//   async function executeLogic(buffer) {
+//     try {
+//       const cleanSerie = buffer.trim();
+//       if (!cleanSerie) return;
+
+//       const now = Date.now();
+//       if (cleanSerie === lastChip && (now - lastReadTime) < 3000) {
+//         return;
+//       }
+
+//       lastReadTime = now;
+//       lastChip = cleanSerie;
+
+//       chipId.value = cleanSerie;
+//       sessionPropertyStore.setChipSerie(cleanSerie);
+
+//       const bovine = await bovineService.getBySerie(cleanSerie, propertyId);
+
+//       if (!bovine) {
+//         sessionPropertyStore.clearBovine();
+//         return;
+//       }
+
+//       sessionPropertyStore.setBovine(bovine);
+
+//       const protocolId = sessionPropertyStore.getProtocolId;
+      
+//       const controlData = new ControlBovine({
+//         bovine_id: bovine.id,
+//         control_id: protocolId,
+//         property_id: propertyId
+//       });
+      
+//       const relation = await controlBovineService.createControlBovine(controlData);
+
+//       if (relation && relation.id) {
+//         sessionPropertyStore.setControlBovineId(relation.id);
+//       }
+//     } catch (error) {
+//       console.error(error);
+//     }
 //   }
 
 //   async function readSerialData() {
 //     if (!port.value || !port.value.readable) return;
-
+    
 //     reader.value = port.value.readable.getReader();
-//     let buffer = '';
-
+    
 //     try {
 //       while (connectionState.value === 'connected') {
 //         const { value, done } = await reader.value.read();
 //         if (done) break;
-
-//         buffer = TEXT_DECODER.decode(value, { stream: true }).trim();
-//         if (!buffer) continue;
-
-//         chipId.value = buffer;
-//         sessionPropertyStore.setChipSerie(buffer);
-
-//         console.log("RFID leído:", buffer);
-
-//         // 1️⃣ Buscar bovino
-//         const bovine = await bovineService.getBySerie(buffer);
-
-//         if (!bovine) {
-//           console.warn("No existe bovino con ese chip");
-//           sessionPropertyStore.clearBovine();
-//           return;
+        
+//         const decoded = TEXT_DECODER.decode(value);
+//         if (decoded) {
+//           await executeLogic(decoded);
 //         }
-
-//         // 2️⃣ Guardar en sesión
-//         sessionPropertyStore.setBovine(bovine);
-
-//         console.log("Bovino activo:", bovine.name);
-
-//         // 3️⃣ Crear vínculo Control-Bovine
-//         const protocolId = sessionPropertyStore.getProtocolId;
-//         const relation = await controlBovineService.createControlBovine({
-//           bovine_id: bovine.id,
-//           control_id: protocolId,
-//           property_id: propertyId
-//         });
-
-//         sessionPropertyStore.setControlBovineId(relation.id);
-
-//         console.log("ControlBovine creado:", relation.id);
+//       }
+//     } catch (error) {
+//       await disconnectReader();
+//     } finally {
+//       if (reader.value) {
+//         reader.value.releaseLock();
 //       }
 //     }
-//     catch (error) {
-//       console.error("Error RFID:", error);
-//       await disconnectReader();
-//     }
 //   }
-
-
-//   function handleUnload() {
-//     disconnectReader();
-//   }
-
-//   onMounted(() => {
-//     window.addEventListener('beforeunload', handleUnload);
-//   });
-
-//   onBeforeUnmount(() => {
-//     window.removeEventListener('beforeunload', handleUnload);
-//     disconnectReader();
-//   });
 
 //   return {
 //     connectionState,
@@ -197,8 +183,8 @@
 //   };
 // }
 
-// 
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+// modo prueba
+import { ref, computed } from 'vue';
 import { useSessionPropertyStore } from '@/store/SessionProperty';
 import { BovineService } from '@/services/management/BovineService';
 import { ControlBovineService } from '@/services/management/ControlBovineService';
@@ -207,10 +193,16 @@ import { ControlBovine } from '@/model/management/ControlBovine';
 export function useSerialReader() {
   const port = ref(null);
   const reader = ref(null);
-  const connectionState = ref('disconnected');
   const isConnecting = ref(false);
   const chipId = ref(null);
+  
   const sessionPropertyStore = useSessionPropertyStore();
+
+  // Accedemos directamente a la variable persistente del store
+  const connectionState = computed({
+    get: () => sessionPropertyStore.connectionState,
+    set: (val) => sessionPropertyStore.setConnectionState(val)
+  });
 
   const bovineService = new BovineService();
   const controlBovineService = new ControlBovineService();
@@ -220,19 +212,18 @@ export function useSerialReader() {
   const BAUD_RATE = 9600;
   const TEXT_DECODER = new TextDecoder();
 
-  // --- CONFIGURACIÓN DE PRUEBAS (HARDCODE) ---
-  const MOCK_MODE = true; // Cambiar a false cuando tengas el lector
+  // --- CONFIGURACIÓN DE PRUEBAS ---
+  const MOCK_MODE = true; 
   const TEST_SERIE = 'B-0015';
   const TEST_CONTROL_ID = 21;
 
   const connectionStatus = computed(() => {
-    if (connectionState.value === 'connected') return 'MODO PRUEBA: Lector Simulado.';
-    if (connectionState.value === 'connecting') return 'Iniciando simulación...';
+    if (connectionState.value === 'connected') return 'Lector Conectado y Listo.';
+    if (connectionState.value === 'connecting') return 'Esperando selección de puerto...';
     if (!('serial' in navigator) && !MOCK_MODE) return 'ERROR: Web Serial API no soportada.';
-    return 'Lector Desconectado (Click para simular).';
+    return 'Lector Desconectado. Haga clic para conectar.';
   });
 
-  // ... (connectionClass, connectionIcon y buttonClass se mantienen igual)
   const connectionClass = computed(() => {
     if (connectionState.value === 'connected') return 'bg-success text-white';
     if (connectionState.value === 'connecting') return 'bg-info text-white';
@@ -255,22 +246,19 @@ export function useSerialReader() {
 
   async function connectReader() {
     if (MOCK_MODE) {
-      // SIMULACIÓN PARA PRUEBAS
       isConnecting.value = true;
       connectionState.value = 'connecting';
-      await sleep(1000); // Simular delay de conexión
+      await sleep(1000); 
 
       connectionState.value = 'connected';
       isConnecting.value = false;
 
-      console.log("🚀 MODO PRUEBA ACTIVO: Ejecutando lógica estática...");
-      executeLogic(TEST_SERIE); // Dispara la lógica directamente con la serie fija
+      console.log("🚀 MODO PRUEBA ACTIVO: Lógica persistente.");
+      executeLogic(TEST_SERIE); 
       return;
     }
 
-    // Lógica real (se mantiene igual para cuando pongas MOCK_MODE = false)
     if (!('serial' in navigator)) return;
-    await disconnectReader();
     isConnecting.value = true;
     connectionState.value = 'connecting';
     try {
@@ -287,46 +275,51 @@ export function useSerialReader() {
   }
 
   async function disconnectReader() {
-    // ... (Limpieza normal)
+    // Si hay un lector real, cerramos el stream
+    if (reader.value) {
+        await reader.value.cancel();
+        reader.value.releaseLock();
+        reader.value = null;
+    }
+    if (port.value) {
+        await port.value.close();
+        port.value = null;
+    }
     connectionState.value = 'disconnected';
-    sessionPropertyStore.setChipSerie(null);
+    // Nota: Ya no reseteamos el chipSerie aquí para que persista en el Dashboard
   }
 
-  // Nueva función para separar la lógica del origen de los datos (Real o Mock)
   async function executeLogic(buffer) {
     try {
       chipId.value = buffer;
       sessionPropertyStore.setChipSerie(buffer);
-      console.log("🔍 Procesando Serie:", buffer);
+      console.log("Chip en store:", sessionPropertyStore.getChipSerie);
 
-      // 1️⃣ Buscar bovino
       const bovine = await bovineService.getBySerie(buffer, propertyId);
 
       if (!bovine) {
-        console.warn("❌ No existe bovino con serie:", buffer);
+        console.warn("❌ Bovino no encontrado.");
         sessionPropertyStore.clearBovine();
         return;
       }
 
-      // 2️⃣ Guardar en sesión
       sessionPropertyStore.setBovine(bovine);
-      console.log("🐮 Bovino encontrado:", bovine.rgd);
 
-      // 3️⃣ Crear vínculo Control-Bovine (Usando el Control ID hardcodeado)
       const protocolId = MOCK_MODE ? TEST_CONTROL_ID : sessionPropertyStore.getProtocolId;
       const controlData = new ControlBovine({
         bovine_id: bovine.id,
         control_id: protocolId,
         property_id: propertyId
       });
+      
       const relation = await controlBovineService.createControlBovine(controlData);
 
       if (relation && relation.id) {
         sessionPropertyStore.setControlBovineId(relation.id);
-        console.log("✅ ControlBovine vinculado ID:", relation.id);
+        console.log("✅ Vinculado ID:", relation.id);
       }
     } catch (error) {
-      console.error("❌ Error en la lógica de procesamiento:", error);
+      console.error("❌ Error lógica:", error);
     }
   }
 
@@ -338,19 +331,18 @@ export function useSerialReader() {
         const { value, done } = await reader.value.read();
         if (done) break;
         const buffer = TEXT_DECODER.decode(value, { stream: true }).trim();
-        if (buffer) executeLogic(buffer); // Llama a la lógica centralizada
+        if (buffer) executeLogic(buffer); 
       }
     } catch (error) {
-      await disconnectReader();
+      connectionState.value = 'disconnected';
+    } finally {
+        if (reader.value) {
+            reader.value.releaseLock();
+        }
     }
   }
 
-  // ... (Lifecycle hooks iguales)
-  onMounted(() => { window.addEventListener('beforeunload', disconnectReader); });
-  onBeforeUnmount(() => {
-    window.removeEventListener('beforeunload', disconnectReader);
-    disconnectReader();
-  });
+  // HEMOS ELIMINADO onBeforeUnmount PARA QUE LA CONEXIÓN NO SE CORTE AL CAMBIAR DE PÁGINA
 
   return {
     connectionState, connectionStatus, connectionClass, connectionIcon,

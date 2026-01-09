@@ -316,7 +316,7 @@ function showToast(type, message) {
 }
 
 onMounted(() => {
-    if (sessionPropertyStore.onScanned()) {
+    if (sessionPropertyStore.onScanned) {
         loadInitialData();
     }
 });

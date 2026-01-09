@@ -19,6 +19,10 @@ console.log("en la propiedad con el place:"+sessionPropertyStore.getPlace);
 console.log("en la propiedad con el phone:"+sessionPropertyStore.getPhone);
 console.log("en la propiedad con el owner:"+sessionPropertyStore.getOwner);
 console.log("isWorked:"+sessionPropertyStore.isWorked);
-
+console.log("chipId:"+sessionPropertyStore.getChipSerie);
+console.log("bovine escaneado:"+ sessionPropertyStore.getBovine);
+console.log("esta escaneado el bovino?:"+ sessionPropertyStore.onScanned);
+console.log("control bovine escaneado:"+ sessionPropertyStore.getControlBovineId);
+console.log("estado de conexion:"+ sessionPropertyStore.getConnectionState);
 
 </script>

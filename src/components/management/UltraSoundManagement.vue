@@ -1,7 +1,7 @@
 <template>
   <div class="ultrasound-container">
 
-    <div v-if="isLoading" class="loading-state-premium">
+    <div v-if="!sessionPropertyStore.onScanned" class="loading-state-premium">
       <div class="spinner-border text-success-premium mb-3" role="status"></div>
       <p class="loading-text-premium">{{ loadingText }}</p>
     </div>
@@ -161,7 +161,6 @@ const service = new UltrasoundService()
 const sessionPropertyStore = useSessionPropertyStore()
 
 const item = ref(null)
-const isLoading = ref(false)
 const isSaving = ref(false)
 const loadingText = ref('Escanee un bovino para cargar los datos...')
 const showForm = ref(false)
@@ -276,7 +275,7 @@ function statusBadgeClass(value) {
 }
 
 onMounted(() => {
-  if (sessionPropertyStore.onScanned()) {
+  if (sessionPropertyStore.onScanned) {
     loadItem()
   }
 });

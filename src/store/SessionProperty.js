@@ -21,6 +21,9 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const isLoaded = ref(false);
     const bovine = ref(null);
     const controlBovineId = ref(null);
+    
+    // Nueva variable persistente para el estado del lector
+    const connectionState = ref('disconnected');
 
     const isAuthenticated = computed(() => !!token.value);
     const getUser = computed(() => user.value);
@@ -36,6 +39,7 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
     const getBovine = computed(() => bovine.value);
     const getControlBovineId = computed(() => controlBovineId.value);
     const onScanned = computed(() => chipSerie.value !== null);
+    const getConnectionState = computed(() => connectionState.value);
 
     async function login(username, password) {
         try {
@@ -116,25 +120,28 @@ export const useSessionPropertyStore = defineStore('sessionProperty', () => {
         chipSerie.value = null;
         bovine.value = null;
         controlBovineId.value = null;
+        connectionState.value = 'disconnected';
     }
 
     const setBovine = (b) => bovine.value = b;
     const setControlBovineId = (id) => controlBovineId.value = id;
     const clearBovine = () => { bovine.value = null; controlBovineId.value = null; };
     const setChipSerie = (serie) => chipSerie.value = serie;
+    const setConnectionState = (state) => connectionState.value = state;
 
     return {
         token, user, isWorking, propertyId, protocolId, 
         name, place, phone, owner, 
-        chipSerie, isLoaded, bovine, controlBovineId,
+        chipSerie, isLoaded, bovine, controlBovineId, connectionState,
 
         isAuthenticated, getUser, getToken, isWorked, 
         getPropertyId, getName, getPlace, getPhone, 
         getOwner, getProtocolId, getChipSerie, getBovine, getControlBovineId, onScanned,
+        getConnectionState,
 
         login, logout, fetchUserProfile, startWork, finishWork,
-        setBovine, setControlBovineId, clearBovine, setChipSerie
+        setBovine, setControlBovineId, clearBovine, setChipSerie, setConnectionState
     }
 }, {
-    persist: true //guardará todo lo que está en el return
+    persist: true 
 });

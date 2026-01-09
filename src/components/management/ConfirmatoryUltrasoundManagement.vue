@@ -1,7 +1,7 @@
 <template>
   <div class="confirmatory-ultrasound-container">
 
-    <div v-if="isLoading" class="loading-state-premium">
+    <div v-if="!sessionPropertyStore.onScanned" class="loading-state-premium">
       <div class="spinner-border text-success-premium mb-3" role="status"></div>
       <p class="loading-text-premium">{{ loadingText }}</p>
     </div>
@@ -346,7 +346,6 @@ const sessionPropertyStore = useSessionPropertyStore()
    STATE
 ========================= */
 const ultrasounds = ref([])
-const isLoading = ref(false)
 const isSaving = ref(false)
 const loadingText = ref('Sincronizando...')
 const editing = ref(false)
@@ -492,7 +491,7 @@ function showToast(type, message) {
 }
 
 onMounted(() => {
-  if (sessionPropertyStore.onScanned()) {
+  if (sessionPropertyStore.onScanned) {
     listUltrasounds()
   }
 })
