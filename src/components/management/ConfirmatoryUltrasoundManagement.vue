@@ -54,9 +54,9 @@
 
               <tr v-if="ultrasounds.length === 0">
                 <td colspan="5" class="text-center py-5">
-                  <div class="empty-table-state ps-5">
+                  <div class="empty-table-state">
                     <i class="fas fa-wave-square mb-3 opacity-50 fs-2"></i>
-                    <p class="text-muted fw-bold m-0">No se han registrado ecografías confirmatorias</p>
+                    <p class="text-muted fw-bold m-0">No se han registrado ecografías</p>
                     <p class="text-muted small">Haga clic en "Nueva Ecografía" para añadir un registro.</p>
                   </div>
                 </td>
@@ -105,7 +105,6 @@
                     <textarea v-model="form.refugo" class="form-control-premium" rows="2"
                       placeholder="Indique el motivo clínico o productivo del fracaso"></textarea>
                   </div>
-
                 </div>
 
                 <div class="d-flex gap-3 mt-4">
@@ -137,8 +136,170 @@
       </div>
     </div>
 
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+      <div id="liveToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div id="toast-message" class="toast-body flex-grow-1 p-3 fw-bold"></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted, watch, computed } from 'vue'
+import { Modal, Toast } from 'bootstrap'
+import { ConfirmatoryUltrasoundService } from '@/services/management/ConfirmatoryUltrasoundService'
+import { useSessionPropertyStore } from '@/store/SessionProperty'
+import { ConfirmatoryUltrasound } from '@/model/management/ConfirmatoryUltrasound'
+
+const service = new ConfirmatoryUltrasoundService()
+const sessionPropertyStore = useSessionPropertyStore()
+
+
+const ultrasounds = ref([])
+const isSaving = ref(false)
+const loadingText = ref('Sincronizando...')
+const editing = ref(false)
+const confirmationDeleteModal = ref(false)
+const selectedId = ref(null)
+
+const form = ref({
+  id: null,
+  status: '',
+  observation: '',
+  refugo: '',
+  date: new Date().toISOString().split('T')[0]
+})
+
+const errors = ref({ status: false, date: false })
+
+/* =========================
+   UI HELPERS (TOAST)
+========================= */
+function showToast(message, type = 'success') {
+  const toastEl = document.getElementById('liveToast');
+  if (toastEl) {
+    toastEl.className = `toast align-items-center border-0 shadow-lg text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+    const msgEl = document.getElementById('toast-message');
+    if (msgEl) msgEl.textContent = message;
+    new Toast(toastEl).show();
+  }
+}
+
+/* =========================
+   VALIDACIONES
+========================= */
+watch(() => form.value, (val) => {
+  errors.value.status = !val.status
+  errors.value.date = !val.date
+}, { deep: true })
+
+const isFormValid = computed(() => {
+  const statusFilled = !!form.value.status
+  const dateFilled = !!form.value.date
+  const refugoValid = !(form.value.status === 'empty' || form.value.status === 'discart') || !!form.value.refugo
+  return statusFilled && dateFilled && refugoValid
+})
+
+/* =========================
+   CRUD
+========================= */
+async function listUltrasounds() {
+  loadingText.value = 'Cargando registros ecográficos...'
+  try {
+    ultrasounds.value = await service.list(sessionPropertyStore.getControlBovineId)
+  } catch (error) {
+    showToast('Error al cargar la lista.', 'danger')
+  }
+}
+
+function openAddForm() {
+  editing.value = false
+  form.value = { id: null, status: '', observation: '', date: new Date().toISOString().split('T')[0], refugo: '' }
+  const modalEl = document.getElementById('ultrasoundModal');
+  new Modal(modalEl).show();
+}
+
+function openEditForm(item) {
+  editing.value = true
+  form.value = { ...item }
+  const modalEl = document.getElementById('ultrasoundModal');
+  new Modal(modalEl).show();
+}
+
+function cancelForm() {
+  errors.value = { status: false, date: false }
+}
+
+async function submitForm() {
+  if (!isFormValid.value) return
+  isSaving.value = true
+  try {
+    if (editing.value) {
+      await service.update(form.value.id, form.value)
+      showToast('Ecografía actualizada correctamente.')
+    } else {
+      const dataToSave = new ConfirmatoryUltrasound({
+        ...form.value,
+        controlBovineId: sessionPropertyStore.getControlBovineId
+      })
+      await service.create(dataToSave)
+      showToast('Nuevo diagnóstico registrado.')
+    }
+    await listUltrasounds()
+    const modalEl = document.getElementById('ultrasoundModal')
+    const modalInstance = Modal.getInstance(modalEl)
+    if (modalInstance) modalInstance.hide()
+  } catch (error) {
+    showToast('Error al procesar la solicitud.', 'danger')
+  } finally {
+    isSaving.value = false
+  }
+}
+
+function confirmDelete(id) {
+  selectedId.value = id
+  confirmationDeleteModal.value = true
+}
+
+async function executeDelete() {
+  try {
+    await service.delete(selectedId.value)
+    showToast('Registro eliminado correctamente.')
+    confirmationDeleteModal.value = false
+    await listUltrasounds()
+  } catch (error) {
+    showToast('No se pudo eliminar el registro.', 'danger')
+  }
+}
+
+/* =========================
+   HELPERS FORMATO
+========================= */
+function statusLabel(value) {
+  const labels = { 'pregnant': 'Preñada', 'empty': 'Vacía', 'refuge': 'Refugio', 'discart': 'Descartada' }
+  return labels[value] || value
+}
+
+function statusBadgeClass(value) {
+  const classes = {
+    'pregnant': 'bg-success-soft text-success',
+    'empty': 'bg-danger-soft text-danger',
+    'discart': 'bg-info-soft text-info'
+  }
+  return classes[value] || 'bg-light text-muted'
+}
+
+onMounted(() => {
+  if (sessionPropertyStore.onScanned) {
+    listUltrasounds()
+  }
+})
+</script>
 
 <style scoped>
 /* Estilos unificados Premium */
@@ -246,15 +407,6 @@
   transform: scale(1.2);
 }
 
-.empty-table-state {
-  color: #94a3b8;
-}
-
-/* Ajustes Modal */
-.modal-content {
-  border-radius: 20px;
-}
-
 .label-premium {
   font-size: 0.7rem;
   font-weight: 800;
@@ -272,11 +424,6 @@
   color: #1e293b;
 }
 
-.form-control-premium:focus {
-  border-color: #10b981;
-  outline: none;
-}
-
 .btn-success-premium {
   background: #2d4a22;
   color: #c0da63;
@@ -284,7 +431,6 @@
   padding: 14px 28px;
   border-radius: 14px;
   font-weight: 700;
-  transition: 0.3s;
 }
 
 .btn-light-premium {
@@ -307,10 +453,7 @@
 
 .confirmation-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
@@ -332,164 +475,3 @@
   margin: 0 auto;
 }
 </style>
-
-<script setup>
-import { ref, onMounted, watch, computed } from 'vue'
-import { Modal, Toast } from 'bootstrap'
-import { ConfirmatoryUltrasoundService } from '@/services/management/ConfirmatoryUltrasoundService'
-import { useSessionPropertyStore } from '@/store/SessionProperty'
-
-const service = new ConfirmatoryUltrasoundService()
-const sessionPropertyStore = useSessionPropertyStore()
-
-/* =========================
-   STATE
-========================= */
-const ultrasounds = ref([])
-const isSaving = ref(false)
-const loadingText = ref('Sincronizando...')
-const editing = ref(false)
-const confirmationDeleteModal = ref(false)
-const selectedId = ref(null)
-
-const form = ref({
-  id: null,
-  status: '',
-  observation: '',
-  refugo: '',
-  date: new Date().toISOString().split('T')[0]
-})
-
-const errors = ref({ status: false, date: false })
-
-/* =========================
-   VALIDACIONES
-========================= */
-watch(() => form.value, (val) => {
-  errors.value.status = !val.status
-  errors.value.date = !val.date
-}, { deep: true })
-
-const isFormValid = computed(() => {
-  const statusFilled = !!form.value.status
-  const dateFilled = !!form.value.date
-  const refugoValid = !(form.value.status === 'empty' || form.value.status === 'discart') || !!form.value.refugo
-  return statusFilled && dateFilled && refugoValid
-})
-/* =========================
-   CRUD
-========================= */
-async function listUltrasounds() {
-  loadingText.value = 'Cargando registros ecográficos...'
-  try {
-    ultrasounds.value = await service.list(sessionPropertyStore.getControlBovineId)
-  } catch (error) {
-    showToast('error', 'Error al cargar la lista de ecografías.')
-  }
-}
-
-function openModal() {
-  const modalElement = document.getElementById('ultrasoundModal')
-  const modalInstance = new Modal(modalElement)
-  modalInstance.show()
-}
-
-function openAddForm() {
-  editing.value = false
-  form.value = { id: null, status: '', observation: '', date: new Date().toISOString().split('T')[0], refugo: '' }
-  openModal()
-}
-
-function openEditForm(item) {
-  editing.value = true
-  form.value = { ...item }
-  openModal()
-}
-
-function cancelForm() {
-  errors.value = { status: false, date: false }
-}
-
-async function submitForm() {
-  if (!isFormValid.value) return
-  isSaving.value = true
-  try {
-    if (editing.value) {
-      await service.update(form.value.id, form.value)
-      showToast('success', 'Ecografía actualizada correctamente.')
-    } else {
-      const dataToSave = {
-        ...form.value,
-        control_bovine_id: sessionPropertyStore.getControlBovineId
-      }
-      await service.create(dataToSave)
-      showToast('success', 'Nuevo diagnóstico registrado.')
-    }
-
-    await listUltrasounds()
-
-    const modalElement = document.getElementById('ultrasoundModal')
-    const modalInstance = Modal.getInstance(modalElement)
-    if (modalInstance) modalInstance.hide()
-
-  } catch (error) {
-    showToast('error', 'Error al procesar la solicitud.')
-  } finally {
-    isSaving.value = false
-  }
-}
-
-function confirmDelete(id) {
-  selectedId.value = id
-  confirmationDeleteModal.value = true
-}
-
-async function executeDelete() {
-  try {
-    await service.delete(selectedId.value)
-    showToast('success', 'Registro eliminado correctamente.')
-    confirmationDeleteModal.value = false
-    await listUltrasounds()
-  } catch (error) {
-    showToast('error', 'No se pudo eliminar el registro.')
-  }
-}
-
-/* =========================
-   HELPERS UI
-========================= */
-function statusLabel(value) {
-  const labels = { 'pregnant': 'Preñada', 'empty': 'Vacía', 'refuge': 'Refugio', 'discart': 'Descartada' }
-  return labels[value] || value
-}
-
-function statusBadgeClass(value) {
-  const classes = {
-    'pregnant': 'bg-success-soft text-success',
-    'empty': 'bg-danger-soft text-danger',
-    'discart': 'bg-info-soft text-info'
-  }
-  return classes[value] || 'bg-light text-muted'
-}
-
-function showToast(type, message) {
-  const toastEl = document.getElementById('liveToast')
-  if (toastEl) {
-    // Seteamos el mensaje dinámico para evitar el error de ESLint
-    const toastBody = toastEl.querySelector('.toast-body') || toastEl
-    toastBody.textContent = message
-
-    // Aplicamos una clase según el tipo (opcional, mejora la UX)
-    toastEl.className = `toast align-items-center text-white border-0 ${type === 'error' ? 'bg-danger' : 'bg-success'}`
-
-    const bsToast = new Toast(toastEl)
-    bsToast.show()
-  }
-}
-
-onMounted(() => {
-  if (sessionPropertyStore.onScanned) {
-    listUltrasounds()
-  }
-})
-</script>

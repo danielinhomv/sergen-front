@@ -21,7 +21,7 @@ export class ConfirmatoryUltrasoundService extends HttpService {
             });
 
             const data = await this.handleResponse(response);
-            const list = Array.isArray(data) ? data : (data.ultrasounds || []);
+            const list = Array.isArray(data) ? data : (data.confirmatoryUltrasounds || []);
             return list.map(item => ConfirmatoryUltrasound.fromJson(item));
         } catch (error) {
             console.error('ConfirmatoryUltrasoundService list Error:', error);

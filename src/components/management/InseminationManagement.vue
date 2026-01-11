@@ -71,10 +71,12 @@
                             </tr>
                             <tr v-if="inseminations.length === 0">
                                 <td colspan="6" class="text-center py-5">
-                                    <div class="empty-table-state d-flex flex-column align-items-center justify-content-center">
+                                    <div
+                                        class="empty-table-state d-flex flex-column align-items-center justify-content-center">
                                         <i class="fas fa-syringe mb-3 opacity-50 fs-2"></i>
                                         <p class="text-muted fw-bold m-0">No se han registrado inseminaciones</p>
-                                        <p class="text-muted small">Haga clic en "Nueva Inseminación" para añadir un registro.</p>
+                                        <p class="text-muted small">Haga clic en "Nueva Inseminación" para añadir un
+                                            registro.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -173,6 +175,17 @@
                 </div>
             </div>
         </div>
+
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+            <div id="liveToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert"
+                aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div id="toast-message" class="toast-body flex-grow-1 p-3 fw-bold"></div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -189,9 +202,6 @@ const service = new InseminationService();
 const bullService = new BullService();
 const sessionPropertyStore = useSessionPropertyStore();
 
-/* ======================
-   ESTADO (ESTRUCTURA UNIFICADA)
-====================== */
 const inseminations = ref([]);
 const bullsList = ref([]);
 const isSaving = ref(false);
@@ -210,9 +220,28 @@ const form = ref({
 });
 
 /* ======================
+   HELPERS UI
+====================== */
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('liveToast');
+    if (toastEl) {
+        toastEl.className = `toast align-items-center border-0 shadow-lg text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+        const msgEl = document.getElementById('toast-message');
+        if (msgEl) msgEl.textContent = message;
+        new Toast(toastEl).show();
+    }
+}
+
+/* ======================
    VALIDACIONES
 ====================== */
-const isFormValid = computed(() => !!form.value.bull && form.value.bodyConditionScore >= 1 && form.value.bodyConditionScore <= 5 && !!form.value.heatQuality && !!form.value.date);
+const isFormValid = computed(() => {
+    return !!form.value.bull &&
+        form.value.bodyConditionScore >= 1 &&
+        form.value.bodyConditionScore <= 5 &&
+        !!form.value.heatQuality &&
+        !!form.value.date;
+});
 
 /* ======================
    CRUD
@@ -228,8 +257,8 @@ async function loadInitialData() {
         inseminations.value = inseminationData;
         bullsList.value = bullsData;
     } catch (error) {
-        showToast('error', 'Error al cargar los datos.');
-    } 
+        showToast('Error al cargar los datos.', 'danger');
+    }
 }
 
 async function saveInsemination() {
@@ -238,19 +267,23 @@ async function saveInsemination() {
     try {
         const data = new Insemination({
             ...form.value,
-            control_bovine_id: sessionPropertyStore.getControlBovineId
+            controlBovineId: sessionPropertyStore.getControlBovineId
         });
 
         if (editing.value) {
             inseminations.value = await service.editInsemination(form.value.id, data);
-            showToast('success', 'Historial actualizado.');
+            showToast('Historial actualizado.');
         } else {
             inseminations.value = await service.createInsemination(data);
-            showToast('success', 'Inseminación registrada con éxito.');
+            showToast('Inseminación registrada con éxito.');
         }
-        Modal.getInstance(document.getElementById('inseminationModal')).hide();
+
+        const modalEl = document.getElementById('inseminationModal');
+        const modalInstance = Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
     } catch (error) {
-        showToast('error', 'Error al guardar.');
+        showToast('Error al guardar.', 'danger');
     } finally {
         isSaving.value = false;
     }
@@ -259,15 +292,15 @@ async function saveInsemination() {
 async function deleteInsemination() {
     try {
         inseminations.value = await service.deleteInsemination(selectedId.value);
-        showToast('success', 'Registro eliminado.');
+        showToast('Registro eliminado.');
         confirmationDeleteModal.value = false;
     } catch (error) {
-        showToast('error', 'Error al eliminar.');
+        showToast('Error al eliminar.', 'danger');
     }
 }
 
 /* ======================
-   HELPERS UI
+   OTRAS FUNCIONES UI
 ====================== */
 function openModal(item = null) {
     if (item) {
@@ -275,9 +308,14 @@ function openModal(item = null) {
         form.value = { ...item };
     } else {
         editing.value = false;
-        form.value = { id: null, bull: '', bodyConditionScore: null, heatQuality: 'well', observation: '', others: '', date: new Date().toISOString().split('T')[0] };
+        form.value = {
+            id: null, bull: '', bodyConditionScore: null,
+            heatQuality: 'well', observation: '', others: '',
+            date: new Date().toISOString().split('T')[0]
+        };
     }
-    new Modal(document.getElementById('inseminationModal')).show();
+    const modalEl = document.getElementById('inseminationModal');
+    new Modal(modalEl).show();
 }
 
 function confirmDelete(id) {
@@ -288,7 +326,8 @@ function confirmDelete(id) {
 function viewFullText(title, content) {
     textModalTitle.value = title;
     textModalContent.value = content;
-    new Modal(document.getElementById('textViewModal')).show();
+    const modalEl = document.getElementById('textViewModal');
+    new Modal(modalEl).show();
 }
 
 function heatLabel(val) {
@@ -301,16 +340,6 @@ function heatBadgeClass(val) {
     return map[val] || 'bg-light';
 }
 
-function showToast(type, message) {
-    const toastEl = document.getElementById('liveToast')
-    if (toastEl) {
-        const toastBody = toastEl.querySelector('.toast-body') || toastEl
-        toastBody.textContent = message
-        const bsToast = new Toast(toastEl)
-        bsToast.show()
-    }
-}
-
 onMounted(() => {
     if (sessionPropertyStore.onScanned) {
         loadInitialData();
@@ -319,7 +348,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* --- CARGA --- */
+/* (Los estilos se mantienen igual ya que son correctos) */
 .loading-state-premium {
     display: flex;
     flex-direction: column;
@@ -354,7 +383,6 @@ onMounted(() => {
     }
 }
 
-/* --- TABLA PREMIUM --- */
 .card-premium-table {
     background: white;
     border-radius: 20px;
@@ -385,11 +413,6 @@ onMounted(() => {
     background-color: #fcfdfc;
 }
 
-.empty-table-state {
-  color: #94a3b8;
-}
-
-/* --- BADGES & ICONS --- */
 .mini-icon-bull {
     width: 32px;
     height: 32px;
@@ -431,7 +454,6 @@ onMounted(() => {
     background-color: #fee2e2 !important;
 }
 
-/* --- BOTONES DE ACCIÓN --- */
 .btn-note {
     border: none;
     width: 30px;
@@ -454,16 +476,11 @@ onMounted(() => {
     color: #64748b;
 }
 
-.btn-note:hover {
-    transform: scale(1.1);
-}
-
 .btn-action-edit {
     border: none;
     background: none;
     color: #f59e0b;
     padding: 8px;
-    transition: 0.2s;
 }
 
 .btn-action-delete {
@@ -471,20 +488,12 @@ onMounted(() => {
     background: none;
     color: #ef4444;
     padding: 8px;
-    transition: 0.2s;
 }
 
-.btn-action-edit:hover,
-.btn-action-delete:hover {
-    transform: scale(1.2);
-}
-
-/* --- FORMULARIOS --- */
 .label-premium {
     font-size: 0.7rem;
     font-weight: 800;
     color: #94a3b8;
-    letter-spacing: 0.5px;
     margin-bottom: 8px;
     display: block;
 }
@@ -498,12 +507,6 @@ onMounted(() => {
     color: #1e293b;
 }
 
-.form-control-premium:focus {
-    border-color: #10b981;
-    outline: none;
-}
-
-/* --- BOTONES --- */
 .btn-success-premium {
     background: #2d4a22;
     color: #c0da63;
@@ -511,34 +514,11 @@ onMounted(() => {
     padding: 12px 24px;
     border-radius: 12px;
     font-weight: 700;
-    transition: 0.3s;
 }
 
-.btn-light-premium {
-    background: #f1f5f9;
-    color: #64748b;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-weight: 700;
-}
-
-.btn-danger-premium {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: 700;
-}
-
-/* --- OVERLAY ELIMINAR --- */
 .confirmation-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(4px);
     display: flex;

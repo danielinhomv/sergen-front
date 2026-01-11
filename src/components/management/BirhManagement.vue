@@ -138,6 +138,17 @@
         </form>
       </div>
     </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+      <div id="liveToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div id="toast-message" class="toast-body flex-grow-1 p-3 fw-bold"></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -165,9 +176,18 @@ const form = ref({
 
 const errors = ref({ birthdate: false, sex: false, birthWeight: false, typeOfBirth: false })
 
-// Helper para centralizar la condición de visibilidad
 function isNormalOrPremature(type) {
   return type === 'normal' || type === 'premeture'
+}
+
+// FUNCIÓN showToast IDÉNTICA A TU COMPONENTE DE SEMENTALES
+function showToast(message, type = 'success') {
+  const toastEl = document.getElementById('liveToast');
+  if (toastEl) {
+    toastEl.className = `toast align-items-center border-0 shadow-lg text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+    document.getElementById('toast-message').textContent = message;
+    new Toast(toastEl).show();
+  }
 }
 
 watch(() => form.value, () => {
@@ -175,7 +195,6 @@ watch(() => form.value, () => {
   errors.value = {
     birthdate: !form.value.birthdate,
     typeOfBirth: !form.value.typeOfBirth,
-    // El sexo y el peso solo dan error si el parto es Normal o Prematuro
     sex: viable ? !form.value.sex : false,
     birthWeight: viable ? (!form.value.birthWeight || parseFloat(form.value.birthWeight) <= 0) : false
   }
@@ -184,14 +203,8 @@ watch(() => form.value, () => {
 const isFormValid = computed(() => {
   const basicValid = form.value.birthdate && form.value.typeOfBirth && 
                      form.value.propertyId && form.value.controlBovineId;
-  
   const viable = isNormalOrPremature(form.value.typeOfBirth);
-  
-  // Si es viable, debe tener sexo y peso > 0. Si no es viable, ignoramos esos campos.
-  const fieldsForViableValid = viable 
-    ? (form.value.sex && form.value.birthWeight > 0) 
-    : true;
-  
+  const fieldsForViableValid = viable ? (form.value.sex && form.value.birthWeight > 0) : true;
   return basicValid && fieldsForViableValid;
 })
 
@@ -202,7 +215,6 @@ async function loadItem() {
     item.value = response
   } catch (error) {
     item.value = null
-    showToast('error', error.message || 'Error al cargar los datos de parto')
   } 
 }
 
@@ -232,26 +244,25 @@ async function submitForm() {
   if (!isFormValid.value) return
   isSaving.value = true
   
-  // Limpiar campos que no aplican a abortos/muertes antes de enviar a la API
   if (!isNormalOrPremature(form.value.typeOfBirth)) {
     form.value.birthWeight = 0;
     form.value.rgd = '';
-    form.value.sex = 'unknown'; // Opcional: enviar un valor neutro si la API lo requiere
+    form.value.sex = 'unknown';
   }
 
   try {
     const birthData = new Birth(form.value)
     if (editing.value) {
       await birthService.updateBirth(form.value.id, birthData)
-      showToast('success', '¡Parto actualizado!')
+      showToast('¡Parto actualizado!');
     } else {
       await birthService.createBirth(birthData)
-      showToast('success', '¡Parto registrado con éxito!')
+      showToast('¡Parto registrado con éxito!');
     }
     await loadItem()
     showForm.value = false
   } catch (error) {
-    showToast('error', error.message || 'Error al guardar')
+    showToast('Error al guardar', 'danger');
   } finally {
     isSaving.value = false
   }
@@ -276,16 +287,6 @@ function statusClass(value) {
   return 'bg-info-soft text-info'
 }
 
-function showToast(type, message) {
-  const toastEl = document.getElementById('liveToast')
-  if (toastEl) {
-    const toastBody = toastEl.querySelector('.toast-body') || toastEl
-    toastBody.textContent = message
-    const bsToast = new Toast(toastEl)
-    bsToast.show()
-  }
-}
-
 onMounted(() => {
   if (sessionPropertyStore.onScanned) {
     loadItem()
@@ -294,7 +295,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* --- ESTRUCTURA DE CARGA (VISIBILIDAD CORREGIDA) --- */
+/* --- ESTRUCTURA DE CARGA --- */
 .loading-state-premium {
   display: flex;
   flex-direction: column;
@@ -322,17 +323,9 @@ onMounted(() => {
 }
 
 @keyframes fadePulse {
-  0% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.6;
-  }
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 /* --- EMPTY STATE --- */
@@ -397,17 +390,9 @@ onMounted(() => {
   letter-spacing: 0.5px;
 }
 
-.bg-success-soft {
-  background-color: #dcfce7 !important;
-}
-
-.bg-danger-soft {
-  background-color: #fee2e2 !important;
-}
-
-.bg-info-soft {
-  background-color: #e0f2fe !important;
-}
+.bg-success-soft { background-color: #dcfce7 !important; }
+.bg-danger-soft { background-color: #fee2e2 !important; }
+.bg-info-soft { background-color: #e0f2fe !important; }
 
 /* --- ELEMENTOS FORM --- */
 .label-premium {
@@ -501,11 +486,5 @@ onMounted(() => {
   background: #f1f5f9;
   color: #64748b;
   transition: 0.3s;
-}
-
-.premium-line {
-  flex: 1;
-  height: 1px;
-  background: #e2e8f0;
 }
 </style>

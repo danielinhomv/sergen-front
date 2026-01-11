@@ -56,8 +56,9 @@ export class BirthService extends HttpService {
             const responseJson = await this.handleResponse(response);
             
             if (!responseJson || Object.keys(responseJson).length === 0) return null;
-
-            return Birth.fromJson(responseJson.data);
+            //birth puede ser null
+            return responseJson.birth ? Birth.fromJson(responseJson.birth) : null;
+            
         } catch (error) {
             console.error('BirthService Get Error:', error);
             throw error;
