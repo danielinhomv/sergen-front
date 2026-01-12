@@ -21,9 +21,9 @@ export class UltrasoundService extends HttpService {
             });
 
             const data = await this.handleResponse(response);
-            if (!data || data.error) return null;
+            if (!data || data.error || !data.ultrasound) return null;
 
-            return Ultrasound.fromJson(data);
+            return Ultrasound.fromJson(data.ultrasound);
         } catch (error) {
             console.error('UltrasoundService GET Error:', error);
             throw error;

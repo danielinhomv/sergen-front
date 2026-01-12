@@ -21,9 +21,9 @@ export class ImplantRemovalService extends HttpService {
             });
 
             const data = await this.handleResponse(response);
-            if (!data || data.error) return null;
-
-            return ImplantRemoval.fromJson(data);
+            // puede implant_retrieval ser null
+            if (!data || data.error || !data.implant_retrieval) return null;
+            return ImplantRemoval.fromJson(data.implant_retrieval);
         } catch (error) {
             console.error('ImplantRemovalService GET Error:', error);
             throw error;

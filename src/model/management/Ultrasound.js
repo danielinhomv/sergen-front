@@ -28,11 +28,11 @@ export class Ultrasound {
             vitaminsAndMinerals: data.vitamins_and_minerals,
             status: data.status,
             protocolDetails: data.protocol_details,
+            refugo: data.refugo,
             usedProductsSummary: data.used_products_summary,
             workTeam: data.work_team,
             date: data.date,
             controlBovineId: data.control_bovine_id,
-            refugo: data.refugo
         });
     }
 
@@ -41,7 +41,7 @@ export class Ultrasound {
             vitamins_and_minerals: this.vitaminsAndMinerals,
             status: this.status,
             protocol_details: this.protocolDetails,
-            used_product_summary: this.usedProductsSummary,
+            used_products_summary: this.usedProductsSummary,
             work_team: this.workTeam,
             date: this.date,
             control_bovine_id: this.controlBovineId,

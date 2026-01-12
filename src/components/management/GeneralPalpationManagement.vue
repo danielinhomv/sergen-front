@@ -123,15 +123,12 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { GeneralPalpationService } from '@/services/management/GeneralPalpationService'
-import { GeneralPalpation } from '@/model/management/GeneralPalpation' // IMPORTADO
+import { GeneralPalpation } from '@/model/management/GeneralPalpation'
 import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new GeneralPalpationService()
 const sessionPropertyStore = useSessionPropertyStore()
 
-/* ======================
-   ESTADO
-====================== */
 const item = ref(null)
 const isSaving = ref(false)
 const loadingText = ref('Sincronizando...')
@@ -160,9 +157,6 @@ function showToast(message, type = 'success') {
   }
 }
 
-/* ======================
-   VALIDACIONES
-====================== */
 watch(() => form.value, () => {
   errors.value.status = !form.value.status
   errors.value.date = !form.value.date
@@ -170,16 +164,14 @@ watch(() => form.value, () => {
 
 const isFormValid = computed(() => !!form.value.status && !!form.value.date)
 
-/* ======================
-   CRUD
-====================== */
 async function loadItem() {
   loadingText.value = 'Cargando datos de palpación...'
   try {
     const response = await service.get(sessionPropertyStore.getControlBovineId)
     item.value = response || null
+    console.log('Datos de palpación cargados:', item.value)
   } catch (error) {
-    item.value = null
+    showToast('Error al cargar los datos.', 'danger')
   }
 }
 
@@ -201,31 +193,28 @@ async function submitForm() {
   if (!isFormValid.value) return
   isSaving.value = true
   try {
-    // INSTANCIACIÓN DEL MODELO
+    // Instanciación del modelo según GeneralPalpation.ts
     const palpationData = new GeneralPalpation({
       ...form.value,
-      controlBovineId: sessionPropertyStore.getControlBovineId // Usando ControlBovineId
+      controlBovineId: sessionPropertyStore.getControlBovineId // camelCase con c minúscula
     })
 
     if (editing.value) {
       await service.update(form.value.id, palpationData)
-      showToast('¡Palpación actualizada!')
+      showToast('¡Diagnóstico actualizado correctamente!')
     } else {
       await service.create(palpationData)
-      showToast('¡Palpación registrada!')
+      showToast('¡Palpación registrada con éxito!')
     }
     await loadItem()
     showForm.value = false
   } catch (error) {
-    showToast('Error al guardar los datos.', 'danger')
+    showToast('Error al procesar la solicitud.', 'danger')
   } finally {
     isSaving.value = false
   }
 }
 
-/* ======================
-   HELPERS UI
-====================== */
 function statusLabel(value) {
   const labels = { 'pregnant': 'Preñada', 'empty': 'Vacía', 'discard': 'Descartada', 'abort': 'Abortada' }
   return labels[value] || value
@@ -249,7 +238,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Los estilos se mantienen igual por brevedad, son correctos según tu diseño premium */
+/* Los estilos se mantienen íntegros para el diseño premium */
 .loading-state-premium {
   display: flex;
   flex-direction: column;
@@ -414,7 +403,6 @@ onMounted(() => {
   padding: 14px 28px;
   border-radius: 14px;
   font-weight: 700;
-  transition: 0.3s;
 }
 
 .btn-light-premium {

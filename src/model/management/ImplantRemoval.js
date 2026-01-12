@@ -21,7 +21,7 @@ export class ImplantRemoval {
             id: data.id,
             status: data.status,
             workTeam: data.work_team,
-            usedProductSummary: data.used_product_summary,
+            usedProductSummary: data.used_products_summary,
             date: data.date,
             controlBovineId: data.control_bovine_id
         });
@@ -31,7 +31,7 @@ export class ImplantRemoval {
         return {
             status: this.status,
             work_team: this.workTeam,
-            used_product_summary: this.usedProductSummary,
+            used_products_summary: this.usedProductSummary,
             date: this.date,
             control_bovine_id: this.controlBovineId
         };

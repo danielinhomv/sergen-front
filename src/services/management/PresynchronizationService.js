@@ -21,9 +21,9 @@ export class PresynchronizationService extends HttpService {
             });
 
             const data = await this.handleResponse(response);
-            if (!data || data.error) return null;
+            if (!data || data.error || !data.presincronization) return null;
 
-            return Presynchronization.fromJson(data);
+            return Presynchronization.fromJson(data.presincronization);
         } catch (error) {
             console.error('PresynchronizationService GET Error:', error);
             throw error;

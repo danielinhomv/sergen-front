@@ -214,6 +214,7 @@ async function loadItem() {
     const response = await birthService.get(sessionPropertyStore.getControlBovineId)
     item.value = response
   } catch (error) {
+    showToast('Error al cargar los datos.')
     item.value = null
   } 
 }

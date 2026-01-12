@@ -21,9 +21,9 @@ export class GeneralPalpationService extends HttpService {
             });
 
             const data = await this.handleResponse(response);
-            if (!data || data.error) return null;
+            if (!data || data.error || !data.generalPalpation ) return null;
 
-            return GeneralPalpation.fromJson(data.GeneralPalpation);
+            return GeneralPalpation.fromJson(data.generalPalpation);
         } catch (error) {
             console.error('GeneralPalpationService GET Error:', error);
             throw error;

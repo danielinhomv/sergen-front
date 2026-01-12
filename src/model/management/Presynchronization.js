@@ -7,7 +7,8 @@ export class Presynchronization {
         sincrogestProduct,
         antiparasiticProduct,
         vitaminsAndMinerals,
-        applicationDate
+        applicationDate,
+        controlBovineId
     }) {
         this.id = id;
         this.reproductiveVaccine = reproductiveVaccine;
@@ -15,6 +16,7 @@ export class Presynchronization {
         this.antiparasiticProduct = antiparasiticProduct;
         this.vitaminsAndMinerals = vitaminsAndMinerals;
         this.applicationDate = applicationDate;
+        this.controlBovineId = controlBovineId;
     }
 
     static fromJson(data) {
@@ -34,7 +36,8 @@ export class Presynchronization {
             sincrogest_product: this.sincrogestProduct,
             antiparasitic_product: this.antiparasiticProduct,
             vitamins_and_minerals: this.vitaminsAndMinerals,
-            application_date: this.applicationDate
+            application_date: this.applicationDate,
+            control_bovine_id: this.controlBovineId
         };
     }
 }

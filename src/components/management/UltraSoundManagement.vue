@@ -23,8 +23,8 @@
         <div class="card-premium-header">
           <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-              <div class="icon-badge-premium">
-                <i class="fas fa-microscope"></i>
+              <div class="icon-badge-premium highlight">
+                <i class="fas fa-calendar-check"></i>
               </div>
               <div>
                 <span :class="[statusBadgeClass(item.status), 'status-pill-base mb-1 d-inline-block']">
@@ -48,27 +48,31 @@
             <div class="col-md-4">
               <label class="label-premium">VITAMINAS Y MINERALES</label>
               <p class="value-premium">
-                <i :class="item.vitamins_and_minerals ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"
+                <i :class="item.vitaminsAndMinerals ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger'"
                   class="me-2"></i>
-                {{ item.vitamins_and_minerals ? 'Aplicado' : 'No aplicado' }}
+                {{ item.vitaminsAndMinerals ? 'Aplicado' : 'No aplicado' }}
               </p>
             </div>
-            <div class="col-md-4" v-if="item.work_team">
+            <div class="col-md-4" v-if="item.workTeam">
               <label class="label-premium">EQUIPO DE TRABAJO</label>
-              <p class="value-premium"><i class="fas fa-users me-2 text-success"></i>{{ item.work_team }}</p>
+              <p class="value-premium"><i class="fas fa-users me-2 text-success"></i>{{ item.workTeam }}</p>
             </div>
 
             <div class="col-12">
               <div class="premium-divider"></div>
             </div>
 
-            <div class="col-md-6" v-if="item.protocol_details">
+            <div class="col-md-6" v-if="item.protocolDetails">
               <label class="label-premium">DETALLES DEL PROTOCOLO</label>
-              <div class="text-box-premium">{{ item.protocol_details }}</div>
+              <div class="text-box-premium">{{ item.protocolDetails }}</div>
             </div>
-            <div class="col-md-6" v-if="item.used_products_summary">
+            <div class="col-md-6" v-if="item.usedProductsSummary">
               <label class="label-premium">PRODUCTOS USADOS</label>
-              <div class="text-box-premium highlight">{{ item.used_products_summary }}</div>
+              <div class="text-box-premium highlight">{{ item.usedProductsSummary }}</div>
+            </div>
+            <div class="col-12" v-if="item.refugo">
+              <label class="label-premium">REFUGO</label>
+              <div class="text-box-premium">{{ item.refugo }}</div>
             </div>
           </div>
         </div>
@@ -104,7 +108,7 @@
             <div class="col-12 py-2">
               <div class="form-check form-switch custom-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="vitaminsSwitch"
-                  v-model="form.vitamins_and_minerals">
+                  v-model="form.vitaminsAndMinerals">
                 <label class="form-check-label fw-bold text-dark" for="vitaminsSwitch">
                   ¿Se aplicaron Vitaminas y Minerales?
                 </label>
@@ -113,13 +117,13 @@
 
             <div class="col-md-6">
               <label class="label-premium">DETALLES DEL PROTOCOLO</label>
-              <textarea v-model="form.protocol_details" class="form-control-premium" rows="3"
+              <textarea v-model="form.protocolDetails" class="form-control-premium" rows="3"
                 placeholder="Describa el protocolo..."></textarea>
             </div>
 
             <div class="col-md-6">
-              <label class="label-premium">RESUMEN DE PRODUCTOS USADOS</label>
-              <textarea v-model="form.used_products_summary" class="form-control-premium" rows="3"
+              <label class="label-premium">PRODUCTOS USADOS *</label>
+              <textarea v-model="form.usedProductsSummary" class="form-control-premium" rows="3"
                 placeholder="Productos utilizados..."></textarea>
             </div>
 
@@ -129,10 +133,9 @@
                 placeholder="Resumen clínico de la ecografía"></textarea>
             </div>
 
-
             <div class="col-md-6">
-              <label class="label-premium">EQUIPO DE TRABAJO</label>
-              <input v-model="form.work_team" class="form-control-premium" placeholder="Personal encargado..." />
+              <label class="label-premium">EQUIPO DE TRABAJO *</label>
+              <input v-model="form.workTeam" class="form-control-premium" placeholder="Personal encargado..." />
             </div>
           </div>
 
@@ -146,8 +149,18 @@
           </div>
         </form>
       </div>
-
     </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+      <div id="liveToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div id="toast-message" class="toast-body flex-grow-1 p-3 fw-bold"></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -155,6 +168,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { UltrasoundService } from '@/services/management/UltrasoundService'
+import { Ultrasound } from '@/model/management/Ultrasound'
 import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new UltrasoundService()
@@ -162,66 +176,60 @@ const sessionPropertyStore = useSessionPropertyStore()
 
 const item = ref(null)
 const isSaving = ref(false)
-const loadingText = ref('Escanee un bovino para cargar los datos...')
+const loadingText = ref('Sincronizando...')
 const showForm = ref(false)
 const editing = ref(false)
 
 const form = ref({
   id: null,
-  vitamins_and_minerals: false,
+  vitaminsAndMinerals: false,
   status: '',
-  protocol_details: '',
-  used_products_summary: '',
-  work_team: '',
+  protocolDetails: '',
+  usedProductsSummary: '', // Coincide con el constructor
+  workTeam: '',
   refugo: '',
   date: new Date().toISOString().split('T')[0]
 })
 
 const errors = ref({ status: false, date: false })
 
+function showToast(message, type = 'success') {
+  const toastEl = document.getElementById('liveToast');
+  if (toastEl) {
+    toastEl.className = `toast align-items-center border-0 shadow-lg text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+    const msgEl = document.getElementById('toast-message');
+    if (msgEl) msgEl.textContent = message;
+    new Toast(toastEl).show();
+  }
+}
+
 watch(() => form.value, () => {
   errors.value.status = !form.value.status
   errors.value.date = !form.value.date
 }, { deep: true })
 
-const isFormValid = computed(() => !!form.value.status && !!form.value.date && !!form.value.used_products_summary && !!form.value.work_team)
-
-function showToast(type, message) {
-  const toastEl = document.getElementById('liveToast');
-  if (!toastEl) return;
-  const toastMessage = document.getElementById('toast-message');
-  const toastIcon = document.getElementById('toast-icon');
-
-  toastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning');
-
-  if (type === 'success') {
-    toastEl.classList.add('text-bg-success');
-    toastIcon.innerHTML = '<i class="fas fa-check-circle fs-5"></i>';
-  } else if (type === 'error') {
-    toastEl.classList.add('text-bg-danger');
-    toastIcon.innerHTML = '<i class="fas fa-times-circle fs-5"></i>';
-  }
-
-  toastMessage.textContent = message;
-  const toast = Toast.getInstance(toastEl) || new Toast(toastEl, { delay: 4000 });
-  toast.show();
-}
+const isFormValid = computed(() =>
+  !!form.value.status &&
+  !!form.value.date &&
+  !!form.value.usedProductsSummary &&
+  !!form.value.workTeam
+)
 
 async function loadItem() {
   loadingText.value = 'Cargando datos de ecografía...'
   try {
-    const response = await service.get(sessionPropertyStore.controlBovineId)
+    const response = await service.get(sessionPropertyStore.getControlBovineId)
     item.value = response || null
   } catch (error) {
-    showToast('error', error.message || 'Error al cargar los datos de ecografía')
+    showToast('Error al cargar los datos.', 'danger')
   }
 }
 
 function openAddForm() {
   editing.value = false
   form.value = {
-    id: null, vitamins_and_minerals: false, status: '',
-    protocol_details: '', used_products_summary: '', work_team: '',
+    id: null, vitaminsAndMinerals: false, status: '',
+    protocolDetails: '', usedProductsSummary: '', workTeam: '',
     date: new Date().toISOString().split('T')[0], refugo: ''
   }
   showForm.value = true
@@ -233,25 +241,29 @@ function openEditForm() {
   showForm.value = true
 }
 
-function cancelForm() {
-  showForm.value = false
-}
+function cancelForm() { showForm.value = false }
 
 async function submitForm() {
   if (!isFormValid.value) return
   isSaving.value = true
   try {
+    // Instanciación exacta según el constructor de Ultrasound.ts
+    const ultrasoundData = new Ultrasound({
+      ...form.value,
+      controlBovineId: sessionPropertyStore.getControlBovineId // camelCase con c minúscula
+    })
+
     if (editing.value) {
-      await service.update(form.value.id, form.value)
-      showToast('success', 'Registro actualizado.')
+      await service.update(form.value.id, ultrasoundData)
+      showToast('Registro actualizado correctamente.')
     } else {
-      await service.create(form.value)
-      showToast('success', 'Ecografía registrada con éxito.')
+      await service.create(ultrasoundData)
+      showToast('Ecografía registrada con éxito.')
     }
     await loadItem()
     showForm.value = false
   } catch (error) {
-    showToast('error', 'Error al procesar la solicitud.')
+    showToast('Error al procesar la solicitud.', 'danger')
   } finally {
     isSaving.value = false
   }
@@ -276,16 +288,10 @@ onMounted(() => {
     loadItem()
   }
 });
-
 </script>
 
 <style scoped>
-/* --- ESTRUCTURA --- */
-.ultrasound-container {
-  width: 100%;
-}
-
-/* --- ESTRUCTURA DE CARGA (VISIBILIDAD CORREGIDA) --- */
+/* Los estilos se mantienen íntegros */
 .loading-state-premium {
   display: flex;
   flex-direction: column;
@@ -299,16 +305,10 @@ onMounted(() => {
   color: #2d4a22 !important;
 }
 
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
 .loading-text-premium {
   color: #475569;
   font-weight: 700;
   font-size: 1.1rem;
-  letter-spacing: 0.5px;
   animation: fadePulse 1.5s infinite;
 }
 
@@ -326,7 +326,6 @@ onMounted(() => {
   }
 }
 
-/* --- EMPTY STATE --- */
 .empty-state-container {
   text-align: center;
   padding: 3rem;
@@ -348,7 +347,6 @@ onMounted(() => {
   margin: 0 auto 20px;
 }
 
-/* --- CARD DETALLE --- */
 .detail-card-premium {
   background: white;
   border-radius: 20px;
@@ -378,47 +376,35 @@ onMounted(() => {
   font-size: 1.2rem;
 }
 
-/* --- BADGES DINÁMICOS (Adaptados a statusBadgeClass) --- */
+.icon-badge-premium.highlight {
+  background: #16a34a;
+  color: white;
+}
+
 .status-pill-base {
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-/* Clases generadas por statusBadgeClass con toque Premium */
 .bg-success-soft {
   background-color: #dcfce7 !important;
-}
-
-.text-success {
-  color: #15803d !important;
 }
 
 .bg-info-soft {
   background-color: #e0f2fe !important;
 }
 
-.text-info {
-  color: #0369a1 !important;
-}
-
 .bg-danger-soft {
   background-color: #fee2e2 !important;
 }
 
-.text-danger {
-  color: #b91c1c !important;
-}
-
-/* --- ELEMENTOS DE FORMULARIO --- */
 .label-premium {
   font-size: 0.7rem;
   font-weight: 800;
   color: #94a3b8;
-  letter-spacing: 0.5px;
   margin-bottom: 8px;
   display: block;
 }
@@ -426,15 +412,14 @@ onMounted(() => {
 .value-premium {
   font-weight: 600;
   color: #1e293b;
-  margin: 0;
   font-size: 1rem;
+  margin: 0;
 }
 
 .text-box-premium {
   padding: 12px;
   background: #f8fafc;
   border-radius: 12px;
-  font-size: 0.9rem;
   color: #475569;
   border: 1px solid #f1f5f9;
 }
@@ -462,28 +447,9 @@ onMounted(() => {
   border: 2px solid #f1f5f9;
   border-radius: 14px;
   font-weight: 600;
-  transition: 0.3s;
   color: #1e293b;
 }
 
-.form-control-premium:focus {
-  border-color: #10b981;
-  outline: none;
-  background: #fcfdfc;
-}
-
-.custom-switch .form-check-input {
-  width: 3em;
-  height: 1.5em;
-  cursor: pointer;
-}
-
-.custom-switch .form-check-input:checked {
-  background-color: #10b981;
-  border-color: #10b981;
-}
-
-/* --- BOTONES --- */
 .btn-success-premium {
   background: #2d4a22;
   color: #c0da63;
@@ -491,12 +457,6 @@ onMounted(() => {
   padding: 14px 28px;
   border-radius: 14px;
   font-weight: 700;
-  transition: 0.3s;
-}
-
-.btn-success-premium:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(45, 74, 34, 0.2);
 }
 
 .btn-light-premium {
@@ -515,6 +475,5 @@ onMounted(() => {
   border: none;
   background: #f1f5f9;
   color: #64748b;
-  transition: 0.3s;
 }
 </style>

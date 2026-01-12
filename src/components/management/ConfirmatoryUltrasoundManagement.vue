@@ -213,7 +213,7 @@ async function listUltrasounds() {
   try {
     ultrasounds.value = await service.list(sessionPropertyStore.getControlBovineId)
   } catch (error) {
-    showToast('Error al cargar la lista.', 'danger')
+    showToast('Error al cargar los datos', 'danger')
   }
 }
 

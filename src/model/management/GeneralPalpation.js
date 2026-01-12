@@ -20,7 +20,6 @@ export class GeneralPalpation {
             status: data.status,
             observation: data.observation,
             date: data.date,
-            controlBovineId: data.control_bovine_id
         });
     }
 

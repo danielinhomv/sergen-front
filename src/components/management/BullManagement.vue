@@ -205,9 +205,13 @@ const isFormValid = computed(() => form.value.name.trim().length > 2 && !isDupli
 
 async function loadBulls() {
   isLoading.value = true;
-  try { bulls.value = await bullService.listBulls(); }
-  catch (e) { showToast('Error al cargar datos', 'danger'); }
-  finally { isLoading.value = false; }
+  try { 
+    bulls.value = await bullService.listBulls(); }
+  catch (e) {
+     showToast('Error al cargar datos', 'danger'); }
+  finally {
+     isLoading.value = false;
+     }
 }
 
 function openAddModal() {
