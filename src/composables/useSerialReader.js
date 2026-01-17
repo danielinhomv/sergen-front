@@ -214,8 +214,8 @@ export function useSerialReader() {
 
   // --- CONFIGURACIÓN DE PRUEBAS ---
   const MOCK_MODE = true; 
-  const TEST_SERIE = 'B-0015';
-  const TEST_CONTROL_ID = 21;
+  const TEST_SERIE = 'B-0027';
+  const TEST_CONTROL_ID = sessionPropertyStore.getProtocolId;
 
   const connectionStatus = computed(() => {
     if (connectionState.value === 'connected') return 'Lector Conectado y Listo.';
