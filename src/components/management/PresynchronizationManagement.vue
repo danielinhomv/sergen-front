@@ -24,7 +24,7 @@
           <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
               <div class="icon-badge-premium highlight">
-                <i class="fas fa-syringes"></i>
+                <i class="fas fa-calendar-check"></i>
               </div>
               <div>
                 <span class="status-pill-base bg-success-soft text-success mb-1 d-inline-block">Protocolo Activo</span>
@@ -41,15 +41,15 @@
           <div class="row g-4">
             <div class="col-md-4">
               <label class="label-premium">FECHA DE APLICACIÓN</label>
-              <p class="value-premium"><i class="fas fa-calendar-check me-2 text-success"></i>{{ item.application_date
-                }}</p>
+              <p class="value-premium"><i class="fas fa-calendar-check me-2 text-success"></i>{{ item.applicationDate }}
+              </p>
             </div>
             <div class="col-md-8">
               <label class="label-premium">ESTADO NUTRICIONAL</label>
-              <div :class="item.vitamins_and_minerals ? 'vitamin-badge-on' : 'vitamin-badge-off'">
-                <i :class="item.vitamins_and_minerals ? 'fas fa-shield-virus' : 'fas fa-exclamation-triangle'"
+              <div :class="item.vitaminsAndMinerals ? 'vitamin-badge-on' : 'vitamin-badge-off'">
+                <i :class="item.vitaminsAndMinerals ? 'fas fa-shield-virus' : 'fas fa-exclamation-triangle'"
                   class="me-2"></i>
-                {{ item.vitamins_and_minerals ? 'Vitaminas y Minerales Aplicados' : 'Sin Vitaminas/Minerales' }}
+                {{ item.vitaminsAndMinerals ? 'Vitaminas y Minerales Aplicados' : 'Sin Vitaminas/Minerales' }}
               </div>
             </div>
 
@@ -60,19 +60,19 @@
                 <div class="col-md-4">
                   <div class="product-item-premium">
                     <span class="product-category">Vacuna Reprod.</span>
-                    <span class="product-name">{{ item.reproductive_vaccine }}</span>
+                    <span class="product-name">{{ item.reproductiveVaccine }}</span>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="product-item-premium">
                     <span class="product-category">Sincrogest</span>
-                    <span class="product-name">{{ item.sincrogest_product }}</span>
+                    <span class="product-name">{{ item.sincrogestProduct }}</span>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="product-item-premium">
                     <span class="product-category">Antiparasitario</span>
-                    <span class="product-name">{{ item.antiparasitic_product }}</span>
+                    <span class="product-name">{{ item.antiparasiticProduct }}</span>
                   </div>
                 </div>
               </div>
@@ -94,26 +94,26 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="label-premium">VACUNA REPRODUCTIVA *</label>
-              <input v-model="form.reproductive_vaccine" class="form-control-premium"
-                :class="{ 'is-invalid': errors.reproductive_vaccine }" placeholder="Ej: Bioabortogen" />
+              <input v-model="form.reproductiveVaccine" class="form-control-premium"
+                :class="{ 'is-invalid': errors.reproductiveVaccine }" placeholder="Ej: Bioabortogen" />
             </div>
 
             <div class="col-md-6">
               <label class="label-premium">SINCROGEST *</label>
-              <input v-model="form.sincrogest_product" class="form-control-premium"
-                :class="{ 'is-invalid': errors.sincrogest_product }" placeholder="Ej: Sincrogest Inyectable" />
+              <input v-model="form.sincrogestProduct" class="form-control-premium"
+                :class="{ 'is-invalid': errors.sincrogestProduct }" placeholder="Ej: Sincrogest Inyectable" />
             </div>
 
             <div class="col-md-6">
               <label class="label-premium">ANTIPARASITARIO *</label>
-              <input v-model="form.antiparasitic_product" class="form-control-premium"
-                :class="{ 'is-invalid': errors.antiparasitic_product }" placeholder="Ej: Ivermectina 1%" />
+              <input v-model="form.antiparasiticProduct" class="form-control-premium"
+                :class="{ 'is-invalid': errors.antiparasiticProduct }" placeholder="Ej: Ivermectina 1%" />
             </div>
 
             <div class="col-md-6">
               <label class="label-premium">FECHA DE APLICACIÓN *</label>
-              <input type="date" v-model="form.application_date" class="form-control-premium"
-                :class="{ 'is-invalid': errors.application_date }" />
+              <input type="date" v-model="form.applicationDate" class="form-control-premium"
+                :class="{ 'is-invalid': errors.applicationDate }" />
             </div>
 
             <div class="col-12">
@@ -124,7 +124,7 @@
                     <p class="text-muted small m-0">Marcar si se aplicó refuerzo nutricional</p>
                   </div>
                   <input class="form-check-input custom-switch" type="checkbox" role="switch" id="vitaminsSwitch"
-                    v-model="form.vitamins_and_minerals">
+                    v-model="form.vitaminsAndMinerals">
                 </div>
               </div>
             </div>
@@ -142,6 +142,17 @@
       </div>
 
     </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080">
+      <div id="liveToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert"
+        aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div id="toast-message" class="toast-body flex-grow-1 p-3 fw-bold"></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -149,6 +160,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { Toast } from 'bootstrap'
 import { PresynchronizationService } from '@/services/management/PresynchronizationService'
+import { Presynchronization } from '@/model/management/Presynchronization'
 import { useSessionPropertyStore } from '@/store/SessionProperty'
 
 const service = new PresynchronizationService()
@@ -156,34 +168,50 @@ const sessionPropertyStore = useSessionPropertyStore()
 
 const item = ref(null)
 const isSaving = ref(false)
-const loadingText = ref('Escanee un bovino para cargar los datos...')
+const loadingText = ref('Sincronizando...')
 const showForm = ref(false)
 const editing = ref(false)
 
 const form = ref({
-  id: null, reproductive_vaccine: '', sincrogest_product: '',
-  antiparasitic_product: '', vitamins_and_minerals: true,
-  application_date: new Date().toISOString().split('T')[0]
+  id: null,
+  reproductiveVaccine: '',
+  sincrogestProduct: '',
+  antiparasiticProduct: '',
+  vitaminsAndMinerals: true,
+  applicationDate: new Date().toISOString().split('T')[0]
 })
 
 const errors = ref({
-  reproductive_vaccine: false,
-  sincrogest_product: false,
-  antiparasitic_product: false,
-  application_date: false
+  reproductiveVaccine: false,
+  sincrogestProduct: false,
+  antiparasiticProduct: false,
+  applicationDate: false
 })
 
+/* =========================
+   UI HELPERS (TOAST)
+========================= */
+function showToast(message, type = 'success') {
+  const toastEl = document.getElementById('liveToast');
+  if (toastEl) {
+    toastEl.className = `toast align-items-center border-0 shadow-lg text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+    const msgEl = document.getElementById('toast-message');
+    if (msgEl) msgEl.textContent = message;
+    new Toast(toastEl).show();
+  }
+}
+
 watch(() => form.value, () => {
-  errors.value.reproductive_vaccine = !form.value.reproductive_vaccine
-  errors.value.sincrogest_product = !form.value.sincrogest_product
-  errors.value.antiparasitic_product = !form.value.antiparasitic_product
-  errors.value.application_date = !form.value.application_date
+  errors.value.reproductiveVaccine = !form.value.reproductiveVaccine
+  errors.value.sincrogestProduct = !form.value.sincrogestProduct
+  errors.value.antiparasiticProduct = !form.value.antiparasiticProduct
+  errors.value.applicationDate = !form.value.applicationDate
 }, { deep: true })
 
 const isFormValid = computed(() => {
   return (
-    !!form.value.reproductive_vaccine && !!form.value.sincrogest_product &&
-    !!form.value.antiparasitic_product && !!form.value.application_date
+    !!form.value.reproductiveVaccine && !!form.value.sincrogestProduct &&
+    !!form.value.antiparasiticProduct && !!form.value.applicationDate
   )
 })
 
@@ -194,22 +222,23 @@ async function loadItem() {
     item.value = response || null
   } catch (error) {
     item.value = null
-    showToast('error', error.message || 'Error al cargar los datos.')
+    showToast('Error al cargar los datos.', 'danger')
   }
 }
 
 function openAddForm() {
   editing.value = false
   form.value = {
-    id: null, reproductive_vaccine: '', sincrogest_product: '',
-    antiparasitic_product: '', vitamins_and_minerals: true,
-    application_date: new Date().toISOString().split('T')[0]
+    id: null, reproductiveVaccine: '', sincrogestProduct: '',
+    antiparasiticProduct: '', vitaminsAndMinerals: true,
+    applicationDate: new Date().toISOString().split('T')[0]
   }
   showForm.value = true
 }
 
 function openEditForm() {
   editing.value = true
+  // Mapeamos lo que viene del item (que usa camelCase por el fromJson del modelo) al form
   form.value = { ...item.value }
   showForm.value = true
 }
@@ -220,34 +249,25 @@ async function submitForm() {
   if (!isFormValid.value) return
   isSaving.value = true
   try {
+    // INSTANCIACIÓN DEL MODELO
+    const dataToSave = new Presynchronization({
+      ...form.value,
+      controlBovineId: sessionPropertyStore.getControlBovineId
+    })
+
     if (editing.value) {
-      await service.update(form.value.id, form.value)
-      showToast('success', 'Protocolo actualizado correctamente.')
+      await service.update(form.value.id, dataToSave)
+      showToast('Presincronización actualizada correctamente.')
     } else {
-      const dataToSave = {
-        ...form.value,
-        control_bovine_id: sessionPropertyStore.getControlBovineId,
-        property_id: sessionPropertyStore.getPropertyId
-      }
       await service.create(dataToSave)
-      showToast('success', 'Protocolo registrado correctamente.')
+      showToast('Presincronización registrada correctamente.')
     }
     await loadItem()
     showForm.value = false
   } catch (error) {
-    showToast('error', 'Ocurrió un error al guardar.')
+    showToast('Ocurrió un error al guardar.', 'danger')
   } finally {
     isSaving.value = false
-  }
-}
-
-function showToast(type, message) {
-  const toastEl = document.getElementById('liveToast')
-  if (toastEl) {
-    const toastBody = toastEl.querySelector('.toast-body') || toastEl
-    toastBody.textContent = message
-    const bsToast = new Toast(toastEl)
-    bsToast.show()
   }
 }
 
@@ -259,7 +279,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* --- ESTRUCTURA DE CARGA (IDÉNTICO A PARTO) --- */
+/* Los estilos se mantienen igual que en tu diseño original */
 .loading-state-premium {
   display: flex;
   flex-direction: column;
@@ -273,16 +293,10 @@ onMounted(() => {
   color: #2d4a22 !important;
 }
 
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
 .loading-text-premium {
   color: #475569;
   font-weight: 700;
   font-size: 1.1rem;
-  letter-spacing: 0.5px;
   animation: fadePulse 1.5s infinite;
 }
 
@@ -300,7 +314,6 @@ onMounted(() => {
   }
 }
 
-/* --- EMPTY STATE --- */
 .empty-state-container {
   text-align: center;
   padding: 4rem;
@@ -322,7 +335,6 @@ onMounted(() => {
   margin: 0 auto 20px;
 }
 
-/* --- CARDS --- */
 .detail-card-premium {
   background: white;
   border-radius: 20px;
@@ -357,7 +369,6 @@ onMounted(() => {
   color: white;
 }
 
-/* --- PRODUCTOS Y BADGES --- */
 .product-item-premium {
   padding: 12px;
   background: #f8fafc;
@@ -402,7 +413,6 @@ onMounted(() => {
   align-items: center;
 }
 
-/* --- FORMULARIO --- */
 .form-premium-card {
   background: white;
   border-radius: 20px;
@@ -415,14 +425,7 @@ onMounted(() => {
   border: 2px solid #f1f5f9;
   border-radius: 14px;
   font-weight: 600;
-  transition: 0.3s;
   color: #1e293b;
-}
-
-.form-control-premium:focus {
-  border-color: #10b981;
-  outline: none;
-  background: #fcfdfc;
 }
 
 .switch-container-premium {
@@ -432,12 +435,10 @@ onMounted(() => {
   border: 1px solid #f1f5f9;
 }
 
-/* --- LABELS Y BOTONES --- */
 .label-premium {
   font-size: 0.7rem;
   font-weight: 800;
   color: #94a3b8;
-  letter-spacing: 0.5px;
   margin-bottom: 8px;
   display: block;
 }
@@ -445,20 +446,7 @@ onMounted(() => {
 .value-premium {
   font-weight: 600;
   color: #1e293b;
-  margin: 0;
   font-size: 1.1rem;
-}
-
-.status-pill-base {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.bg-success-soft {
-  background-color: #dcfce7 !important;
 }
 
 .btn-success-premium {
@@ -468,12 +456,6 @@ onMounted(() => {
   padding: 14px 28px;
   border-radius: 14px;
   font-weight: 700;
-  transition: 0.3s;
-}
-
-.btn-success-premium:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(45, 74, 34, 0.2);
 }
 
 .btn-light-premium {
@@ -492,7 +474,6 @@ onMounted(() => {
   border: none;
   background: #f1f5f9;
   color: #64748b;
-  transition: 0.3s;
 }
 
 .premium-divider {

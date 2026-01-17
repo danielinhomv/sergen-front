@@ -45,7 +45,7 @@
             :progress="data.summary.cobertura_pct" variant="info" :badge="data.summary.total_ecografias + ' total'" />
         </div>
         <div class="col-md-3">
-          <MetricCard title="Vacías" :value="data.summary.empty.count"
+          <MetricCard title="Vacías/Descartes" :value="data.summary.empty.count"
             :subtitle="data.summary.empty.pct + '% no gestantes'" variant="warning" icon="fas fa-times-circle" />
         </div>
         <div class="col-md-3">

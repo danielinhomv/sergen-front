@@ -385,6 +385,8 @@ const etapaRoutes = {
   'Parto': 'birth-report'
 };
 
+
+
 const router = useRouter();
 const route = useRoute();
 const currentRouteName = computed(() => route.name);

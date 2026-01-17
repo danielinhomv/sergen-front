@@ -12,7 +12,7 @@
 //   const reader = ref(null);
 //   const isConnecting = ref(false);
 //   const chipId = ref(null);
-  
+
 //   const sessionPropertyStore = useSessionPropertyStore();
 //   const bovineService = new BovineService();
 //   const controlBovineService = new ControlBovineService();
@@ -66,7 +66,7 @@
 //     }
 
 //     if (!('serial' in navigator)) return;
-    
+
 //     await disconnectReader();
 
 //     isConnecting.value = true;
@@ -128,13 +128,13 @@
 //       sessionPropertyStore.setBovine(bovine);
 
 //       const protocolId = sessionPropertyStore.getProtocolId;
-      
+
 //       const controlData = new ControlBovine({
 //         bovine_id: bovine.id,
 //         control_id: protocolId,
 //         property_id: propertyId
 //       });
-      
+
 //       const relation = await controlBovineService.createControlBovine(controlData);
 
 //       if (relation && relation.id) {
@@ -147,14 +147,14 @@
 
 //   async function readSerialData() {
 //     if (!port.value || !port.value.readable) return;
-    
+
 //     reader.value = port.value.readable.getReader();
-    
+
 //     try {
 //       while (connectionState.value === 'connected') {
 //         const { value, done } = await reader.value.read();
 //         if (done) break;
-        
+
 //         const decoded = TEXT_DECODER.decode(value);
 //         if (decoded) {
 //           await executeLogic(decoded);
@@ -195,7 +195,7 @@ export function useSerialReader() {
   const reader = ref(null);
   const isConnecting = ref(false);
   const chipId = ref(null);
-  
+
   const sessionPropertyStore = useSessionPropertyStore();
 
   // Accedemos directamente a la variable persistente del store
@@ -213,9 +213,9 @@ export function useSerialReader() {
   const TEXT_DECODER = new TextDecoder();
 
   // --- CONFIGURACIÓN DE PRUEBAS ---
-  const MOCK_MODE = true; 
-  const TEST_SERIE = 'B-0015';
-  const TEST_CONTROL_ID = 21;
+  const MOCK_MODE = true;
+  const TEST_SERIE = 'C-0070';
+  const TEST_CONTROL_ID = sessionPropertyStore.getProtocolId;
 
   const connectionStatus = computed(() => {
     if (connectionState.value === 'connected') return 'Lector Conectado y Listo.';
@@ -248,13 +248,13 @@ export function useSerialReader() {
     if (MOCK_MODE) {
       isConnecting.value = true;
       connectionState.value = 'connecting';
-      await sleep(1000); 
+      await sleep(1000);
 
       connectionState.value = 'connected';
       isConnecting.value = false;
 
       console.log("🚀 MODO PRUEBA ACTIVO: Lógica persistente.");
-      executeLogic(TEST_SERIE); 
+      executeLogic(TEST_SERIE);
       return;
     }
 
@@ -277,13 +277,13 @@ export function useSerialReader() {
   async function disconnectReader() {
     // Si hay un lector real, cerramos el stream
     if (reader.value) {
-        await reader.value.cancel();
-        reader.value.releaseLock();
-        reader.value = null;
+      await reader.value.cancel();
+      reader.value.releaseLock();
+      reader.value = null;
     }
     if (port.value) {
-        await port.value.close();
-        port.value = null;
+      await port.value.close();
+      port.value = null;
     }
     connectionState.value = 'disconnected';
     // Nota: Ya no reseteamos el chipSerie aquí para que persista en el Dashboard
@@ -311,7 +311,7 @@ export function useSerialReader() {
         control_id: protocolId,
         property_id: propertyId
       });
-      
+
       const relation = await controlBovineService.createControlBovine(controlData);
 
       if (relation && relation.id) {
@@ -331,14 +331,14 @@ export function useSerialReader() {
         const { value, done } = await reader.value.read();
         if (done) break;
         const buffer = TEXT_DECODER.decode(value, { stream: true }).trim();
-        if (buffer) executeLogic(buffer); 
+        if (buffer) executeLogic(buffer);
       }
     } catch (error) {
       connectionState.value = 'disconnected';
     } finally {
-        if (reader.value) {
-            reader.value.releaseLock();
-        }
+      if (reader.value) {
+        reader.value.releaseLock();
+      }
     }
   }
 
