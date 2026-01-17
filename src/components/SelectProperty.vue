@@ -797,7 +797,7 @@ export default {
       loading.value = true;
       try {
         console.log("Iniciando trabajo en la propiedad:", name);
-  
+
         await sessionStore.startWork(propId, selectedControlId.value, name, place, phone, owner);
         replaceTo('dashboard');
       } catch (e) {
