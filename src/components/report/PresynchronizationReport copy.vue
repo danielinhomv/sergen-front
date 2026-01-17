@@ -1,7 +1,6 @@
 <template>
   <div class="report-container">
 
-    <!-- Loading inicial -->
     <div v-if="loading" class="d-flex justify-content-center align-items-center py-5" style="height: 400px;">
       <div class="spinner-border text-primary" role="status"></div>
     </div>
@@ -18,20 +17,10 @@
           <h1 class="page-title">Presincronización</h1>
           <p class="page-subtitle">Resultados técnicos y cumplimiento del protocolo</p>
         </div>
-        <button class="btn-action" @click="generatePDF" :disabled="GeneratingPdf || !hasData">
-          <i v-if="!GeneratingPdf" class="fas fa-file-pdf text-danger"></i>
-          <div v-else class="spinner-border spinner-border-sm text-danger" role="status"></div>
-          <span>{{ GeneratingPdf ? 'Generando PDF...' : 'Exportar PDF' }}</span>
+        <button class="btn-action" @click="generatePDF">
+          <i class="fas fa-file-pdf text-danger"></i>
+          <span>Exportar PDF</span>
         </button>
-      </div>
-
-      <!-- OVERLAY DE CARGA PARA PDF -->
-      <div v-if="generatingPdf" class="pdf-loading-overlay">
-        <div class="loading-modal">
-          <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-          <h4 class="fw-bold mb-2">Generando reporte PDF</h4>
-          <p class="text-muted mb-0">Por favor espere...</p>
-        </div>
       </div>
 
       <div class="row g-4 mb-5">
@@ -176,20 +165,11 @@
       </div>
 
     </div>
-
-    <!-- Modal de Carga para PDF -->
-    <div v-if="generatingPdf" class="pdf-loading-overlay">
-      <div class="pdf-loading-card">
-        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-        <h4 class="fw-bold mb-2">Generando reporte PDF</h4>
-        <p class="text-muted mb-0">Por favor espere, esto puede tardar unos segundos...</p>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, inject , computed} from 'vue';
+import { ref, onMounted, watch, inject } from 'vue';
 import ReportService from '@/services/report/ReportService';
 import MetricCard from '@/components/common/MetricCard.vue';
 import DataTable from '@/components/common/DataTable.vue';
@@ -197,7 +177,6 @@ import DataTable from '@/components/common/DataTable.vue';
 const data = ref(null);
 const loading = ref(true);
 const error = ref(null);
-const generatingPdf = ref(false);
 const URL_DATA = 'presynchronization';
 
 const { filters: currentFilters, trigger: filterTrigger } = inject('reportFilters');
@@ -232,33 +211,8 @@ async function fetchData() {
   }
 }
 
-// Computed para verificar si hay datos en detalles
-const hasData = computed(() => {
-  return data.value && data.value.details && data.value.details.length > 0;
-});
-
-async function generatePDF() {
-  // Validar que existan datos
-  if (!data.value || Object.keys(data.value).length === 0) {
-    error.value = "No hay datos disponibles para generar el reporte.";
-    return;
-  }
-
-  // Validar que al menos haya un registro en detalles
-  if (!data.value.details || data.value.details.length === 0) {
-    error.value = "No hay registros para exportar. Verifique los filtros aplicados.";
-    return;
-  }
-
-  generatingPdf.value = true;
-  try {
-    await ReportService.exportReportPdf(filters.value, URL_DATA);
-  } catch (err) {
-    console.error('Error al generar PDF:', err);
-    error.value = err.message || "Error al generar el PDF.";
-  } finally {
-    generatingPdf.value = false;
-  }
+function generatePDF() {
+  ReportService.exportReportPdf(filters.value, URL_DATA);
 }
 
 function formatDate(dateStr) {
@@ -337,6 +291,8 @@ function formatDate(dateStr) {
   border-color: #fdba74;
   background: #fffaf0;
 }
+
+/* Fondo naranja muy suave */
 
 /* Iconos de Sección */
 .section-icon {
@@ -498,39 +454,6 @@ function formatDate(dateStr) {
   background: #e2e8f0;
 }
 
-/* Modal de Carga PDF */
-.pdf-loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: fadeIn 0.2s ease-out;
-}
-
-.pdf-loading-card {
-  background: white;
-  border-radius: 16px;
-  padding: 3rem 4rem;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease-out;
-}
-
-.pdf-loading-card h4 {
-  color: #0f172a;
-}
-
-.pdf-loading-card p {
-  font-size: 0.95rem;
-}
-
 .animate-fade {
   animation: fadeIn 0.5s ease-out forwards;
 }
@@ -539,18 +462,6 @@ function formatDate(dateStr) {
   from {
     opacity: 0;
     transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
   }
 
   to {
